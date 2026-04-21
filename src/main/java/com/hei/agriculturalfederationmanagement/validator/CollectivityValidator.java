@@ -4,6 +4,7 @@ import com.hei.agriculturalfederationmanagement.entity.Member;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateCollectivity;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateStructure;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
+import com.hei.agriculturalfederationmanagement.repository.MemberRepository;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Component;
@@ -60,7 +61,7 @@ public class CollectivityValidator {
         List<Integer> missingIds = new ArrayList<>();
 
         for (Integer id : memberIds) {
-            if (!memberRepository.existsById(id)) {
+            if (memberRepository.existsById(id)) {
                 missingIds.add(id);
             }
         }
@@ -104,7 +105,7 @@ public class CollectivityValidator {
     }
 
     private void validateStructureMemberExists(Integer memberId, String role) {
-        if (!memberRepository.existsById(memberId)) {
+        if (memberRepository.existsById(memberId)) {
             throw new NotFoundException(role + " not found with ID: " + memberId);
         }
     }

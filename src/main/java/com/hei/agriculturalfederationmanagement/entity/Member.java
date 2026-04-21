@@ -26,7 +26,7 @@ public class Member {
     private Instant enrolmentDate;
     private String address;
     private String email;
-    private String phone;
+    private String phoneNumber;
     private String profession;
     private Gender gender;
 

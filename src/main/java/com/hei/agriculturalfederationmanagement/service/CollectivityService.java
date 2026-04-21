@@ -105,13 +105,6 @@ public class CollectivityService {
 
         List<Member> members = memberRepository.findByIds(memberIds);
 
-        Set<Integer> structureRoleIds = Set.of(
-                structure.getPresidentId(),
-                structure.getVicePresidentId(),
-                structure.getTreasurerId(),
-                structure.getSecretaryId()
-        );
-
         for (Member member : members) {
             CollectivityOccupation occupation;
 
