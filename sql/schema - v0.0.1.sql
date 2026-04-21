@@ -163,3 +163,67 @@ CREATE TABLE "public"."mobile_money_account" (
                                                          REFERENCES "public"."account" ("id")
                                                          ON DELETE CASCADE
 );
+
+-- constraints
+
+ALTER TABLE "public"."collectivity"
+    ADD CONSTRAINT "fk_collectivity_federation"
+        FOREIGN KEY ("id_federation")
+            REFERENCES "public"."federation"("id"),
+    ADD CONSTRAINT "fk_collectivity_location"
+        FOREIGN KEY ("id_location")
+        REFERENCES "public"."location"("id");
+
+ALTER TABLE "public"."member_collectivity"
+    ADD CONSTRAINT "fk_member_collectivity_member"
+        FOREIGN KEY ("id_member")
+            REFERENCES "public"."member"("id"),
+    ADD CONSTRAINT "fk_member_collectivity_collectivity"
+        FOREIGN KEY ("id_collectivity")
+        REFERENCES "public"."collectivity"("id");
+
+ALTER TABLE "public"."member_referee"
+    ADD CONSTRAINT "fk_member_referee_candidate"
+        FOREIGN KEY ("id_candidate")
+            REFERENCES "public"."member"("id"),
+    ADD CONSTRAINT "fk_member_referee_referee"
+        FOREIGN KEY ("id_referee")
+        REFERENCES "public"."member"("id"),
+    ADD CONSTRAINT "fk_member_referee_collectivity"
+        FOREIGN KEY ("id_collectivity")
+        REFERENCES "public"."collectivity"("id");
+
+ALTER TABLE "public"."mandate_federation"
+    ADD CONSTRAINT "fk_mandate_federation_member"
+        FOREIGN KEY ("id_member")
+            REFERENCES "public"."member"("id"),
+    ADD CONSTRAINT "fk_mandate_federation_federation"
+        FOREIGN KEY ("id_federation")
+        REFERENCES "public"."federation"("id");
+
+ALTER TABLE "public"."cotisation_plan"
+    ADD CONSTRAINT "fk_cotisation_plan_collectivity"
+        FOREIGN KEY ("id_collectivity")
+            REFERENCES "public"."collectivity"("id");
+
+ALTER TABLE "public"."transaction"
+    ADD CONSTRAINT "fk_transaction_member"
+        FOREIGN KEY ("id_member")
+            REFERENCES "public"."member"("id"),
+    ADD CONSTRAINT "fk_transaction_collectivity"
+        FOREIGN KEY ("id_collectivity")
+        REFERENCES "public"."collectivity"("id"),
+    ADD CONSTRAINT "fk_transaction_cotisation_plan"
+        FOREIGN KEY ("id_cotisation_plan")
+        REFERENCES "public"."cotisation_plan"("id"),
+    ADD CONSTRAINT "fk_transaction_account"
+        FOREIGN KEY ("id_account")
+        REFERENCES "public"."account"("id");
+
+ALTER TABLE "public"."account"
+    ADD CONSTRAINT "fk_account_collectivity"
+        FOREIGN KEY ("id_collectivity")
+            REFERENCES "public"."collectivity"("id"),
+    ADD CONSTRAINT "fk_account_federation"
+        FOREIGN KEY ("id_federation")
+        REFERENCES "public"."federation"("id");
