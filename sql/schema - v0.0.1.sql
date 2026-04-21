@@ -25,7 +25,7 @@ CREATE TABLE "public"."member" (
                                    PRIMARY KEY ("id")
 );
 
-
+-- this table is currently not used since we used varchar for location in collectivity for now
 CREATE TABLE "public"."location" (
                                      "id"   serial      NOT NULL,
                                      "name" varchar     NOT NULL,
