@@ -1,6 +1,5 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
-import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +17,7 @@ public class Collectivity {
     private String number;
     private String speciality;
     private Instant creationDatetime;
-    private CollectivityStatus status;
+    private boolean federationApproval;
     private Instant authorizationDate;
     private Location location;
     private Structure structure;

@@ -3,7 +3,6 @@
 CREATE TYPE "collectivity_occupation"  AS ENUM ('PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY', 'SENIOR', 'JUNIOR');
 CREATE TYPE "federation_occupation"  AS ENUM ('PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY');
 CREATE TYPE "gender"                  AS ENUM ('MALE', 'FEMALE');
-CREATE TYPE "collectivity_status"     AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE "cotisation_frequency"    AS ENUM ('MONTHLY', 'ANNUAL', 'PUNCTUAL');
 CREATE TYPE "payment_mode"            AS ENUM ('CASH', 'BANK_TRANSFER', 'MOBILE_MONEY');
 CREATE TYPE "bank_name"          AS ENUM ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM');
@@ -45,7 +44,7 @@ CREATE TABLE "public"."collectivity" (
                                          "name"               varchar               NOT NULL UNIQUE,
                                          "speciality"         varchar               NOT NULL,
                                          "creation_datetime"  timestamp             NOT NULL,
-                                         "status"             collectivity_status   NOT NULL DEFAULT 'PENDING',
+                                         "federation_approval" boolean DEFAULT FALSE,
                                          "authorization_date" timestamp,
                                          "id_federation"      int                   NOT NULL,
                                          "id_location"        int                   NOT NULL,
