@@ -12,9 +12,10 @@ CREATE TYPE "bank_name_enum"          AS ENUM ('BRED', 'MCB', 'BMOI', 'BOA', 'BG
 CREATE TYPE "mobile_money_service"    AS ENUM ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY');
 CREATE TYPE "activity_type"           AS ENUM ('MONTHLY_GA', 'JUNIOR_TRAINING', 'EXCEPTIONAL');
 CREATE TYPE "collectivity_status"     AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+CREATE TYPE "movement_direction"      AS ENUM ('IN', 'OUT');
 
 -- ============================================================
--- TABLES DE BASE
+-- BASE TABLES
 -- ============================================================
 
 CREATE TABLE "public"."city" (
@@ -25,7 +26,7 @@ CREATE TABLE "public"."city" (
 
 CREATE TABLE "public"."federation" (
     "id"                    serial         NOT NULL,
-    -- % des cotisations périodiques reversé à la fédération (Section C)
+    -- % of periodic cotisations forwarded to the federation (Section C)
     "cotisation_percentage" numeric(5,2)   NOT NULL DEFAULT 10.00,
     PRIMARY KEY ("id")
 );
@@ -51,15 +52,15 @@ CREATE TABLE "public"."collectivity" (
     "speciality"         varchar               NOT NULL,
     "creation_datetime"  timestamp             NOT NULL,
     "status"             collectivity_status   NOT NULL DEFAULT 'PENDING',
-    "authorization_date" timestamp,                        -- Section A : date d'autorisation
+    "authorization_date" timestamp,
     "id_federation"      int                   NOT NULL,
     "id_city"            int                   NOT NULL,
     PRIMARY KEY ("id")
 );
 
 -- ============================================================
--- SECTION A/B  –  Adhésion et postes
--- member_collectivity : historique des postes + appartenance à une collectivité
+-- SECTION A/B – Membership and posts
+-- member_collectivity: history of posts + membership in a collectivity
 -- ============================================================
 
 CREATE TABLE "public"."member_collectivity" (
@@ -68,91 +69,88 @@ CREATE TABLE "public"."member_collectivity" (
     "id_collectivity" int                       NOT NULL,
     "post_name"       collectivity_post_name    NOT NULL,
     "start_date"      timestamp                 NOT NULL,
-    "end_date"        timestamp,                           -- NULL = actif ; renseigné = mandat terminé ou démission
+    "end_date"        timestamp,                -- NULL = active; set = mandate ended or resigned
     PRIMARY KEY ("id")
 );
 
 -- ============================================================
--- SECTION B-2 – Parrainage multiple (nouvelles conditions d'admission)
+-- SECTION B-2 – Multiple sponsorship (updated admission conditions)
 -- ============================================================
 
 CREATE TABLE "public"."sponsorship" (
     "id"              serial      NOT NULL,
-    "id_candidate"    int         NOT NULL,   -- membre en cours d'admission
-    "id_sponsor"      int         NOT NULL,   -- membre confirmé parrain
-    "id_collectivity" int         NOT NULL,   -- collectivité visée par le candidat
-    "relationship"    varchar     NOT NULL,   -- famille, ami, collègue, etc.
+    "id_candidate"    int         NOT NULL,   -- member being admitted
+    "id_sponsor"      int         NOT NULL,   -- confirmed member acting as sponsor
+    "id_collectivity" int         NOT NULL,   -- target collectivity of the candidate
+    "relationship"    varchar     NOT NULL,   -- family, friend, colleague, etc.
     "created_at"      timestamp   NOT NULL DEFAULT NOW(),
     PRIMARY KEY ("id"),
     UNIQUE ("id_candidate", "id_sponsor")
 );
 
 -- ============================================================
--- SECTION A  –  Mandat de la fédération (2 ans)
+-- SECTION A – Federation mandate (2 years)
 -- ============================================================
 
 CREATE TABLE "public"."mandate_federation" (
-    "id"           serial                  NOT NULL,
-    "id_member"    int                     NOT NULL,
-    "id_federation" int                    NOT NULL,
-    "post_name"    federation_post_name    NOT NULL,
-    "start_date"   timestamp               NOT NULL,
-    "end_date"     timestamp,
+    "id"            serial                  NOT NULL,
+    "id_member"     int                     NOT NULL,
+    "id_federation" int                     NOT NULL,
+    "post_name"     federation_post_name    NOT NULL,
+    "start_date"    timestamp               NOT NULL,
+    "end_date"      timestamp,
     PRIMARY KEY ("id")
 );
 
 -- ============================================================
--- SECTION C  –  Plans de cotisation & paiements
+-- SECTION C – Cotisation plans & payments
 -- ============================================================
 
--- Plan de cotisation défini par la collectivité (ex : cotisation annuelle 200 000 Ar)
+-- Cotisation plan defined by the collectivity (e.g. annual cotisation 200,000 MGA)
 CREATE TABLE "public"."cotisation_plan" (
     "id"              serial                NOT NULL,
     "id_collectivity" int                   NOT NULL,
     "label"           varchar               NOT NULL,
     "frequency"       cotisation_frequency  NOT NULL,
     "amount"          numeric(15,2)         NOT NULL,
-    "year"            int,                              -- année d'applicabilité
+    "year"            int,
     "is_active"       boolean               NOT NULL DEFAULT true,
     PRIMARY KEY ("id")
 );
 
--- Encaissement : trace de chaque paiement effectué par un membre (Section C)
+-- Payment: records each payment made by a member (Section C)
 CREATE TABLE "public"."payment" (
     "id"                  serial          NOT NULL,
     "id_member"           int             NOT NULL,
     "id_collectivity"     int             NOT NULL,
-    "id_cotisation_plan"  int,                        -- NULL = frais d'adhésion ou ponctuel libre
-    "id_account"          int             NOT NULL,   -- compte qui reçoit le paiement (Section D)
+    "id_cotisation_plan"  int,            -- NULL = membership fee or free punctual payment
+    "id_account"          int             NOT NULL,   -- account receiving the payment (Section D)
     "amount"              numeric(15,2)   NOT NULL,
     "payment_date"        timestamp       NOT NULL,
     "payment_mode"        payment_mode    NOT NULL,
-    "recorded_by"         int             NOT NULL,   -- id du trésorier qui saisit
+    "recorded_by"         int             NOT NULL,   -- treasurer who recorded the entry
     PRIMARY KEY ("id")
 );
 
 -- ============================================================
--- SECTION D  –  Comptes (caisse, bancaire, mobile money)
+-- SECTION D – Accounts (cash, bank, mobile money)
 -- ============================================================
 
--- Table mère : un compte appartient soit à une collectivité, soit à la fédération
+-- Parent table: an account belongs to either a collectivity or the federation
 CREATE TABLE "public"."account" (
     "id"              serial          NOT NULL,
     "account_type"    account_type    NOT NULL,
-    "balance"         numeric(15,2)   NOT NULL DEFAULT 0,
-    "balance_date"    date            NOT NULL,
     "id_collectivity" int,
     "id_federation"   int,
     PRIMARY KEY ("id"),
-    -- Contrainte : exactement un propriétaire
+    -- Constraint: exactly one owner
     CONSTRAINT "chk_account_owner" CHECK (
         ("id_collectivity" IS NOT NULL AND "id_federation" IS NULL) OR
         ("id_collectivity" IS NULL  AND "id_federation"   IS NOT NULL)
     )
 );
 
--- Contrainte unicité de la caisse par propriétaire (une seule caisse par collectivité/fédération)
--- À implémenter via un index partiel :
+-- Unique cash account per owner (only one cash register per collectivity/federation)
 CREATE UNIQUE INDEX "uq_cash_per_collectivity"
     ON "public"."account" ("id_collectivity")
     WHERE "account_type" = 'CASH' AND "id_collectivity" IS NOT NULL;
@@ -161,7 +159,23 @@ CREATE UNIQUE INDEX "uq_cash_per_federation"
     ON "public"."account" ("id_federation")
     WHERE "account_type" = 'CASH' AND "id_federation" IS NOT NULL;
 
--- Détails d'un compte bancaire (RIB décomposé)
+-- ============================================================
+-- SECTION D – Account movements (replaces balance field)
+-- Each financial transaction is recorded as a movement IN or OUT
+-- ============================================================
+
+CREATE TABLE "public"."account_movement" (
+    "id"              serial                NOT NULL,
+    "id_account"      int                   NOT NULL,
+    "direction"       movement_direction    NOT NULL,   -- IN = credit, OUT = debit
+    "amount"          numeric(15,2)         NOT NULL,
+    "label"           varchar               NOT NULL,   -- description of the movement
+    "movement_date"   timestamp             NOT NULL DEFAULT NOW(),
+    "id_payment"      int,                             -- link to payment if applicable (nullable)
+    PRIMARY KEY ("id")
+);
+
+-- Bank account details (RIB breakdown)
 CREATE TABLE "public"."bank_account" (
     "id"             serial           NOT NULL,
     "id_account"     int              NOT NULL UNIQUE,
@@ -174,7 +188,7 @@ CREATE TABLE "public"."bank_account" (
     PRIMARY KEY ("id")
 );
 
--- Détails d'un compte mobile money
+-- Mobile money account details
 CREATE TABLE "public"."mobile_money_account" (
     "id"           serial                  NOT NULL,
     "id_account"   int                     NOT NULL UNIQUE,
@@ -185,7 +199,7 @@ CREATE TABLE "public"."mobile_money_account" (
 );
 
 -- ============================================================
--- SECTION E  –  Activités
+-- SECTION E – Activities
 -- ============================================================
 
 CREATE TABLE "public"."activity" (
@@ -194,10 +208,9 @@ CREATE TABLE "public"."activity" (
     "description"      text,
     "activity_date"    timestamp       NOT NULL,
     "activity_type"    activity_type   NOT NULL,
-    -- true = obligatoire pour tous les membres concernés
     "is_mandatory_all" boolean         NOT NULL DEFAULT false,
-    "id_collectivity"  int,   -- NULL si activité fédération
-    "id_federation"    int,   -- NULL si activité collectivité
+    "id_collectivity"  int,   -- NULL if federation activity
+    "id_federation"    int,   -- NULL if collectivity activity
     PRIMARY KEY ("id"),
     CONSTRAINT "chk_activity_owner" CHECK (
         ("id_collectivity" IS NOT NULL AND "id_federation" IS NULL) OR
@@ -205,7 +218,7 @@ CREATE TABLE "public"."activity" (
     )
 );
 
--- Pour les activités exceptionnelles : postes spécifiquement obligés d'assister
+-- For exceptional activities: specific posts required to attend
 CREATE TABLE "public"."activity_mandatory_role" (
     "id"          serial                    NOT NULL,
     "id_activity" int                       NOT NULL,
@@ -215,25 +228,25 @@ CREATE TABLE "public"."activity_mandatory_role" (
 );
 
 -- ============================================================
--- SECTION F  –  Feuille de présence
+-- SECTION F – Attendance sheet
 -- ============================================================
 
 CREATE TABLE "public"."attendance" (
-    "id"                    serial    NOT NULL,
-    "id_activity"           int       NOT NULL,
-    "id_member"             int       NOT NULL,
-    "is_present"            boolean   NOT NULL DEFAULT false,
-    "is_excused"            boolean   NOT NULL DEFAULT false,
-    "excuse_reason"         text,
-    -- Collectivité d'appartenance du membre au moment de la présence
-    -- (permet de distinguer les invités d'autres collectivités – Section F)
-    "id_member_collectivity" int      NOT NULL,
+    "id"                     serial    NOT NULL,
+    "id_activity"            int       NOT NULL,
+    "id_member"              int       NOT NULL,
+    "is_present"             boolean   NOT NULL DEFAULT false,
+    "is_excused"             boolean   NOT NULL DEFAULT false,
+    "excuse_reason"          text,
+    -- Collectivity membership of the member at the time of the activity
+    -- (allows distinguishing guests from other collectivities – Section F)
+    "id_member_collectivity" int       NOT NULL,
     PRIMARY KEY ("id"),
     UNIQUE ("id_activity", "id_member")
 );
 
 -- ============================================================
--- CONTRAINTES DE CLÉ ÉTRANGÈRE
+-- FOREIGN KEY CONSTRAINTS
 -- ============================================================
 
 ALTER TABLE "public"."collectivity"
@@ -267,8 +280,12 @@ ALTER TABLE "public"."account"
     ADD CONSTRAINT "fk_acc_collectivity"           FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id"),
     ADD CONSTRAINT "fk_acc_federation"             FOREIGN KEY ("id_federation")    REFERENCES "public"."federation"("id");
 
+ALTER TABLE "public"."account_movement"
+    ADD CONSTRAINT "fk_mv_account"                FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id"),
+    ADD CONSTRAINT "fk_mv_payment"                FOREIGN KEY ("id_payment")       REFERENCES "public"."payment"("id");
+
 ALTER TABLE "public"."bank_account"
-    ADD CONSTRAINT "fk_ba_account"                 FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id");
+    ADD CONSTRAINT "fk_ba_account"                FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id");
 
 ALTER TABLE "public"."mobile_money_account"
     ADD CONSTRAINT "fk_mma_account"               FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id");

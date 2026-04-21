@@ -1,0 +1,1689 @@
+openapi: 3.0.3
+info:
+  title: Agricultural Collectivities Federation – REST API
+  description: |
+    REST API for managing an agricultural collectivities federation in Madagascar.
+    Covers sections A (collectivities), B/B-2 (memberships), C (cotisations),
+    D (treasury), E (activities), F (attendance), G (collectivity stats) and H (federation stats).
+  version: 2.0.0
+
+servers:
+  - url: https://api.federation-agricole.mg/v1
+    description: Production server
+
+tags:
+  - name: Collectivities
+    description: "Section A – Opening and management of collectivities"
+  - name: Members
+    description: "Section B / B-2 – Membership, transfer and resignation"
+  - name: Cotisations
+    description: "Section C – Cotisation plans and payments"
+  - name: Accounts
+    description: "Section D – Treasury and account management"
+  - name: Activities
+    description: "Section E – Activities of collectivities and the federation"
+  - name: Attendance
+    description: "Section F – Member attendance tracking"
+  - name: CollectivityStats
+    description: "Section G – Statistics for a collectivity"
+  - name: FederationStats
+    description: "Section H – Statistics for the federation"
+  - name: Federation
+    description: Federation-level resources (accounts, activities, mandates)
+
+# ==============================================================
+# PATHS
+# ==============================================================
+paths:
+
+  # ------------------------------------------------------------
+  # SECTION A – Collectivities
+  # ------------------------------------------------------------
+
+  /collectivities:
+    get:
+      tags: [Collectivities]
+      summary: List all collectivities
+      operationId: listCollectivities
+      parameters:
+        - name: city_id
+          in: query
+          schema:
+            type: integer
+        - name: speciality
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/CollectivityStatus'
+      responses:
+        '200':
+          description: List of collectivities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CollectivitySummary'
+
+    post:
+      tags: [Collectivities]
+      summary: Submit a request to open a new collectivity
+      operationId: createCollectivity
+      description: |
+        Required conditions (Section A):
+        - At least 10 registered members, of which 5 have at least 6 months of seniority in the federation
+        - Specific posts (president, deputy president, treasurer, secretary) must be filled
+        - Locality and agricultural speciality must be defined
+        Formal federation authorization (`PATCH /collectivities/{id}/authorize`) is required separately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectivityRequest'
+      responses:
+        '201':
+          description: Request created – status PENDING
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          description: Conditions not met
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /collectivities/{collectivityId}:
+    get:
+      tags: [Collectivities]
+      summary: Get collectivity details
+      operationId: getCollectivity
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      responses:
+        '200':
+          description: Collectivity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /collectivities/{collectivityId}/authorize:
+    patch:
+      tags: [Collectivities]
+      summary: Grant or deny opening authorization (federation)
+      operationId: authorizeCollectivity
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [APPROVED, REJECTED]
+                reason:
+                  type: string
+                  description: Reason for rejection (required if REJECTED)
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Collectivity has already been processed
+
+  # ------------------------------------------------------------
+  # SECTION B / B-2 – Members & admissions
+  # ------------------------------------------------------------
+
+  /collectivities/{collectivityId}/memberships:
+    get:
+      tags: [Members]
+      summary: List members of a collectivity
+      operationId: listMemberships
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: post
+          in: query
+          schema:
+            $ref: '#/components/schemas/CollectivityPostName'
+        - name: active_only
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberCollectivityDetail'
+
+    post:
+      tags: [Members]
+      summary: Submit a membership application (B-2)
+      operationId: applyMembership
+      description: |
+        Updated admission conditions (B-2):
+        - At least 2 confirmed sponsors with seniority > 90 days each
+        - Number of sponsors from the target collectivity must be >= number of sponsors from other collectivities
+        - Personal information + nature of the relationship with each sponsor
+        - Membership fee of 50,000 MGA + full mandatory annual cotisations
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipApplicationRequest'
+      responses:
+        '201':
+          description: Application accepted – member registered as JUNIOR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipApplication'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          description: Conditions not met (sponsors, payment, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /collectivities/{collectivityId}/memberships/{memberId}:
+    delete:
+      tags: [Members]
+      summary: Resign from a collectivity
+      operationId: resignMembership
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for resignation
+      responses:
+        '200':
+          description: Resignation recorded
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/collectivity:
+    patch:
+      tags: [Members]
+      summary: Transfer member to another collectivity
+      operationId: transferMember
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_collectivity_id]
+              properties:
+                new_collectivity_id:
+                  type: integer
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberCollectivityDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members:
+    get:
+      tags: [Members]
+      summary: List all members of the federation
+      operationId: listMembers
+      responses:
+        '200':
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+
+  /members/{memberId}:
+    get:
+      tags: [Members]
+      summary: Get member details
+      operationId: getMember
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ------------------------------------------------------------
+  # SECTION C – Cotisations and payments
+  # ------------------------------------------------------------
+
+  /collectivities/{collectivityId}/cotisation-plans:
+    get:
+      tags: [Cotisations]
+      summary: List cotisation plans
+      operationId: listCotisationPlans
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: frequency
+          in: query
+          schema:
+            $ref: '#/components/schemas/CotisationFrequency'
+      responses:
+        '200':
+          description: List of cotisation plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CotisationPlan'
+
+    post:
+      tags: [Cotisations]
+      summary: Create a cotisation plan
+      operationId: createCotisationPlan
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCotisationPlanRequest'
+      responses:
+        '201':
+          description: Cotisation plan created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CotisationPlan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /collectivities/{collectivityId}/cotisation-plans/{planId}:
+    patch:
+      tags: [Cotisations]
+      summary: Activate or deactivate a cotisation plan
+      operationId: updateCotisationPlan
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: planId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Cotisation plan updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CotisationPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /collectivities/{collectivityId}/payments:
+    get:
+      tags: [Cotisations]
+      summary: List payments for a collectivity
+      operationId: listPayments
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+
+    post:
+      tags: [Cotisations]
+      summary: Record a payment (treasurer)
+      operationId: createPayment
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ------------------------------------------------------------
+  # SECTION D – Accounts / Treasury
+  # ------------------------------------------------------------
+
+  /collectivities/{collectivityId}/accounts:
+    get:
+      tags: [Accounts]
+      summary: List accounts of a collectivity
+      operationId: listCollectivityAccounts
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/AccountType'
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+    post:
+      tags: [Accounts]
+      summary: Create an account for a collectivity
+      operationId: createCollectivityAccount
+      description: |
+        - Only one CASH account per collectivity → 409 if one already exists
+        - Multiple BANK and MOBILE_MONEY accounts are allowed
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: A cash account already exists for this collectivity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /collectivities/{collectivityId}/accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      summary: Get account details
+      operationId: getCollectivityAccount
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /collectivities/{collectivityId}/accounts/{accountId}/movements:
+    get:
+      tags: [Accounts]
+      summary: List movements for an account
+      operationId: listAccountMovements
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - $ref: '#/components/parameters/AccountId'
+        - name: direction
+          in: query
+          schema:
+            $ref: '#/components/schemas/MovementDirection'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of account movements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountMovement'
+
+    post:
+      tags: [Accounts]
+      summary: Record a movement on an account (treasurer)
+      operationId: createAccountMovement
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountMovementRequest'
+      responses:
+        '201':
+          description: Movement recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountMovement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /federation/accounts:
+    get:
+      tags: [Federation]
+      summary: List federation accounts
+      operationId: listFederationAccounts
+      responses:
+        '200':
+          description: Federation accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+    post:
+      tags: [Federation]
+      summary: Create an account for the federation
+      operationId: createFederationAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '409':
+          description: A cash account already exists for the federation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /federation/accounts/{accountId}:
+    get:
+      tags: [Federation]
+      summary: Get federation account details
+      operationId: getFederationAccount
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /federation/accounts/{accountId}/movements:
+    get:
+      tags: [Federation]
+      summary: List movements for a federation account
+      operationId: listFederationAccountMovements
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - name: direction
+          in: query
+          schema:
+            $ref: '#/components/schemas/MovementDirection'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of account movements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountMovement'
+
+    post:
+      tags: [Federation]
+      summary: Record a movement on a federation account
+      operationId: createFederationAccountMovement
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountMovementRequest'
+      responses:
+        '201':
+          description: Movement recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountMovement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ------------------------------------------------------------
+  # SECTION E – Activities
+  # ------------------------------------------------------------
+
+  /collectivities/{collectivityId}/activities:
+    get:
+      tags: [Activities]
+      summary: List activities of a collectivity
+      operationId: listCollectivityActivities
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ActivityType'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+
+    post:
+      tags: [Activities]
+      summary: Create an activity for a collectivity
+      operationId: createCollectivityActivity
+      description: |
+        Activity types:
+        - MONTHLY_GA: monthly general assembly (mandatory for all members)
+        - JUNIOR_TRAINING: mandatory junior training session
+        - EXCEPTIONAL: exceptional activity (define is_mandatory_all or mandatory_roles)
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityRequest'
+      responses:
+        '201':
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /activities/{activityId}:
+    get:
+      tags: [Activities]
+      summary: Get activity details
+      operationId: getActivity
+      parameters:
+        - $ref: '#/components/parameters/ActivityId'
+      responses:
+        '200':
+          description: Activity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /federation/activities:
+    get:
+      tags: [Federation]
+      summary: List federation activities
+      operationId: listFederationActivities
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Federation activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+
+    post:
+      tags: [Federation]
+      summary: Create an activity for the federation
+      operationId: createFederationActivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityRequest'
+      responses:
+        '201':
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ------------------------------------------------------------
+  # SECTION F – Attendance
+  # ------------------------------------------------------------
+
+  /activities/{activityId}/attendances:
+    get:
+      tags: [Attendance]
+      summary: Get attendance sheet for an activity
+      operationId: listAttendances
+      parameters:
+        - $ref: '#/components/parameters/ActivityId'
+      responses:
+        '200':
+          description: Attendance sheet
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attendance'
+
+    post:
+      tags: [Attendance]
+      summary: Record a member's attendance (secretary)
+      operationId: recordAttendance
+      description: |
+        A member from another collectivity may be recorded in the attendance sheet,
+        but their presence will not count toward their annual attendance rate.
+      parameters:
+        - $ref: '#/components/parameters/ActivityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordAttendanceRequest'
+      responses:
+        '201':
+          description: Attendance recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Attendance already recorded for this member at this activity
+
+  /activities/{activityId}/attendances/{memberId}:
+    patch:
+      tags: [Attendance]
+      summary: Update a member's attendance record (excuse, correction)
+      operationId: updateAttendance
+      parameters:
+        - $ref: '#/components/parameters/ActivityId'
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAttendanceRequest'
+      responses:
+        '200':
+          description: Attendance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ------------------------------------------------------------
+  # SECTION G – Collectivity statistics
+  # ------------------------------------------------------------
+
+  /collectivities/{collectivityId}/statistics:
+    get:
+      tags: [CollectivityStats]
+      summary: Global report of a collectivity (for the federation)
+      operationId: getCollectivityStats
+      description: Global attendance rate + number of registered members over a period
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Global collectivity statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectivityGlobalStats'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /collectivities/{collectivityId}/statistics/members:
+    get:
+      tags: [CollectivityStats]
+      summary: Detailed per-member statistics (for the president)
+      operationId: getMemberStats
+      description: |
+        For each active member (not resigned):
+        - Attendance rate over the period
+        - Amount collected over the period
+        - Potentially unpaid amount over the period
+      parameters:
+        - $ref: '#/components/parameters/CollectivityId'
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Per-member statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberStats'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ------------------------------------------------------------
+  # SECTION H – Federation statistics
+  # ------------------------------------------------------------
+
+  /federation/statistics:
+    get:
+      tags: [FederationStats]
+      summary: Global federation report (monthly / annual)
+      operationId: getFederationStats
+      description: |
+        For each collectivity:
+        - Global attendance rate
+        - Percentage of members up to date on their cotisations
+        - Number of new members
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Federation report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederationStats'
+
+# ==============================================================
+# COMPONENTS
+# ==============================================================
+components:
+
+  parameters:
+    CollectivityId:
+      name: collectivityId
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Collectivity identifier
+
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Member identifier
+
+    ActivityId:
+      name: activityId
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Activity identifier
+
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Account identifier
+
+  responses:
+    BadRequest:
+      description: Invalid request – missing or incorrect data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+
+    # ----------------------------------------------------------
+    # Enums
+    # ----------------------------------------------------------
+
+    Gender:
+      type: string
+      enum: [MALE, FEMALE]
+
+    CollectivityStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+
+    CollectivityPostName:
+      type: string
+      enum: [PRESIDENT, DEPUTY_PRESIDENT, TREASURER, SECRETARY, CONFIRMED, JUNIOR]
+
+    FederationPostName:
+      type: string
+      enum: [PRESIDENT, DEPUTY_PRESIDENT, TREASURER, SECRETARY]
+
+    PaymentMode:
+      type: string
+      enum: [CASH, BANK_TRANSFER, MOBILE_MONEY]
+
+    CotisationFrequency:
+      type: string
+      enum: [MONTHLY, ANNUAL, PUNCTUAL]
+
+    AccountType:
+      type: string
+      enum: [CASH, BANK, MOBILE_MONEY]
+
+    BankName:
+      type: string
+      enum: [BRED, MCB, BMOI, BOA, BGFI, AFG, ACCES_BANQUE, BAOBAB, SIPEM]
+
+    MobileMoneyService:
+      type: string
+      enum: [ORANGE_MONEY, MVOLA, AIRTEL_MONEY]
+
+    ActivityType:
+      type: string
+      enum: [MONTHLY_GA, JUNIOR_TRAINING, EXCEPTIONAL]
+
+    MovementDirection:
+      type: string
+      enum: [IN, OUT]
+      description: "IN = credit (money received), OUT = debit (money spent)"
+
+    # ----------------------------------------------------------
+    # Utility schemas
+    # ----------------------------------------------------------
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: CONDITION_NOT_MET
+        message:
+          type: string
+          example: Admission conditions are not met
+        details:
+          type: array
+          items:
+            type: string
+
+    # ----------------------------------------------------------
+    # Member
+    # ----------------------------------------------------------
+
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        enrolment_date:
+          type: string
+          format: date-time
+        address:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        job:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+
+    MemberCollectivityDetail:
+      allOf:
+        - $ref: '#/components/schemas/Member'
+        - type: object
+          properties:
+            post_name:
+              $ref: '#/components/schemas/CollectivityPostName'
+            start_date:
+              type: string
+              format: date-time
+            end_date:
+              type: string
+              format: date-time
+              nullable: true
+              description: "Null = active member"
+
+    # ----------------------------------------------------------
+    # Collectivity
+    # ----------------------------------------------------------
+
+    CollectivitySummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        number:
+          type: string
+        name:
+          type: string
+        speciality:
+          type: string
+        city:
+          type: string
+        status:
+          $ref: '#/components/schemas/CollectivityStatus'
+        member_count:
+          type: integer
+        creation_datetime:
+          type: string
+          format: date-time
+
+    Collectivity:
+      allOf:
+        - $ref: '#/components/schemas/CollectivitySummary'
+        - type: object
+          properties:
+            authorization_date:
+              type: string
+              format: date-time
+              nullable: true
+
+    CreateCollectivityRequest:
+      type: object
+      required: [name, speciality, city_id, members]
+      properties:
+        name:
+          type: string
+          description: Unique name of the collectivity
+        speciality:
+          type: string
+          description: Agricultural speciality
+        city_id:
+          type: integer
+          description: City identifier
+        members:
+          type: array
+          minItems: 10
+          description: |
+            Minimum 10 members, of which 5 must have at least 6 months of federation seniority.
+            Posts PRESIDENT, DEPUTY_PRESIDENT, TREASURER, SECRETARY must be assigned.
+          items:
+            type: object
+            required: [member_id, post_name]
+            properties:
+              member_id:
+                type: integer
+              post_name:
+                $ref: '#/components/schemas/CollectivityPostName'
+
+    # ----------------------------------------------------------
+    # Membership / Sponsorship (B-2)
+    # ----------------------------------------------------------
+
+    Sponsorship:
+      type: object
+      required: [id_sponsor, relationship]
+      properties:
+        id_sponsor:
+          type: integer
+          description: Identifier of the confirmed sponsor member
+        relationship:
+          type: string
+          description: "Nature of the relationship: family, friend, colleague, etc."
+          example: friend
+
+    MembershipApplicationRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - birth_date
+        - gender
+        - address
+        - job
+        - phone
+        - email
+        - sponsors
+        - payment_mode
+        - payment_account_id
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        gender:
+          $ref: '#/components/schemas/Gender'
+        address:
+          type: string
+        job:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        sponsors:
+          type: array
+          minItems: 2
+          description: |
+            B-2: At least 2 confirmed sponsors (seniority > 90 days).
+            Sponsors from the target collectivity must be >= sponsors from other collectivities.
+          items:
+            $ref: '#/components/schemas/Sponsorship'
+        payment_mode:
+          $ref: '#/components/schemas/PaymentMode'
+          description: "Payment mode: BANK_TRANSFER or MOBILE_MONEY (not CASH)"
+        payment_account_id:
+          type: integer
+          description: Destination account for the payment (membership fee + annual cotisations)
+
+    MembershipApplication:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/Member'
+        collectivity_id:
+          type: integer
+        post_name:
+          $ref: '#/components/schemas/CollectivityPostName'
+          description: JUNIOR by default
+        sponsors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sponsorship'
+        enrolment_date:
+          type: string
+          format: date-time
+        total_paid:
+          type: number
+          format: float
+          description: "Total amount paid: membership fee + annual cotisations (MGA)"
+
+    # ----------------------------------------------------------
+    # Cotisations
+    # ----------------------------------------------------------
+
+    CotisationPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        frequency:
+          $ref: '#/components/schemas/CotisationFrequency'
+        amount:
+          type: number
+          format: float
+          description: Amount in MGA
+        year:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+
+    CreateCotisationPlanRequest:
+      type: object
+      required: [label, frequency, amount]
+      properties:
+        label:
+          type: string
+          example: Monthly cotisation 2025
+        frequency:
+          $ref: '#/components/schemas/CotisationFrequency'
+        amount:
+          type: number
+          format: float
+          example: 20000
+        year:
+          type: integer
+          example: 2025
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        member_id:
+          type: integer
+        collectivity_id:
+          type: integer
+        cotisation_plan_id:
+          type: integer
+          nullable: true
+        account_id:
+          type: integer
+        amount:
+          type: number
+          format: float
+          description: Amount in MGA
+        payment_date:
+          type: string
+          format: date-time
+        payment_mode:
+          $ref: '#/components/schemas/PaymentMode'
+        recorded_by:
+          type: integer
+          description: Identifier of the treasurer who recorded the payment
+
+    CreatePaymentRequest:
+      type: object
+      required: [member_id, account_id, amount, payment_date, payment_mode]
+      properties:
+        member_id:
+          type: integer
+        cotisation_plan_id:
+          type: integer
+          nullable: true
+          description: Null for a free punctual payment
+        account_id:
+          type: integer
+        amount:
+          type: number
+          format: float
+        payment_date:
+          type: string
+          format: date-time
+        payment_mode:
+          $ref: '#/components/schemas/PaymentMode'
+
+    # ----------------------------------------------------------
+    # Accounts (Section D)
+    # ----------------------------------------------------------
+
+    BankAccountDetails:
+      type: object
+      required: [holder_name, bank_name, bank_code, branch_code, account_number, rib_key]
+      properties:
+        holder_name:
+          type: string
+        bank_name:
+          $ref: '#/components/schemas/BankName'
+        bank_code:
+          type: string
+          pattern: '^\d{5}$'
+          description: Bank code (5 digits)
+        branch_code:
+          type: string
+          pattern: '^\d{5}$'
+          description: Branch code (5 digits)
+        account_number:
+          type: string
+          pattern: '^\d{11}$'
+          description: Account number (11 digits)
+        rib_key:
+          type: string
+          pattern: '^\d{2}$'
+          description: RIB key (2 digits)
+
+    MobileMoneyAccountDetails:
+      type: object
+      required: [holder_name, service_name, phone_number]
+      properties:
+        holder_name:
+          type: string
+        service_name:
+          $ref: '#/components/schemas/MobileMoneyService'
+        phone_number:
+          type: string
+          description: Unique phone number associated with the account
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+        account_type:
+          $ref: '#/components/schemas/AccountType'
+        computed_balance:
+          type: number
+          format: float
+          readOnly: true
+          description: "Current balance in MGA, computed from all IN/OUT movements"
+        bank_details:
+          $ref: '#/components/schemas/BankAccountDetails'
+          nullable: true
+          description: "Populated only if account_type = BANK"
+        mobile_money_details:
+          $ref: '#/components/schemas/MobileMoneyAccountDetails'
+          nullable: true
+          description: "Populated only if account_type = MOBILE_MONEY"
+
+    CreateAccountRequest:
+      type: object
+      required: [account_type]
+      properties:
+        account_type:
+          $ref: '#/components/schemas/AccountType'
+        bank_details:
+          $ref: '#/components/schemas/BankAccountDetails'
+          description: "Required if account_type = BANK"
+        mobile_money_details:
+          $ref: '#/components/schemas/MobileMoneyAccountDetails'
+          description: "Required if account_type = MOBILE_MONEY"
+
+    AccountMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+        account_id:
+          type: integer
+        direction:
+          $ref: '#/components/schemas/MovementDirection'
+        amount:
+          type: number
+          format: float
+          description: Amount in MGA
+        label:
+          type: string
+          description: Description of the movement
+        movement_date:
+          type: string
+          format: date-time
+        payment_id:
+          type: integer
+          nullable: true
+          description: Linked payment identifier, if applicable
+
+    CreateAccountMovementRequest:
+      type: object
+      required: [direction, amount, label, movement_date]
+      properties:
+        direction:
+          $ref: '#/components/schemas/MovementDirection'
+        amount:
+          type: number
+          format: float
+          description: Amount in MGA
+        label:
+          type: string
+          description: Description of the movement
+        movement_date:
+          type: string
+          format: date-time
+        payment_id:
+          type: integer
+          nullable: true
+          description: Linked payment identifier, if applicable
+
+    # ----------------------------------------------------------
+    # Activities (Section E)
+    # ----------------------------------------------------------
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        activity_date:
+          type: string
+          format: date-time
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        is_mandatory_all:
+          type: boolean
+          description: Attendance mandatory for all relevant members
+        mandatory_roles:
+          type: array
+          nullable: true
+          description: "Required posts (if is_mandatory_all = false and type = EXCEPTIONAL)"
+          items:
+            $ref: '#/components/schemas/CollectivityPostName'
+        collectivity_id:
+          type: integer
+          nullable: true
+        federation_id:
+          type: integer
+          nullable: true
+
+    CreateActivityRequest:
+      type: object
+      required: [title, activity_date, activity_type, is_mandatory_all]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        activity_date:
+          type: string
+          format: date-time
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        is_mandatory_all:
+          type: boolean
+        mandatory_roles:
+          type: array
+          description: "Only for EXCEPTIONAL when is_mandatory_all = false"
+          items:
+            $ref: '#/components/schemas/CollectivityPostName'
+
+    # ----------------------------------------------------------
+    # Attendance (Section F)
+    # ----------------------------------------------------------
+
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: integer
+        activity_id:
+          type: integer
+        member_id:
+          type: integer
+        is_present:
+          type: boolean
+        is_excused:
+          type: boolean
+        excuse_reason:
+          type: string
+          nullable: true
+        member_collectivity_id:
+          type: integer
+          description: Collectivity membership of the member at the time of the activity
+
+    RecordAttendanceRequest:
+      type: object
+      required: [member_id, is_present]
+      properties:
+        member_id:
+          type: integer
+        is_present:
+          type: boolean
+        is_excused:
+          type: boolean
+          default: false
+        excuse_reason:
+          type: string
+          description: "Required if is_excused = true"
+
+    UpdateAttendanceRequest:
+      type: object
+      properties:
+        is_present:
+          type: boolean
+        is_excused:
+          type: boolean
+        excuse_reason:
+          type: string
+
+    # ----------------------------------------------------------
+    # Collectivity statistics (Section G)
+    # ----------------------------------------------------------
+
+    CollectivityGlobalStats:
+      type: object
+      properties:
+        collectivity_id:
+          type: integer
+        period_from:
+          type: string
+          format: date
+        period_to:
+          type: string
+          format: date
+        attendance_rate:
+          type: number
+          format: float
+          description: "Global attendance rate in % (0–100)"
+        total_members:
+          type: integer
+          description: Number of active registered members
+
+    MemberStats:
+      type: object
+      properties:
+        member_id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        post_name:
+          $ref: '#/components/schemas/CollectivityPostName'
+        attendance_rate:
+          type: number
+          format: float
+          description: "Attendance rate over the period in % (0–100)"
+        total_paid:
+          type: number
+          format: float
+          description: Total amount collected over the period (MGA)
+        total_unpaid:
+          type: number
+          format: float
+          description: Potentially unpaid amount over the period (MGA)
+
+    # ----------------------------------------------------------
+    # Federation statistics (Section H)
+    # ----------------------------------------------------------
+
+    FederationCollectivityStats:
+      type: object
+      properties:
+        collectivity_id:
+          type: integer
+        collectivity_name:
+          type: string
+        attendance_rate:
+          type: number
+          format: float
+          description: "Global attendance rate for the collectivity in % (0–100)"
+        up_to_date_cotisation_percentage:
+          type: number
+          format: float
+          description: "Percentage of members up to date on their cotisations"
+        new_members_count:
+          type: integer
+          description: Number of new members over the period
+
+    FederationStats:
+      type: object
+      properties:
+        period_from:
+          type: string
+          format: date
+        period_to:
+          type: string
+          format: date
+        collectivities:
+          type: array
+          items:
+            $ref: '#/components/schemas/FederationCollectivityStats'
