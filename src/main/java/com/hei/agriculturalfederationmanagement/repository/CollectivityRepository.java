@@ -7,6 +7,6 @@ import java.sql.Connection;
 
 @Repository
 @AllArgsConstructor
-public class CollectiviyRepository {
+public class CollectivityRepository {
     private final Connection connection;
 }
