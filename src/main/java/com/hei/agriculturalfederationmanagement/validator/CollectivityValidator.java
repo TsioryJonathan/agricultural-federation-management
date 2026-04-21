@@ -24,6 +24,10 @@ public class CollectivityValidator {
             throw new BadRequestException("Collectivity must have federation approval");
         }
 
+        if(createCollectivity.getLocation() == null){
+            throw new BadRequestException("Collectivity must have location");
+        }
+
 
         List<Integer> memberIds = createCollectivity.getMemberIds();
         if (memberIds == null || memberIds.isEmpty()) {
