@@ -52,5 +52,10 @@ public class Member {
                 .toList();
     }
 
+    // i need this for the collectivity responses, examples show that member should display list of referees id
+    public List<Integer> getReferees(){
+        return this.referees.stream().map(Member::getId).toList();
+    }
+
 
 }
