@@ -21,9 +21,6 @@ public class Collectivity {
     private CollectivityStatus status;
     private Instant authorizationDate;
     private Location location;
+    private Structure structure;
     private List<Member> members;
-    private Member president;
-    private Member vicePresident;
-    private Member treasurer;
-    private Member secretary;
 }
