@@ -20,7 +20,7 @@ public class FederationController {
         try{
             return ResponseEntity.status(HttpStatus.OK).body(service.getFederation());
         }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Federation not found!")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Federation not found!");
         }
     }
 

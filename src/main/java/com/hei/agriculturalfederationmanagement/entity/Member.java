@@ -26,6 +26,6 @@ public class Member {
     private String phone;
     private String profession;
     private Gender gender;
-   private List<Member> sponsors;
+   private List<Member> referees;
     private CollectivityOccupation occupation;
 }

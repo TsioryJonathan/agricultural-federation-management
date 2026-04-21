@@ -13,8 +13,17 @@ import java.util.List;
 public class CollectivityRepository {
     private final Connection connection;
 
-    public List<Collectivity> createCollectivities(List<CreateCollectivity> createCollectivities) {
-        String sql = "";
+    public List<Collectivity> save(List<Collectivity> collectivities) {
+        String sql = """
+                insert into collectivity (number, name, speciality, creation_datetime,
+                                        federation_approval, authorization_date, id_federation, id_location)
+                                       values (?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+
+
+        try
+
+
         return null;
     }
 }
