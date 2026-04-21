@@ -18,5 +18,5 @@ public class CreateCollectivity {
     private Location location;
     private List<Integer> memberIds;
     private boolean federationApproval;
-    private Structure structure;
+    private CreateStructure structure;
 }
