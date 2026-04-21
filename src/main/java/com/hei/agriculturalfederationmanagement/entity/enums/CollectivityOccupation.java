@@ -1,6 +1,6 @@
 package com.hei.agriculturalfederationmanagement.entity.enums;
 
-public enum Occupation {
+public enum CollectivityOccupation {
     JUNIOR,
     SENIOR,
     SECRETARY,

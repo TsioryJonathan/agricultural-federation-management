@@ -1,7 +1,7 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
 import com.hei.agriculturalfederationmanagement.entity.enums.Gender;
-import com.hei.agriculturalfederationmanagement.entity.enums.Occupation;
+import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +27,5 @@ public class Member {
     private String profession;
     private Gender gender;
    private List<Member> sponsors;
-    private Occupation occupation;
+    private CollectivityOccupation occupation;
 }

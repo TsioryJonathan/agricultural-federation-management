@@ -1,6 +1,6 @@
 package com.hei.agriculturalfederationmanagement.entity.enums;
 
-public enum Status
+public enum CollectivityStatus
 {
     PENDING,
     APPROVED,

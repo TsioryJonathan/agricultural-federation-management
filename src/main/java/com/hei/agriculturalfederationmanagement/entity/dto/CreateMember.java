@@ -1,7 +1,7 @@
 package com.hei.agriculturalfederationmanagement.entity.dto;
 
 import com.hei.agriculturalfederationmanagement.entity.enums.Gender;
-import com.hei.agriculturalfederationmanagement.entity.enums.Occupation;
+import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +23,7 @@ public class CreateMember {
     private String profession;
     private String phoneNumber;
     private String email;
-    private Occupation occupation;
+    private CollectivityOccupation occupation;
     private int collectivityId;
     private List<Integer> refereesId;
     private boolean registrationFeePaid;
