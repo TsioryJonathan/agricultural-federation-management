@@ -8,7 +8,7 @@ CREATE TYPE "cotisation_frequency"    AS ENUM ('MONTHLY', 'ANNUAL', 'PUNCTUAL');
 CREATE TYPE "payment_mode"            AS ENUM ('CASH', 'BANK_TRANSFER', 'MOBILE_MONEY');
 CREATE TYPE "bank_name"          AS ENUM ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM');
 CREATE TYPE "mobile_money_service"    AS ENUM ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY');
-
+CREATE TYPE "transaction_type" AS ENUM ('IN', 'OUT');
 
 -- tables
 
@@ -94,15 +94,17 @@ CREATE TABLE "public"."cotisation_plan" (
                                             PRIMARY KEY ("id")
 );
 
-CREATE TABLE "public"."payment" (
+CREATE TABLE "public"."transaction" (
                                     "id"                  serial          NOT NULL,
                                     "id_member"           int             NOT NULL,
                                     "id_collectivity"     int             NOT NULL,
                                     "id_cotisation_plan"  int,            -- si c'est null donc c'est le frais d'adhésion ou un coticota ponctuel
                                     "id_account"          int             NOT NULL,
+                                    "transaction_type"    transaction_type   NOT NULL DEFAULT 'IN',
                                     "amount"              numeric(15,2)   NOT NULL,
-                                    "payment_date"        timestamp       NOT NULL,
-                                    "payment_mode"        payment_mode    NOT NULL,
+                                    "transaction_date"    timestamp       NOT NULL DEFAULT NOW(),
+                                    "payment_mode"        payment_mode,   -- null quand c un OUT transaction
+                                    "description"         text,
                                     PRIMARY KEY ("id")
 );
 
