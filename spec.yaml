@@ -1263,8 +1263,9 @@ components:
           items:
             $ref: '#/components/schemas/Sponsorship'
         payment_mode:
-          $ref: '#/components/schemas/PaymentMode'
-          description: "Payment mode: BANK_TRANSFER or MOBILE_MONEY (not CASH)"
+          type: string
+          enum: [BANK_TRANSFER, MOBILE_MONEY]
+          description: CASH is not allowed for membership application
         payment_account_id:
           type: integer
           description: Destination account for the payment (membership fee + annual cotisations)

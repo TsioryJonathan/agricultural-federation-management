@@ -320,3 +320,13 @@ ALTER TABLE "public"."attendance"
     ADD CONSTRAINT "fk_att_activity"              FOREIGN KEY ("id_activity")           REFERENCES "public"."activity"("id"),
     ADD CONSTRAINT "fk_att_member"                FOREIGN KEY ("id_member")             REFERENCES "public"."member"("id"),
     ADD CONSTRAINT "fk_att_member_collectivity"   FOREIGN KEY ("id_member_collectivity") REFERENCES "public"."member_collectivity"("id");
+
+
+CREATE UNIQUE INDEX uq_unique_active_post_per_collectivity
+ON member_collectivity (id_collectivity, post_name)
+WHERE end_date IS NULL
+AND post_name IN ('PRESIDENT', 'DEPUTY_PRESIDENT', 'TREASURER', 'SECRETARY');
+
+ALTER TABLE member_collectivity
+ADD CONSTRAINT chk_mandate_duration
+CHECK (end_date IS NULL OR end_date <= start_date + INTERVAL '1 year');
