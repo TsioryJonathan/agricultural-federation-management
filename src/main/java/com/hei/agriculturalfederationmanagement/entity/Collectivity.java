@@ -1,5 +1,6 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
+import com.hei.agriculturalfederationmanagement.entity.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +18,6 @@ public class Collectivity {
     private String speciality;
     private Instant creationDatetime;
     private Status status;
+    private Instant authorizationDate;
+    private City city;
 }
