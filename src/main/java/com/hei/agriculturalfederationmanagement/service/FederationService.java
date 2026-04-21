@@ -6,14 +6,13 @@ import com.hei.agriculturalfederationmanagement.repository.FederationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @AllArgsConstructor
 public class FederationService {
+    private final FederationRepository federationRepository;
 
-    private final FederationRepository repository;
-
-    public Federation getFederation(){
-        return repository.findFederation().orElseThrow(()-> new NotFoundException("Federation not found"));
+    public Federation getFederation() {
+        return federationRepository.findFederation()
+                .orElseThrow(() -> new NotFoundException("Federation not found"));
     }
 }
