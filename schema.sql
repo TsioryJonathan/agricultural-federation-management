@@ -7,7 +7,6 @@ CREATE TYPE "federation_post_name"    AS ENUM ('PRESIDENT', 'DEPUTY_PRESIDENT', 
 CREATE TYPE "gender"                  AS ENUM ('MALE', 'FEMALE');
 CREATE TYPE "payment_mode"            AS ENUM ('CASH', 'BANK_TRANSFER', 'MOBILE_MONEY');
 CREATE TYPE "cotisation_frequency"    AS ENUM ('MONTHLY', 'ANNUAL', 'PUNCTUAL');
-CREATE TYPE "account_type"            AS ENUM ('CASH', 'BANK', 'MOBILE_MONEY');
 CREATE TYPE "bank_name_enum"          AS ENUM ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM');
 CREATE TYPE "mobile_money_service"    AS ENUM ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY');
 CREATE TYPE "activity_type"           AS ENUM ('MONTHLY_GA', 'JUNIOR_TRAINING', 'EXCEPTIONAL');
@@ -138,28 +137,46 @@ CREATE TABLE "public"."payment" (
 -- Table mère : un compte appartient soit à une collectivité, soit à la fédération
 CREATE TABLE "public"."account" (
     "id"              serial          NOT NULL,
-    "account_type"    account_type    NOT NULL,
-    "balance"         numeric(15,2)   NOT NULL DEFAULT 0,
-    "balance_date"    date            NOT NULL,
     "id_collectivity" int,
     "id_federation"   int,
     PRIMARY KEY ("id"),
-    -- Contrainte : exactement un propriétaire
+
+    -- Exactly one owner (collectivity OR federation)
     CONSTRAINT "chk_account_owner" CHECK (
         ("id_collectivity" IS NOT NULL AND "id_federation" IS NULL) OR
-        ("id_collectivity" IS NULL  AND "id_federation"   IS NOT NULL)
+        ("id_collectivity" IS NULL AND "id_federation" IS NOT NULL)
     )
 );
 
--- Contrainte unicité de la caisse par propriétaire (une seule caisse par collectivité/fédération)
--- À implémenter via un index partiel :
-CREATE UNIQUE INDEX "uq_cash_per_collectivity"
-    ON "public"."account" ("id_collectivity")
-    WHERE "account_type" = 'CASH' AND "id_collectivity" IS NOT NULL;
+CREATE TABLE "public"."cash_account" (
+    "id"          serial NOT NULL,
+    "id_account"  int    NOT NULL UNIQUE,
 
-CREATE UNIQUE INDEX "uq_cash_per_federation"
-    ON "public"."account" ("id_federation")
-    WHERE "account_type" = 'CASH' AND "id_federation" IS NOT NULL;
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "fk_cash_account"
+        FOREIGN KEY ("id_account")
+        REFERENCES "public"."account" ("id")
+        ON DELETE CASCADE
+);
+
+CREATE TYPE movement_type AS ENUM ('IN', 'OUT');
+
+CREATE TABLE "public"."account_movement" (
+    "id"          serial          NOT NULL,
+    "id_account"  int             NOT NULL,
+    "type"        movement_type   NOT NULL,
+    "amount"      numeric(15,2)   NOT NULL CHECK (amount > 0),
+    "created_at"  timestamp       NOT NULL DEFAULT now(),
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "fk_movement_account"
+        FOREIGN KEY ("id_account")
+        REFERENCES "public"."account" ("id")
+        ON DELETE CASCADE
+);
+
 
 -- Détails d'un compte bancaire (RIB décomposé)
 CREATE TABLE "public"."bank_account" (
@@ -167,21 +184,40 @@ CREATE TABLE "public"."bank_account" (
     "id_account"     int              NOT NULL UNIQUE,
     "holder_name"    varchar          NOT NULL,
     "bank_name"      bank_name_enum   NOT NULL,
-    "bank_code"      char(5)          NOT NULL,   -- BBBBB
-    "branch_code"    char(5)          NOT NULL,   -- GGGGG
-    "account_number" char(11)         NOT NULL,   -- CCCCCCCCCCC
-    "rib_key"        char(2)          NOT NULL,   -- KK
-    PRIMARY KEY ("id")
+    "bank_code"      char(5)          NOT NULL,
+    "branch_code"    char(5)          NOT NULL,
+    "account_number" char(11)         NOT NULL,
+    "rib_key"        char(2)          NOT NULL,
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "fk_bank_account"
+        FOREIGN KEY ("id_account")
+        REFERENCES "public"."account" ("id")
+        ON DELETE CASCADE
 );
 
 -- Détails d'un compte mobile money
 CREATE TABLE "public"."mobile_money_account" (
-    "id"           serial                  NOT NULL,
-    "id_account"   int                     NOT NULL UNIQUE,
-    "holder_name"  varchar                 NOT NULL,
-    "service_name" mobile_money_service    NOT NULL,
-    "phone_number" varchar                 NOT NULL UNIQUE,
-    PRIMARY KEY ("id")
+    "id"           serial               NOT NULL,
+    "id_account"   int                  NOT NULL UNIQUE,
+    "holder_name"  varchar              NOT NULL,
+    "service_name" mobile_money_service NOT NULL,
+    "phone_number" varchar              NOT NULL UNIQUE,
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "fk_mobile_account"
+        FOREIGN KEY ("id_account")
+        REFERENCES "public"."account" ("id")
+        ON DELETE CASCADE
+);
+
+
+CREATE UNIQUE INDEX uq_cash_account_unique
+ON cash_account (
+    (SELECT id_collectivity FROM account WHERE account.id = cash_account.id_account),
+    (SELECT id_federation FROM account WHERE account.id = cash_account.id_account)
 );
 
 -- ============================================================
