@@ -1,7 +1,7 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
 
-import com.hei.agriculturalfederationmanagement.entity.enums.Occupation;
+import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +17,7 @@ public class MemberCollectivity {
     private int id;
     private Member member;
     private Collectivity collectivity;
-    private Occupation occupation;
+    private CollectivityOccupation occupation;
     private Instant startDate;
     private Instant endDate;
 }

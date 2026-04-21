@@ -2,9 +2,12 @@ package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.Member;
+import com.hei.agriculturalfederationmanagement.entity.MemberCollectivity;
 import com.hei.agriculturalfederationmanagement.entity.Structure;
 import com.hei.agriculturalfederationmanagement.entity.dto.CollectivityResponse;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateCollectivity;
+import com.hei.agriculturalfederationmanagement.entity.dto.CreateStructure;
+import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityValidator;
 import lombok.AllArgsConstructor;
@@ -15,6 +18,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -42,11 +46,13 @@ public class CollectivityService {
 
             collectivity = repository.save(collectivity);
 
-            addMembersToCollectivity(collectivity.getId(), request);
+            // might need to put this in repository instead
+            addMembersToCollectivity(collectivity, request);
 
             savedCollectivities.add(collectivity);
         }
 
+        // might not need this anymore if in repository i provide the list of members
         List<Integer> savedIds = savedCollectivities.stream()
                 .map(Collectivity::getId)
                 .toList();
@@ -91,5 +97,45 @@ public class CollectivityService {
 
     private String generateCollectivityName(String locationName) {
         return "Collectivité de " + locationName;
+    }
+
+    private void addMembersToCollectivity(Collectivity collectivity, CreateCollectivity request) {
+        List<Integer> memberIds = request.getMemberIds();
+        CreateStructure structure = request.getStructure();
+
+        List<Member> members = memberRepository.findByIds(memberIds);
+
+        Set<Integer> structureRoleIds = Set.of(
+                structure.getPresidentId(),
+                structure.getVicePresidentId(),
+                structure.getTreasurerId(),
+                structure.getSecretaryId()
+        );
+
+        for (Member member : members) {
+            CollectivityOccupation occupation;
+
+            if (member.getId().equals(structure.getPresidentId())) {
+                occupation = CollectivityOccupation.PRESIDENT;
+            } else if (member.getId().equals(structure.getVicePresidentId())) {
+                occupation = CollectivityOccupation.VICE_PRESIDENT;
+            } else if (member.getId().equals(structure.getTreasurerId())) {
+                occupation = CollectivityOccupation.TREASURER;
+            } else if (member.getId().equals(structure.getSecretaryId())) {
+                occupation = CollectivityOccupation.SECRETARY;
+            } else {
+                occupation = member.isAValidSponsor()?
+                        CollectivityOccupation.SENIOR : CollectivityOccupation.JUNIOR;
+            }
+
+            MemberCollectivity membership = MemberCollectivity.builder()
+                    .member(member)
+                    .collectivity(collectivity)
+                    .occupation(occupation)
+                    .startDate(Instant.now())
+                    .build();
+
+            memberCollectivityRepository.save(membership);
+        }
     }
 }

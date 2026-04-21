@@ -47,7 +47,7 @@ CREATE TABLE "public"."collectivity" (
                                          "federation_approval" boolean DEFAULT FALSE,
                                          "authorization_date" timestamp,
                                          "id_federation"      int                   NOT NULL,
-                                         "id_location"        int                   NOT NULL,
+                                         "location"        varchar                   NOT NULL,
                                          PRIMARY KEY ("id")
 );
 
@@ -168,10 +168,7 @@ CREATE TABLE "public"."mobile_money_account" (
 ALTER TABLE "public"."collectivity"
     ADD CONSTRAINT "fk_collectivity_federation"
         FOREIGN KEY ("id_federation")
-            REFERENCES "public"."federation"("id"),
-    ADD CONSTRAINT "fk_collectivity_location"
-        FOREIGN KEY ("id_location")
-        REFERENCES "public"."location"("id");
+            REFERENCES "public"."federation"("id");
 
 ALTER TABLE "public"."member_collectivity"
     ADD CONSTRAINT "fk_member_collectivity_member"
