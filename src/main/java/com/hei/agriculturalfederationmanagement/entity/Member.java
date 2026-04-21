@@ -32,7 +32,7 @@ public class Member {
 
     @JsonIgnore
     @Builder.Default
-    private List<Member> sponsors = new ArrayList<>();
+    private List<Member> referees = new ArrayList<>();
 
     @JsonIgnore
     @Builder.Default
@@ -51,4 +51,6 @@ public class Member {
                 .map(mc -> mc.getCollectivity().getId())
                 .toList();
     }
+
+
 }

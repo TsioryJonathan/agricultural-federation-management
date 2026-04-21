@@ -47,7 +47,7 @@ public class MemberService {
                         .firstName(m.getFirstName())
                         .lastName(m.getLastName())
                         .email(m.getEmail())
-                        .phone(m.getPhone())
+                        .phoneNumber(m.getPhoneNumber())
                         .address(m.getAddress())
                         .build()
                 )
