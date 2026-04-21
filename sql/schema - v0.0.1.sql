@@ -6,6 +6,8 @@ CREATE TYPE "gender"                  AS ENUM ('MALE', 'FEMALE');
 CREATE TYPE "collectivity_status"     AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE "cotisation_frequency"    AS ENUM ('MONTHLY', 'ANNUAL', 'PUNCTUAL');
 CREATE TYPE "payment_mode"            AS ENUM ('CASH', 'BANK_TRANSFER', 'MOBILE_MONEY');
+CREATE TYPE "bank_name"          AS ENUM ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM');
+CREATE TYPE "mobile_money_service"    AS ENUM ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY');
 
 
 -- tables
@@ -102,4 +104,60 @@ CREATE TABLE "public"."payment" (
                                     "payment_date"        timestamp       NOT NULL,
                                     "payment_mode"        payment_mode    NOT NULL,
                                     PRIMARY KEY ("id")
+);
+
+CREATE TABLE "public"."account" (
+                                    "id"              serial  NOT NULL,
+                                    "id_collectivity" int,
+                                    "id_federation"   int,
+                                    PRIMARY KEY ("id"),
+                                    CONSTRAINT "chk_account_owner" CHECK (
+                                        ("id_collectivity" IS NOT NULL AND "id_federation" IS NULL) OR
+                                        ("id_collectivity" IS NULL AND "id_federation" IS NOT NULL)
+                                        )
+);
+
+CREATE TABLE "public"."cash_account" (
+                                         "id"          serial NOT NULL,
+                                         "id_account"  int    NOT NULL UNIQUE,
+
+                                         PRIMARY KEY ("id"),
+
+                                         CONSTRAINT "fk_cash_account"
+                                             FOREIGN KEY ("id_account")
+                                                 REFERENCES "public"."account" ("id")
+                                                 ON DELETE CASCADE
+);
+
+CREATE TABLE "public"."bank_account" (
+                                         "id"             serial           NOT NULL,
+                                         "id_account"     int              NOT NULL UNIQUE,
+                                         "holder_name"    varchar          NOT NULL,
+                                         "bank_name"      bank_name   NOT NULL,
+                                         "bank_code"      char(5)          NOT NULL,
+                                         "branch_code"    char(5)          NOT NULL,
+                                         "account_number" char(11)         NOT NULL,
+                                         "rib_key"        char(2)          NOT NULL,
+
+                                         PRIMARY KEY ("id"),
+
+                                         CONSTRAINT "fk_bank_account"
+                                             FOREIGN KEY ("id_account")
+                                                 REFERENCES "public"."account" ("id")
+                                                 ON DELETE CASCADE
+);
+
+CREATE TABLE "public"."mobile_money_account" (
+                                                 "id"           serial               NOT NULL,
+                                                 "id_account"   int                  NOT NULL UNIQUE,
+                                                 "holder_name"  varchar              NOT NULL,
+                                                 "service_name" mobile_money_service NOT NULL,
+                                                 "phone_number" varchar              NOT NULL UNIQUE,
+
+                                                 PRIMARY KEY ("id"),
+
+                                                 CONSTRAINT "fk_mobile_account"
+                                                     FOREIGN KEY ("id_account")
+                                                         REFERENCES "public"."account" ("id")
+                                                         ON DELETE CASCADE
 );
