@@ -1,6 +1,7 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
+import com.hei.agriculturalfederationmanagement.entity.dto.CreateCollectivity;
 import com.hei.agriculturalfederationmanagement.service.CollectivityService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ public class CollectivityController {
     @PostMapping
     public ResponseEntity<?> createCollectivities(@RequestBody(required = false) List<CreateCollectivity> createCollectivities){
         try{
-            if(createCollectivity == null){
+            if(createCollectivities == null){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory body not provided");
             }
             List<Collectivity> collectivities = service.createCollectivies(createCollectivities);

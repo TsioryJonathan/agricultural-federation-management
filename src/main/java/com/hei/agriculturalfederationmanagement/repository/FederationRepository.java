@@ -23,7 +23,7 @@ public class FederationRepository {
             if(!rs.next()){
 
             }
-            return
+            return null;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to fetch federation ",e);
         }
