@@ -45,7 +45,7 @@ public class CollectivityValidator {
         }
 
         long membersWithSeniority = members.stream()
-                .filter(this::hasMinimumSeniority)
+                .filter(Member::isAValidSponsor)
                 .count();
 
         if (membersWithSeniority < 5) {
@@ -58,15 +58,6 @@ public class CollectivityValidator {
         validateStructure(createCollectivity.getStructure(), memberIds);
     }
 
-
-    // maybe this should be in member entity but im not sure yet
-    private boolean hasMinimumSeniority(Member member) {
-        if (member.getEnrolmentDate() == null) {
-            return false;
-        }
-        long monthsSinceEnrolment = ChronoUnit.MONTHS.between(member.getEnrolmentDate(), LocalDateTime.now());
-        return monthsSinceEnrolment >= 6;
-    }
 
     private void validateAllMembersExist(List<Integer> memberIds) {
         List<Integer> missingIds = new ArrayList<>();
