@@ -17,8 +17,8 @@ public class CollectivityRepository {
     public Collectivity save(Collectivity collectivity) {
         String sql = """
             insert into collectivity (number, name, speciality, creation_datetime, 
-                                     federation_approval, authorization_date, id_federation, id_location)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                     federation_approval, authorization_date, id_location)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             returning id
         """;
 
@@ -30,6 +30,8 @@ public class CollectivityRepository {
             stmt.setBoolean(5, collectivity.isFederationApproval());
             stmt.setTimestamp(6, collectivity.getAuthorizationDate() != null ?
                     Timestamp.valueOf(String.valueOf(collectivity.getAuthorizationDate())) : null);
+
+            stmt.setInt(7, collectivity.getLocation().getId());
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
