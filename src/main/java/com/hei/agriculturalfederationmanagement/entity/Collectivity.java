@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,5 +20,10 @@ public class Collectivity {
     private Instant creationDatetime;
     private Status status;
     private Instant authorizationDate;
-    private City city;
+    private Location location;
+    private List<Member> members;
+    private Member president;
+    private Member vicePresident;
+    private Member treasurer;
+    private Member secretary;
 }
