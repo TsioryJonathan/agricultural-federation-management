@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 public class CreateCollectivity {
     private Location location;
-    private List<Member> members;
+    private List<Integer> memberIds;
     private boolean federationApproval;
     private Structure structure;
 }
