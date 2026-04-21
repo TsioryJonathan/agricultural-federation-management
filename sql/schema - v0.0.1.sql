@@ -63,6 +63,7 @@ CREATE TABLE "public"."member_referee" (
                                         "id_referee"      int         NOT NULL,
                                         "id_collectivity" int         NOT NULL,
                                         "created_at"      timestamp   NOT NULL DEFAULT NOW(),
+                                        "relationship"    varchar     NOT NULL,
                                         PRIMARY KEY ("id"),
                                         UNIQUE ("id_candidate", "id_referee")
 );
