@@ -28,7 +28,7 @@ public class CollectivityController {
             if(createCollectivities == null){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory body not provided");
             }
-            List<CollectivityResponse> collectivities = service.createCollectivies(createCollectivities);
+            List<CollectivityResponse> collectivities = service.createCollectivities(createCollectivities);
             return ResponseEntity.status(HttpStatus.CREATED).body(collectivities);
         }catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

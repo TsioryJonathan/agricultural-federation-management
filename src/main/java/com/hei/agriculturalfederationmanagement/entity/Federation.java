@@ -15,6 +15,6 @@ import java.util.List;
 @Builder
 public class Federation {
     private Integer id;
-    private Float cotisationPercentage;
+    private double cotisationPercentage;
     private Structure structure;
 }

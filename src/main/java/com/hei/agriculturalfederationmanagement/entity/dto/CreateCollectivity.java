@@ -1,8 +1,5 @@
 package com.hei.agriculturalfederationmanagement.entity.dto;
 
-import com.hei.agriculturalfederationmanagement.entity.Location;
-import com.hei.agriculturalfederationmanagement.entity.Member;
-import com.hei.agriculturalfederationmanagement.entity.Structure;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
