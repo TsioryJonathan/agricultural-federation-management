@@ -1,14 +1,16 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hei.agriculturalfederationmanagement.entity.enums.Gender;
-import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -16,16 +18,37 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Member {
+
     private Integer id;
     private String firstName;
     private String lastName;
-    private Date birthDate;
+    private LocalDate birthDate;
     private Instant enrolmentDate;
     private String address;
     private String email;
     private String phone;
     private String profession;
     private Gender gender;
-   private List<Member> referees;
-    private CollectivityOccupation occupation;
+
+    @JsonIgnore
+    @Builder.Default
+    private List<Member> sponsors = new ArrayList<>();
+
+    @JsonIgnore
+    @Builder.Default
+    private List<MemberCollectivity> memberCollectivities = new ArrayList<>();
+
+    public boolean isAValidSponsor() {
+        return enrolmentDate != null &&
+                Duration.between(enrolmentDate, Instant.now()).toDays() >= 90;
+    }
+
+    public List<Integer> getIdsOfActualBelongingCollectivities() {
+        if (memberCollectivities == null) return List.of();
+
+        return memberCollectivities.stream()
+                .filter(mc -> mc.getEndDate() == null)
+                .map(mc -> mc.getCollectivity().getId())
+                .toList();
+    }
 }
