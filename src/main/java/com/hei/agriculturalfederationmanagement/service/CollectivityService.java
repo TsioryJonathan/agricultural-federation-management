@@ -11,9 +11,11 @@ import lombok.AllArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -21,23 +23,21 @@ public class CollectivityService {
     private final CollectivityRepository repository;
     private final CollectivityValidator validator;
 
-    public List<Collectivity> createCollectivies(List<CreateCollectivity> createCollectivities) throws BadRequestException {
+    public List<CollectivityResponse> createCollectivies(List<CreateCollectivity> createCollectivities) throws BadRequestException {
         List<Collectivity> savedCollectivities = new ArrayList<>();
 
         for (CreateCollectivity request : createCollectivities) {
             validator.validateCollectivityCreation(request);
 
-            Integer locationId = locationRepository.save(request.getLocation().getName());
 
             Collectivity collectivity = Collectivity.builder()
                     .number(generateCollectivityNumber())
-                    .name(generateCollectivityName(request.getLocation().getName()))
+                    .name(generateCollectivityName(request.getLocation()))
                     .speciality("Agriculture")
-                    .creationDatetime(LocalDateTime.now())
+                    .creationDatetime(Instant.now())
                     .federationApproval(request.isFederationApproval())
-                    .authorizationDate(LocalDateTime.now())
-                    .idFederation(1)
-                    .idLocation(locationId)
+                    .authorizationDate(Instant.now())
+                    .location(request.getLocation())
                     .build();
 
             collectivity = repository.save(collectivity);
@@ -53,7 +53,6 @@ public class CollectivityService {
 
         List<Collectivity> fullCollectivities = repository.findAllByIds(savedIds);
 
-        // 7. Build responses with full member objects
         return fullCollectivities.stream()
                 .map(this::buildResponse)
                 .toList();
@@ -72,7 +71,7 @@ public class CollectivityService {
 
         return CollectivityResponse.builder()
                 .id(String.valueOf(collectivity.getId()))
-                .location(collectivity.getLocation().getName())
+                .location(collectivity.getLocation())
                 .structure(structure)
                 .members(members)
                 .build();
@@ -84,5 +83,13 @@ public class CollectivityService {
                 .filter(m -> m.getId().equals(memberId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String generateCollectivityNumber() {
+        return "COL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private String generateCollectivityName(String locationName) {
+        return "Collectivité de " + locationName;
     }
 }

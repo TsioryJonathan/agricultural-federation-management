@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class CreateCollectivity {
-    private Location location;
+    private String location;
     private List<Integer> memberIds;
     private boolean federationApproval;
     private CreateStructure structure;

@@ -20,7 +20,7 @@ public class Collectivity {
     private Instant creationDatetime;
     private boolean federationApproval;
     private Instant authorizationDate;
-    private Location location;
+    private String location;
     private Structure structure;
     private List<Member> members;
 }
