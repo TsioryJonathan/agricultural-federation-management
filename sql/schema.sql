@@ -214,11 +214,11 @@ CREATE TABLE "public"."mobile_money_account" (
 );
 
 
-CREATE UNIQUE INDEX uq_cash_account_unique
-ON cash_account (
-    (SELECT id_collectivity FROM account WHERE account.id = cash_account.id_account),
-    (SELECT id_federation FROM account WHERE account.id = cash_account.id_account)
-);
+    CREATE UNIQUE INDEX uq_cash_account_unique
+    ON cash_account (
+        (SELECT id_collectivity FROM account WHERE account.id = cash_account.id_account),
+        (SELECT id_federation FROM account WHERE account.id = cash_account.id_account)
+    );
 
 -- ============================================================
 -- SECTION E  –  Activités
