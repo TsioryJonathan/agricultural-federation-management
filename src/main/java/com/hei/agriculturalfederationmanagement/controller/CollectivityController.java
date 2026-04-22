@@ -1,6 +1,5 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
-import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.dto.CollectivityResponse;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateCollectivity;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
