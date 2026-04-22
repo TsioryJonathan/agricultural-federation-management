@@ -1,9 +1,8 @@
 package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
-import com.hei.agriculturalfederationmanagement.entity.dto.AssignCollectivityIdentityRequest;
-import com.hei.agriculturalfederationmanagement.entity.dto.CollectivityResponse;
-import com.hei.agriculturalfederationmanagement.entity.dto.CreateCollectivity;
+import com.hei.agriculturalfederationmanagement.entity.Member;
+import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.ConflictException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
@@ -16,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 @Service
 @AllArgsConstructor
@@ -94,6 +94,27 @@ public class CollectivityService {
         return buildResponse(updated);
     }
 
+    private List<MemberResponse> buildResponse(List<Member> members) {
+
+        return IntStream.range(0, members.size())
+                .mapToObj(i -> {
+                    Member m = members.get(i);
+
+                    return MemberResponse.builder()
+                            .id(m.getId())
+                            .firstName(m.getFirstName())
+                            .lastName(m.getLastName())
+                            .birthDate(m.getBirthDate())
+                            .gender(m.getGender())
+                            .address(m.getAddress())
+                            .profession(m.getProfession())
+                            .phoneNumber(m.getPhoneNumber())
+                            .email(m.getEmail())
+                            .build();
+                })
+                .toList();
+    }
+
     private CollectivityResponse buildResponse(Collectivity collectivity) {
         return CollectivityResponse.builder()
                 .id(String.valueOf(collectivity.getId()))
@@ -101,7 +122,7 @@ public class CollectivityService {
                 .name(collectivity.getName())
                 .location(collectivity.getLocation())
                 .structure(collectivity.getStructure())
-                .members(collectivity.getMembers())
+                .members(buildResponse(collectivity.getMembers()))
                 .build();
     }
 

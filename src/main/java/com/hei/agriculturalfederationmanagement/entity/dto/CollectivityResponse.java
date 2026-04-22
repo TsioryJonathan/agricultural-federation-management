@@ -19,5 +19,5 @@ public class CollectivityResponse {
     private String name;
     private String location;
     private Structure structure;
-    private List<Member> members;
+    private List<MemberResponse> members;
 }
