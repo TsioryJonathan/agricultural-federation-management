@@ -105,7 +105,7 @@ public class CollectivityValidator {
     }
 
     private void validateStructureMemberExists(Integer memberId, String role) {
-        if (memberRepository.existsById(memberId)) {
+        if (!memberRepository.existsById(memberId)) {
             throw new NotFoundException(role + " not found with ID: " + memberId);
         }
     }
