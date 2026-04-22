@@ -42,4 +42,7 @@ public class MemberController {
                     .body("Internal server error: " + ex.getMessage());
         }
     }
+
+    @PostMapping("/{id}/payments")
+    public ResponseEntity<?> createPayment(@RequestBody )
 }
