@@ -135,7 +135,7 @@ public class CollectivityService {
     private FinancialAccountResponse toFinancialAccountResponse(Account account) {
         if (account == null) return null;
 
-        Double balance = calculateAccountBalance(account.getId());
+        Double balance = account.getBalance();
 
         if (account.getBankAccount() != null) {
             BankAccount ba = account.getBankAccount();
@@ -170,11 +170,6 @@ public class CollectivityService {
         }
 
         return null;
-    }
-
-    private Double calculateAccountBalance(Integer accountId) {
-        // Implement balance calculation from transactions but should be in transaction object
-        return 0.0;
     }
 
     private MemberResponse toMemberResponse(Member member) {

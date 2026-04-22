@@ -345,12 +345,15 @@ public class CollectivityRepository {
         }
     }
 
+
     public List<Transaction> findTransactionsByCollectivityIdAndDateRange(
             Integer collectivityId,
             Instant from,
             Instant to) {
 
-        String sql = """
+        Map<Integer, Account> accountMap = loadAccountsWithAllTransactions(collectivityId);
+
+        String transactionSql = """
         select
             t.id,
             t.amount,
@@ -358,20 +361,6 @@ public class CollectivityRepository {
             t.payment_mode,
             t.id_account,
             t.id_member,
-            a.id_collectivity,
-            a.id_federation,
-            ca.id as cash_account_id,
-            ba.id as bank_account_id,
-            ba.holder_name as bank_holder_name,
-            ba.bank_name,
-            ba.bank_code,
-            ba.branch_code,
-            ba.account_number,
-            ba.rib_key,
-            ma.id as mobile_account_id,
-            ma.holder_name as mobile_holder_name,
-            ma.service_name,
-            ma.phone_number,
             m.first_name,
             m.last_name,
             m.birth_date,
@@ -382,11 +371,7 @@ public class CollectivityRepository {
             m.profession,
             m.gender
         from transaction t
-        join account a on t.id_account = a.id
         join member m on t.id_member = m.id
-        left join cash_account ca on a.id = ca.id_account
-        left join bank_account ba on a.id = ba.id_account
-        left join mobile_money_account ma on a.id = ma.id_account
         where t.id_collectivity = ?
           and t.transaction_type = 'IN'
           and t.transaction_date >= ?
@@ -397,7 +382,7 @@ public class CollectivityRepository {
         List<Transaction> transactions = new ArrayList<>();
         Map<Integer, Member> memberCache = new HashMap<>();
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(transactionSql)) {
             stmt.setInt(1, collectivityId);
             stmt.setTimestamp(2, Timestamp.from(from));
             stmt.setTimestamp(3, Timestamp.from(to));
@@ -410,11 +395,9 @@ public class CollectivityRepository {
                         .transactionDate(rs.getTimestamp("transaction_date").toInstant())
                         .paymentMode(rs.getString("payment_mode") != null ?
                                 PaymentMode.valueOf(rs.getString("payment_mode")) : null)
-                        .idAccount(rs.getInt("id_account"))
-                        .idMember(rs.getInt("id_member"))
                         .build();
 
-                Account account = buildAccountFromResultSet(rs);
+                Account account = accountMap.get(rs.getInt("id_account"));
                 transaction.setAccount(account);
 
                 Integer memberId = rs.getInt("id_member");
@@ -442,8 +425,10 @@ public class CollectivityRepository {
                 transactions.add(transaction);
             }
 
-            List<Member> uniqueMembers = new ArrayList<>(memberCache.values());
-            loadRefereesForMembers(uniqueMembers);
+            if (!memberCache.isEmpty()) {
+                List<Member> members = new ArrayList<>(memberCache.values());
+                loadRefereesForMembers(members);
+            }
 
             return transactions;
 
@@ -452,48 +437,111 @@ public class CollectivityRepository {
         }
     }
 
+    private Map<Integer, Account> loadAccountsWithAllTransactions(Integer collectivityId) {
+        String sql = """
+        select
+            a.id as account_id,
+            a.id_collectivity,
+            a.id_federation,
+            ca.id as cash_account_id,
+            ba.id as bank_account_id,
+            ba.holder_name as bank_holder_name,
+            ba.bank_name,
+            ba.bank_code,
+            ba.branch_code,
+            ba.account_number,
+            ba.rib_key,
+            ma.id as mobile_account_id,
+            ma.holder_name as mobile_holder_name,
+            ma.service_name,
+            ma.phone_number,
+            t.id as transaction_id,
+            t.amount as transaction_amount,
+            t.transaction_type,
+            t.transaction_date,
+            t.payment_mode,
+            t.description
+        from account a
+        left join cash_account ca on a.id = ca.id_account
+        left join bank_account ba on a.id = ba.id_account
+        left join mobile_money_account ma on a.id = ma.id_account
+        left join transaction t on a.id = t.id_account
+        where a.id_collectivity = ?
+        order by a.id, t.transaction_date
+    """;
 
-    private Account buildAccountFromResultSet(ResultSet rs) throws SQLException {
-        Integer accountId = rs.getInt("id_account");
-        Integer collectivityId = rs.getInt("id_collectivity");
-        Integer federationId = rs.getInt("id_federation");
+        Map<Integer, Account> accountMap = new HashMap<>();
 
-        Account account = Account.builder()
-                .id(accountId)
-                .idCollectivity(collectivityId)
-                .idFederation(federationId)
-                .build();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, collectivityId);
+            ResultSet rs = stmt.executeQuery();
 
-        if (rs.getObject("cash_account_id") != null) {
-            CashAccount cashAccount = CashAccount.builder()
-                    .id(rs.getInt("cash_account_id"))
-                    .account(account)
-                    .build();
-            account.setCashAccount(cashAccount);
-        } else if (rs.getObject("bank_account_id") != null) {
-            BankAccount bankAccount = BankAccount.builder()
-                    .id(rs.getInt("bank_account_id"))
-                    .account(account)
-                    .holderName(rs.getString("bank_holder_name"))
-                    .bankName(BankName.valueOf(rs.getString("bank_name")))
-                    .bankCode(rs.getString("bank_code"))
-                    .branchCode(rs.getString("branch_code"))
-                    .accountNumber(rs.getString("account_number"))
-                    .ribKey(rs.getString("rib_key"))
-                    .build();
-            account.setBankAccount(bankAccount);
-        } else if (rs.getObject("mobile_account_id") != null) {
-            MobileMoneyAccount mobileAccount = MobileMoneyAccount.builder()
-                    .id(rs.getInt("mobile_account_id"))
-                    .account(account)
-                    .holderName(rs.getString("mobile_holder_name"))
-                    .serviceName(MobileMoneyService.valueOf(rs.getString("service_name")))
-                    .phoneNumber(rs.getString("phone_number"))
-                    .build();
-            account.setMobileMoneyAccount(mobileAccount);
+            while (rs.next()) {
+                Integer accountId = rs.getInt("account_id");
+
+                Account account = accountMap.computeIfAbsent(accountId, id -> {
+                    try {
+                        Account newAccount = Account.builder()
+                                .id(id)
+                                .collectivity(findById(rs.getInt("id_collectivity")))
+                                .transactions(new ArrayList<>())
+                                .build();
+
+                        if (rs.getObject("cash_account_id") != null) {
+                            CashAccount cashAccount = CashAccount.builder()
+                                    .id(rs.getInt("cash_account_id"))
+                                    .account(newAccount)
+                                    .build();
+                            newAccount.setCashAccount(cashAccount);
+                        } else if (rs.getObject("bank_account_id") != null) {
+                            BankAccount bankAccount = BankAccount.builder()
+                                    .id(rs.getInt("bank_account_id"))
+                                    .account(newAccount)
+                                    .holderName(rs.getString("bank_holder_name"))
+                                    .bankName(BankName.valueOf(rs.getString("bank_name")))
+                                    .bankCode(rs.getString("bank_code"))
+                                    .branchCode(rs.getString("branch_code"))
+                                    .accountNumber(rs.getString("account_number"))
+                                    .ribKey(rs.getString("rib_key"))
+                                    .build();
+                            newAccount.setBankAccount(bankAccount);
+                        } else if (rs.getObject("mobile_account_id") != null) {
+                            MobileMoneyAccount mobileAccount = MobileMoneyAccount.builder()
+                                    .id(rs.getInt("mobile_account_id"))
+                                    .account(newAccount)
+                                    .holderName(rs.getString("mobile_holder_name"))
+                                    .serviceName(MobileMoneyService.valueOf(rs.getString("service_name")))
+                                    .phoneNumber(rs.getString("phone_number"))
+                                    .build();
+                            newAccount.setMobileMoneyAccount(mobileAccount);
+                        }
+
+                        return newAccount;
+                    } catch (SQLException e) {
+                        throw new RuntimeException("Failed to build account", e);
+                    }
+                });
+
+                int transactionId = rs.getInt("transaction_id");
+                if (transactionId > 0) {
+                    Transaction transaction = Transaction.builder()
+                            .id(transactionId)
+                            .amount(rs.getBigDecimal("transaction_amount").doubleValue())
+                            .transactionType(TransactionType.valueOf(rs.getString("transaction_type")))
+                            .transactionDate(rs.getTimestamp("transaction_date").toInstant())
+                            .paymentMode(rs.getString("payment_mode") != null ?
+                                    PaymentMode.valueOf(rs.getString("payment_mode")) : null)
+                            .description(rs.getString("description"))
+                            .build();
+
+                    account.getTransactions().add(transaction);
+                }
+            }
+
+            return accountMap;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load accounts with transactions", e);
         }
-
-        return account;
     }
-
 }

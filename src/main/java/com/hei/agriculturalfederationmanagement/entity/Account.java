@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class Account {
     private Integer id;
-    private Collectivity Collectivity;
+    private Collectivity collectivity;
     private CashAccount cashAccount;
     private BankAccount bankAccount;
     private MobileMoneyAccount mobileMoneyAccount;
