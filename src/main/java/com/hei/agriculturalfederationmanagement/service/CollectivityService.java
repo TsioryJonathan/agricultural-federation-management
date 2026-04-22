@@ -2,6 +2,7 @@ package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.Member;
+import com.hei.agriculturalfederationmanagement.entity.Structure;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.ConflictException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
@@ -15,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -94,25 +96,41 @@ public class CollectivityService {
         return buildResponse(updated);
     }
 
-    private List<MemberResponse> buildResponse(List<Member> members) {
 
-        return IntStream.range(0, members.size())
-                .mapToObj(i -> {
-                    Member m = members.get(i);
+    private MemberResponse toMemberResponse(Member member) {
+        if (member == null) return null;
 
-                    return MemberResponse.builder()
-                            .id(m.getId())
-                            .firstName(m.getFirstName())
-                            .lastName(m.getLastName())
-                            .birthDate(m.getBirthDate())
-                            .gender(m.getGender())
-                            .address(m.getAddress())
-                            .profession(m.getProfession())
-                            .phoneNumber(m.getPhoneNumber())
-                            .email(m.getEmail())
-                            .build();
-                })
-                .toList();
+        return MemberResponse.builder()
+                .id(member.getId())
+                .firstName(member.getFirstName())
+                .lastName(member.getLastName())
+                .birthDate(member.getBirthDate())
+                .gender(member.getGender())
+                .address(member.getAddress())
+                .profession(member.getProfession())
+                .phoneNumber(member.getPhoneNumber())
+                .email(member.getEmail())
+                .referees(member.getReferees())
+                .build();
+    }
+
+    private List<MemberResponse> toMemberResponseList(List<Member> members) {
+        if (members == null) return new ArrayList<>();
+
+        return members.stream()
+                .map(this::toMemberResponse)
+                .collect(Collectors.toList());
+    }
+
+    private StructureResponse toStructureResponse(Structure structure) {
+        if (structure == null) return null;
+
+        return StructureResponse.builder()
+                .president(toMemberResponse(structure.getPresident()))
+                .vicePresident(toMemberResponse(structure.getVicePresident()))
+                .treasurer(toMemberResponse(structure.getTreasurer()))
+                .secretary(toMemberResponse(structure.getSecretary()))
+                .build();
     }
 
     private CollectivityResponse buildResponse(Collectivity collectivity) {
@@ -121,9 +139,8 @@ public class CollectivityService {
                 .number(collectivity.getNumber())
                 .name(collectivity.getName())
                 .location(collectivity.getLocation())
-                .structure(collectivity.getStructure())
-                .members(buildResponse(collectivity.getMembers()))
+                .structure(toStructureResponse(collectivity.getStructure()))
+                .members(toMemberResponseList(collectivity.getMembers()))
                 .build();
     }
-
 }
