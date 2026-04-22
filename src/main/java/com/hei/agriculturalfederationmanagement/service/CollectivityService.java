@@ -32,8 +32,6 @@ public class CollectivityService {
             validator.validateCollectivityCreation(request);
 
             Collectivity collectivity = Collectivity.builder()
-                    .number(generateCollectivityNumber())
-                    .name(generateCollectivityName(request.getLocation()))
                     .speciality("Agriculture")
                     .federationApproval(request.isFederationApproval())
                     .authorizationDate(Instant.now())
@@ -71,11 +69,11 @@ public class CollectivityService {
                 .build();
     }
 
-    private String generateCollectivityNumber() {
-        return "COL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-    }
+   // private String generateCollectivityNumber() {
+     //   return "COL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    //}
 
-    private String generateCollectivityName(String locationName) {
-        return "Collectivité de " + locationName;
-    }
+    //private String generateCollectivityName(String locationName) {
+   //     return "Collectivité de " + locationName;
+    //}
 }
