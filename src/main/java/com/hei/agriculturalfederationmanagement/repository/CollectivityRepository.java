@@ -26,11 +26,10 @@ public class CollectivityRepository {
                                                     Integer presidentId, Integer vicePresidentId,
                                                     Integer treasurerId, Integer secretaryId) {
         String insertCollectivitySql = """
-            insert into collectivity (number, name, speciality, 
-                                     federation_approval, authorization_date, location)
-            values (?, ?, ?, ?, ?, ?, ?, ?)
-            returning id
-        """;
+        insert into collectivity (number, name, speciality,federation_approval, authorization_date, location, id_federation, creation_datetime)
+        values (?, ?, ?, ?, ?, ?, 1, now())
+        returning id
+    """;
 
         String insertMemberSql = """
             insert into member_collectivity (id_member, id_collectivity, occupation, start_date)

@@ -61,7 +61,7 @@ public class CollectivityValidator {
         List<Integer> missingIds = new ArrayList<>();
 
         for (Integer id : memberIds) {
-            if (memberRepository.existsById(id)) {
+            if (!memberRepository.existsById(id)) {
                 missingIds.add(id);
             }
         }
