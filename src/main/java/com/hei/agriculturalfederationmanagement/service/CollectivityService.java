@@ -137,16 +137,9 @@ public class CollectivityService {
 
         Double balance = calculateAccountBalance(account.getId());
 
-        if (account.getCashAccount() != null) {
-            return CashAccountResponse.builder()
-                    .id(String.valueOf(account.getId()))
-                    .amount(balance)
-                    .build();
-        } else if (account.getBankAccount() != null) {
+        if (account.getBankAccount() != null) {
             BankAccount ba = account.getBankAccount();
-            return BankAccountResponse.builder()
-                    .id(String.valueOf(account.getId()))
-                    .amount(balance)
+            BankAccountResponse response = BankAccountResponse.builder()
                     .holderName(ba.getHolderName())
                     .bankName(ba.getBankName())
                     .bankCode(ba.getBankCode())
@@ -154,20 +147,30 @@ public class CollectivityService {
                     .bankAccountNumber(ba.getAccountNumber())
                     .bankAccountKey(ba.getRibKey())
                     .build();
+            response.setId(String.valueOf(account.getId()));
+            response.setAmount(balance);
+            return response;
+
         } else if (account.getMobileMoneyAccount() != null) {
             MobileMoneyAccount ma = account.getMobileMoneyAccount();
-            return MobileBankingAccountResponse.builder()
-                    .id(String.valueOf(account.getId()))
-                    .amount(balance)
+            MobileBankingAccountResponse response = MobileBankingAccountResponse.builder()
                     .holderName(ma.getHolderName())
                     .mobileBankingService(ma.getServiceName())
                     .mobileNumber(ma.getPhoneNumber())
                     .build();
+            response.setId(String.valueOf(account.getId()));
+            response.setAmount(balance);
+            return response;
+
+        } else if (account.getCashAccount() != null) {
+            CashAccountResponse response = CashAccountResponse.builder().build();
+            response.setId(String.valueOf(account.getId()));
+            response.setAmount(balance);
+            return response;
         }
 
         return null;
     }
-
 
     private Double calculateAccountBalance(Integer accountId) {
         // Implement balance calculation from transactions but should be in transaction object
