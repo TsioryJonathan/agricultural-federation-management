@@ -4,12 +4,11 @@ import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.Member;
 import com.hei.agriculturalfederationmanagement.entity.Structure;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
-import com.hei.agriculturalfederationmanagement.exception.ConflictException;
+import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityValidator;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
