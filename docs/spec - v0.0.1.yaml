@@ -177,10 +177,6 @@ components:
           description: Unique name assigned by federation (null until assigned, immutable once set)
         location:
           type: string
-        speciality:
-          type: string
-        federationApproval:
-          type: boolean
         structure:
           $ref: '#/components/schemas/CollectivityStructure'
         members:
