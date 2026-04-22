@@ -89,7 +89,7 @@ public class CollectivityController {
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to) {
         try {
-            if(from == null || to == null{
+            if(from == null || to == null){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Either mandatory 'to' or 'from' param not provided");
             }
             List<CollectivityTransactionResponse> transactions =
