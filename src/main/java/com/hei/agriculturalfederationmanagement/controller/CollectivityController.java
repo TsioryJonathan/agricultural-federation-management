@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -81,4 +82,24 @@ public class CollectivityController {
                     .body("An unexpected error occurred: " + e.getMessage());
         }
     }
+
+    @GetMapping("/{id}/transactions")
+    public ResponseEntity<?> getCollectivityTransactions(
+            @PathVariable Integer id,
+            @RequestParam Instant from,
+            @RequestParam Instant to) {
+        try {
+            List<CollectivityTransactionResponse> transactions =
+                    service.getCollectivityTransactions(id, from, to);
+            return ResponseEntity.status(HttpStatus.OK).body(transactions);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
 }
