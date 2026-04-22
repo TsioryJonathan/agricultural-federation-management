@@ -3,14 +3,12 @@ package com.hei.agriculturalfederationmanagement.entity.dto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
+import lombok.experimental.SuperBuilder;
 
-// TODO: check out what are those json things
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
