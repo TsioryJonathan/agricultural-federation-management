@@ -1,15 +1,14 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
-import com.hei.agriculturalfederationmanagement.entity.Member;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateMember;
+import com.hei.agriculturalfederationmanagement.exception.InsufficientSponsorCount;
+import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
+import com.hei.agriculturalfederationmanagement.exception.PaymentException;
 import com.hei.agriculturalfederationmanagement.service.MemberService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,15 +16,30 @@ import java.util.List;
 @RequestMapping("/members")
 @AllArgsConstructor
 public class MemberController {
+
     private final MemberService service;
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<?> createMember(@RequestBody List<CreateMember> members) {
-        try{
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.createMembers(members));
-        }
-        catch (RuntimeException ex){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+        try {
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(service.createMembers(members));
+
+        } catch (PaymentException | InsufficientSponsorCount ex) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ex.getMessage());
+
+        } catch (NotFoundException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ex.getMessage());
+
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error: " + ex.getMessage());
         }
     }
 }

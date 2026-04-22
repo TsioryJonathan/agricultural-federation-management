@@ -9,7 +9,7 @@ import java.util.List;
 @Component
 public class SponsorCountValidator {
     public void validate(CreateMember member) {
-        if (member.getRefereesId().size() < 2) {
+        if (member.getReferees().size() < 2) {
             throw new InsufficientSponsorCount(
                     member.getFirstName() + " : at least two sponsors required"
             );

@@ -9,23 +9,32 @@ import java.util.List;
 
 @Component
 public class CollectivityRuleValidator {
-    public void validate(CreateMember member, List<Member> sponsors) {
-        int nbInActual = 0;
-        int nbInOther = 0;
-        List<Member> filteredSponsors = sponsors.stream()
-                .filter(s -> member.getRefereesId().contains(s.getId()))
-                .toList();
-        for (Member sp : filteredSponsors) {
-            List<Integer> collectivityIds = sp.getIdsOfActualBelongingCollectivities();
-            if (collectivityIds.contains(member.getCollectivityId())) {
-                nbInActual++;
+
+    public void validate(CreateMember dto, List<Member> sponsors) {
+
+        int inTargetCollectivity = 0;
+        int inOtherCollectivities = 0;
+
+        for (Member sponsor : sponsors) {
+
+            if (!dto.getReferees().contains(sponsor.getId())) {
+                continue;
+            }
+
+            List<Integer> collectivityIds =
+                    sponsor.getIdsOfActualBelongingCollectivities();
+
+            if (collectivityIds.contains(dto.getCollectivityIdentifier())) {
+                inTargetCollectivity++;
             } else {
-                nbInOther++;
+                inOtherCollectivities++;
             }
         }
-        if (nbInActual < nbInOther) {
+
+        if (inTargetCollectivity < inOtherCollectivities) {
             throw new InsufficientSponsorCount(
-                    member.getFirstName() + " does not satisfy collectivity sponsor rule"
+                    dto.getFirstName() +
+                            " does not satisfy collectivity sponsor rule"
             );
         }
     }
