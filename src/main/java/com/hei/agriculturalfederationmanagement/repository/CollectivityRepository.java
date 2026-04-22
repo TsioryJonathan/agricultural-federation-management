@@ -544,4 +544,118 @@ public class CollectivityRepository {
             throw new RuntimeException("Failed to load accounts with transactions", e);
         }
     }
+
+    public Account findAccountById(Integer accountId) {
+        String sql = """
+        SELECT 
+            a.id, a.id_collectivity, a.id_federation,
+            ca.id as cash_account_id,
+            ba.id as bank_account_id, ba.holder_name as bank_holder_name, ba.bank_name,
+            ba.bank_code, ba.branch_code, ba.account_number, ba.rib_key,
+            ma.id as mobile_account_id, ma.holder_name as mobile_holder_name,
+            ma.service_name, ma.phone_number
+        FROM account a
+        LEFT JOIN cash_account ca ON a.id = ca.id_account
+        LEFT JOIN bank_account ba ON a.id = ba.id_account
+        LEFT JOIN mobile_money_account ma ON a.id = ma.id_account
+        WHERE a.id = ?
+    """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return buildAccountFromResultSet(rs);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find account", e);
+        }
+    }
+
+
+    private Account buildAccountFromResultSet(ResultSet rs) throws SQLException {
+        Integer accountId = rs.getInt("id");
+        Integer collectivityId = rs.getInt("id_collectivity");
+        Integer federationId = rs.getInt("id_federation");
+
+        Account account = Account.builder()
+                .id(accountId)
+                .collectivity(findById(collectivityId))
+                .transactions(new ArrayList<>())
+                .build();
+
+        if (rs.getObject("cash_account_id") != null) {
+            CashAccount cashAccount = CashAccount.builder()
+                    .id(rs.getInt("cash_account_id"))
+                    .account(account)
+                    .build();
+            account.setCashAccount(cashAccount);
+
+        } else if (rs.getObject("bank_account_id") != null) {
+            BankAccount bankAccount = BankAccount.builder()
+                    .id(rs.getInt("bank_account_id"))
+                    .account(account)
+                    .holderName(rs.getString("bank_holder_name"))
+                    .bankName(BankName.valueOf(rs.getString("bank_name")))
+                    .bankCode(rs.getString("bank_code"))
+                    .branchCode(rs.getString("branch_code"))
+                    .accountNumber(rs.getString("account_number"))
+                    .ribKey(rs.getString("rib_key"))
+                    .build();
+            account.setBankAccount(bankAccount);
+
+        } else if (rs.getObject("mobile_account_id") != null) {
+            MobileMoneyAccount mobileAccount = MobileMoneyAccount.builder()
+                    .id(rs.getInt("mobile_account_id"))
+                    .account(account)
+                    .holderName(rs.getString("mobile_holder_name"))
+                    .serviceName(MobileMoneyService.valueOf(rs.getString("service_name")))
+                    .phoneNumber(rs.getString("phone_number"))
+                    .build();
+            account.setMobileMoneyAccount(mobileAccount);
+        }
+
+        loadTransactionsForAccount(account);
+
+        return account;
+    }
+
+    private void loadTransactionsForAccount(Account account) {
+        String sql = """
+        SELECT
+            id, amount, transaction_type, transaction_date, 
+            payment_mode, description, id_member, id_collectivity
+        FROM transaction
+        WHERE id_account = ?
+        ORDER BY transaction_date
+    """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, account.getId());
+            ResultSet rs = stmt.executeQuery();
+
+            List<Transaction> transactions = new ArrayList<>();
+            while (rs.next()) {
+                Transaction transaction = Transaction.builder()
+                        .id(rs.getInt("id"))
+                        .amount(rs.getBigDecimal("amount").doubleValue())
+                        .transactionType(TransactionType.valueOf(rs.getString("transaction_type")))
+                        .transactionDate(rs.getTimestamp("transaction_date").toInstant())
+                        .paymentMode(rs.getString("payment_mode") != null ?
+                                PaymentMode.valueOf(rs.getString("payment_mode")) : null)
+                        .description(rs.getString("description"))
+                        .collectivity(findById(rs.getInt("id_collectivity")))
+                        .account(account)
+                        .build();
+                transactions.add(transaction);
+            }
+
+            account.setTransactions(transactions);
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load transactions for account", e);
+        }
+    }
 }

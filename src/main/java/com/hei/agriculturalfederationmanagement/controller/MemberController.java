@@ -1,9 +1,13 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateMember;
+import com.hei.agriculturalfederationmanagement.entity.dto.CreateMemberPayment;
+import com.hei.agriculturalfederationmanagement.entity.dto.MemberPaymentResponse;
+import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.InsufficientSponsorCount;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.exception.PaymentException;
+import com.hei.agriculturalfederationmanagement.service.MemberPaymentService;
 import com.hei.agriculturalfederationmanagement.service.MemberService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +22,8 @@ import java.util.List;
 public class MemberController {
 
     private final MemberService service;
+    private final MemberPaymentService memberPaymentService;
+
 
     @PostMapping
     public ResponseEntity<?> createMember(@RequestBody List<CreateMember> members) {
@@ -44,5 +50,19 @@ public class MemberController {
     }
 
     @PostMapping("/{id}/payments")
-    public ResponseEntity<?> createPayment(@RequestBody )
+    public ResponseEntity<?> createMemberPayments(
+            @PathVariable Integer id,
+            @RequestBody List<CreateMemberPayment> requests) {
+        try {
+            List<MemberPaymentResponse> responses = memberPaymentService.createPayments(id, requests);
+            return ResponseEntity.status(HttpStatus.CREATED).body(responses);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
 }
