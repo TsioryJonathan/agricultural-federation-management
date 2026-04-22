@@ -66,7 +66,7 @@ public class CollectivityRepository {
 
                     memberStmt.setInt(1, memberId);
                     memberStmt.setInt(2, collectivityId);
-                    memberStmt.setString(3, occupation);
+                    memberStmt.setObject(3, occupation, Types.OTHER);
                     memberStmt.setTimestamp(4, now);
                     memberStmt.addBatch();
                 }

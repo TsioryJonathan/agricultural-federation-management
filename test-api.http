@@ -4,86 +4,11 @@ Content-Type: application/json
 
 ###
 
-### 2. Create Members Batch 1 (using superuser as sponsor - no collectivity needed)
+### 2. Create Members Batch 1 (collectivity 1 already exists in seed - use its members as sponsors)
 POST http://localhost:8080/members
 Content-Type: application/json
 
 [
-  {
-    "firstName": "Jean",
-    "lastName": "Rabenrasoa",
-    "birthDate": "1985-03-15",
-    "gender": "MALE",
-    "address": "Lot II B 45, Antananarivo",
-    "profession": "Agriculteur",
-    "phoneNumber": "+261341234567",
-    "email": "jean.rabenrasoa@gmail.com",
-    "occupation": "SENIOR",
-    "collectivityIdentifier": 1,
-    "referees": [1, 2],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  },
-  {
-    "firstName": "Marie",
-    "lastName": "Randriamanantena",
-    "birthDate": "1988-07-22",
-    "gender": "FEMALE",
-    "address": "Lot VA 12, Antananarivo",
-    "profession": "Enseignante",
-    "phoneNumber": "+261329876543",
-    "email": "marie.randria@gmail.com",
-    "occupation": "SENIOR",
-    "collectivityIdentifier": 1,
-    "referees": [1, 2],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  },
-  {
-    "firstName": "Pierre",
-    "lastName": "Ratsimba",
-    "birthDate": "1990-01-10",
-    "gender": "MALE",
-    "address": "Lot III B 78, Antananarivo",
-    "profession": "Commercant",
-    "phoneNumber": "+261334512389",
-    "email": "pierre.ratsimba@gmail.com",
-    "occupation": "PRESIDENT",
-    "collectivityIdentifier": 1,
-    "referees": [1, 2],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  },
-  {
-    "firstName": "Sophie",
-    "lastName": "Rakotovao",
-    "birthDate": "1992-05-18",
-    "gender": "FEMALE",
-    "address": "Lot I C 23, Antananarivo",
-    "profession": "Agricultrice",
-    "phoneNumber": "+261345678912",
-    "email": "sophie.rakotovao@gmail.com",
-    "occupation": "SENIOR",
-    "collectivityIdentifier": 1,
-    "referees": [1, 2],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  },
-  {
-    "firstName": "Marc",
-    "lastName": "Randria",
-    "birthDate": "1987-09-25",
-    "gender": "MALE",
-    "address": "Lot IV D 56, Antananarivo",
-    "profession": "Eleveur",
-    "phoneNumber": "+261321122233",
-    "email": "marc.randria@gmail.com",
-    "occupation": "SENIOR",
-    "collectivityIdentifier": 1,
-    "referees": [1, 2],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  },
   {
     "firstName": "Lucie",
     "lastName": "Ramasindrazana",
@@ -163,65 +88,7 @@ Content-Type: application/json
 
 ###
 
-### 3. Create Collectivity Antananarivo (needs 10+ members)
-POST http://localhost:8080/collectivities
-Content-Type: application/json
-
-[
-  {
-    "location": "Antananarivo",
-    "federationApproval": true,
-    "structure": {
-      "presidentId": 3,
-      "vicePresidentId": 1,
-      "treasurerId": 2,
-      "secretaryId": 4
-    }
-  }
-]
-
-###
-
-### 4. Create New Members in Collectivity 1 (can use members from that collectivity as sponsors)
-POST http://localhost:8080/members
-Content-Type: application/json
-
-[
-  {
-    "firstName": "Thomas",
-    "lastName": "Rakotomanga",
-    "birthDate": "1993-06-12",
-    "gender": "MALE",
-    "address": "Lot XV J 90, Antananarivo",
-    "profession": "Agriculteur",
-    "phoneNumber": "+261355566677",
-    "email": "thomas.rakotomanga@gmail.com",
-    "occupation": "SENIOR",
-    "collectivityIdentifier": 1,
-    "referees": [3, 4],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  },
-  {
-    "firstName": "Emma",
-    "lastName": "Ranirina",
-    "birthDate": "1994-09-25",
-    "gender": "FEMALE",
-    "address": "Lot XVI K 11, Antananarivo",
-    "profession": "Enseignante",
-    "phoneNumber": "+261366778899",
-    "email": "emma.ranirina@gmail.com",
-    "occupation": "SENIOR",
-    "collectivityIdentifier": 1,
-    "referees": [3, 5],
-    "registrationFeePaid": true,
-    "membershipDuesPaid": true
-  }
-]
-
-###
-
-### 5. Create Members for Collectivity 2 (Fianarantsoa - need 10+ first)
+### 3. Create Members for Collectivity 2 (Fianarantsoa - superusers as sponsors)
 POST http://localhost:8080/members
 Content-Type: application/json
 
@@ -380,7 +247,7 @@ Content-Type: application/json
 
 ###
 
-### 6. Create Collectivity Fianarantsoa (adjust IDs based on actual member IDs from step 5)
+### 4. Create Collectivity Fianarantsoa (adjust IDs based on actual member IDs from step 3)
 POST http://localhost:8080/collectivities
 Content-Type: application/json
 
@@ -389,10 +256,10 @@ Content-Type: application/json
     "location": "Fianarantsoa",
     "federationApproval": true,
     "structure": {
-      "presidentId": 14,
+      "presidentId": 8,
       "vicePresidentId": 13,
-      "treasurerId": 15,
-      "secretaryId": 16
+      "treasurerId": 9,
+      "secretaryId": 10
     }
   }
 ]

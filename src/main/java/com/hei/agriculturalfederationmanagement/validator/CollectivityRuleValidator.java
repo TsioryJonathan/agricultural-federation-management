@@ -39,7 +39,7 @@ public class CollectivityRuleValidator {
 
         int validSponsors = inTargetCollectivity + superuserSponsors;
 
-        if (validSponsors <= 2) {
+        if (validSponsors < 2) {
             throw new InsufficientSponsorCount(
                     dto.getFirstName() +
                             " does not satisfy collectivity sponsor rule"

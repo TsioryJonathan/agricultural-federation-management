@@ -37,6 +37,7 @@ public class MemberRepository {
             m.phone_number,
             m.profession,
             m.gender,
+            m.superuser,
 
             mc.id AS mc_id,
             mc.start_date,
@@ -106,12 +107,12 @@ public class MemberRepository {
 
 public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
-        String insertMemberSql = """
+String insertMemberSql = """
         INSERT INTO member(
             first_name, last_name, birth_date, enrolment_date,
             address, email, phone_number, profession, gender
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         List<Member> result = new ArrayList<>();
@@ -130,7 +131,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
                 memberStmt.setString(6, member.getEmail());
                 memberStmt.setString(7, member.getPhoneNumber());
                 memberStmt.setString(8, member.getProfession());
-                memberStmt.setString(9, member.getGender().name());
+                memberStmt.setObject(9, member.getGender().name(), Types.OTHER);
 
                 memberStmt.executeUpdate();
 
@@ -162,6 +163,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
                 .phoneNumber(rs.getString("phone_number"))
                 .profession(rs.getString("profession"))
                 .gender(Gender.valueOf(rs.getString("gender")))
+                .superuser(rs.getBoolean("superuser"))
                 .memberCollectivities(new ArrayList<>())
                 .build();
     }

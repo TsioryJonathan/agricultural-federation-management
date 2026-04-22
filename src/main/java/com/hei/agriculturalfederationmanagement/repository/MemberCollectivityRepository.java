@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class MemberCollectivityRepository {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, memberId);
             stmt.setInt(2, collectivityId);
-            stmt.setString(3, occupation.name());
+            stmt.setObject(3, occupation.name(), Types.OTHER);
             stmt.setTimestamp(4, Timestamp.from(Instant.now()));
             stmt.setTimestamp(5, null);
             stmt.executeUpdate();
@@ -53,7 +54,7 @@ public class MemberCollectivityRepository {
 
                     stmt.setInt(1, memberId);
                     stmt.setInt(2, collectivityId);
-                    stmt.setString(3, occupation.name());
+                    stmt.setObject(3, occupation.name(), Types.OTHER);
                     stmt.setTimestamp(4, Timestamp.from(Instant.now()));
                     stmt.setTimestamp(5, null);
                     stmt.addBatch();
