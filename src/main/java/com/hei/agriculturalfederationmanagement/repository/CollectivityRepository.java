@@ -88,7 +88,7 @@ public class CollectivityRepository {
             try {
                 connection.setAutoCommit(true);
             } catch (SQLException e) {
-                throw new RuntimeException("Failed to reset auto-commit", e);
+                System.err.println("Failed to reset auto-commit");
             }
         }
     }

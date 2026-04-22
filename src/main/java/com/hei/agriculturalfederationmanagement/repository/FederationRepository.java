@@ -21,7 +21,7 @@ public class FederationRepository {
 
     public Optional<Federation> findFederation() {
         String sql = """
-            SELECT 
+            select 
                 f.id as federation_id,
                 f.cotisation_percentage,
                 mf.id_member,
@@ -35,10 +35,10 @@ public class FederationRepository {
                 m.phone_number,
                 m.profession,
                 m.gender
-            FROM federation f
-            LEFT JOIN mandate_federation mf ON f.id = mf.id_federation AND mf.end_date IS NULL
-            LEFT JOIN member m ON mf.id_member = m.id
-            ORDER BY f.id
+            from federation f
+            left join mandate_federation mf on f.id = mf.id_federation and mf.end_date is null
+            left join member m on mf.id_member = m.id
+            order by f.id
         """;
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql);
