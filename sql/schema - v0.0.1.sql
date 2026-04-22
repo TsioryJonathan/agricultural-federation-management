@@ -40,8 +40,8 @@ CREATE TABLE "public"."federation" (
 
 CREATE TABLE "public"."collectivity" (
                                          "id"                 serial                NOT NULL,
-                                         "number"             varchar               NOT NULL UNIQUE,
-                                         "name"               varchar               NOT NULL UNIQUE,
+                                         "number"             varchar               UNIQUE,
+                                         "name"               varchar               UNIQUE,
                                          "speciality"         varchar               NOT NULL,
                                          "creation_datetime"  timestamp             NOT NULL,
                                          "federation_approval" boolean DEFAULT FALSE,
