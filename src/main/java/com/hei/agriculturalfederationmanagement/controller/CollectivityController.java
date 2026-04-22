@@ -86,9 +86,12 @@ public class CollectivityController {
     @GetMapping("/{id}/transactions")
     public ResponseEntity<?> getCollectivityTransactions(
             @PathVariable Integer id,
-            @RequestParam Instant from,
-            @RequestParam Instant to) {
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to) {
         try {
+            if(from == null || to == null{
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Either mandatory 'to' or 'from' param not provided");
+            }
             List<CollectivityTransactionResponse> transactions =
                     service.getCollectivityTransactions(id, from, to);
             return ResponseEntity.status(HttpStatus.OK).body(transactions);
