@@ -29,6 +29,7 @@ public class Member {
     private String phoneNumber;
     private String profession;
     private Gender gender;
+    private boolean superuser;
 
     @JsonIgnore
     @Builder.Default
@@ -40,7 +41,7 @@ public class Member {
 
     public boolean isAValidSponsor() {
         return enrolmentDate != null &&
-                Duration.between(enrolmentDate, Instant.now()).toDays() >= 90;
+                Duration.between(enrolmentDate, Instant.now()).toDays() >= 180;
     }
 
     public List<Integer> getIdsOfActualBelongingCollectivities() {

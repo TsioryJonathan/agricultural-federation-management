@@ -14,10 +14,16 @@ public class CollectivityRuleValidator {
 
         int inTargetCollectivity = 0;
         int inOtherCollectivities = 0;
+        int superuserSponsors = 0;
 
         for (Member sponsor : sponsors) {
 
             if (!dto.getReferees().contains(sponsor.getId())) {
+                continue;
+            }
+
+            if (sponsor.isSuperuser()) {
+                superuserSponsors++;
                 continue;
             }
 
@@ -31,7 +37,9 @@ public class CollectivityRuleValidator {
             }
         }
 
-        if (inTargetCollectivity < inOtherCollectivities) {
+        int validSponsors = inTargetCollectivity + superuserSponsors;
+
+        if (validSponsors <= 2) {
             throw new InsufficientSponsorCount(
                     dto.getFirstName() +
                             " does not satisfy collectivity sponsor rule"

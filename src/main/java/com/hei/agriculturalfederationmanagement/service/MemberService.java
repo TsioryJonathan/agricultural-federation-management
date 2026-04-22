@@ -17,41 +17,45 @@ import java.util.stream.IntStream;
 @AllArgsConstructor
 public class MemberService {
 
-    private final MemberRepository repository;
+    private final MemberRepository memberRepository;
+    private final MemberLinkService memberLinkService;
     private final PaymentValidator paymentValidator;
     private final CollectivityRuleValidator collectivityRuleValidator;
     private final SponsorCountValidator sponsorCountValidator;
 
     public List<MemberResponse> createMembers(List<CreateMember> memberList) {
 
-        // ================= VALIDATION =================
+        /* Validate payement */
         memberList.forEach(paymentValidator::validate);
+
+        /* Validate Sponsor count */
         memberList.forEach(sponsorCountValidator::validate);
 
         List<Integer> sponsorIds = memberList.stream()
                 .flatMap(m -> m.getReferees().stream())
                 .distinct()
                 .toList();
-
-        List<Member> sponsors = repository.findByIds(sponsorIds);
-
+        List<Member> sponsors = memberRepository.findByIds(sponsorIds);
+        /* Validate all sponsors by rules */
         memberList.forEach(m ->
                 collectivityRuleValidator.validate(m, sponsors)
         );
 
-        // ================= MAPPING DTO → ENTITY =================
+        /* Convert DTO to entity*/
         List<Member> members = memberList.stream()
                 .map(this::toEntity)
                 .toList();
 
-        // ================= SAVE =================
-        List<Member> saved = repository.saveAll(members, memberList);
+        /* Save member */
+        List<Member> savedMembers = memberRepository.saveAll(members, memberList);
 
-        // ================= RESPONSE =================
-        return buildResponse(saved, memberList);
+        /* Create link */
+        memberLinkService.createMemberCollectivityLinks(savedMembers, memberList);
+        memberLinkService.createRefereeLinks(savedMembers, memberList);
+
+        return buildResponse(savedMembers, memberList);
     }
 
-    // ---------------- DTO → ENTITY ----------------
     private Member toEntity(CreateMember dto) {
         return Member.builder()
                 .firstName(dto.getFirstName())
@@ -65,7 +69,6 @@ public class MemberService {
                 .build();
     }
 
-    // ---------------- RESPONSE BUILDER ----------------
     private List<MemberResponse> buildResponse(List<Member> saved, List<CreateMember> dtos) {
 
         return IntStream.range(0, saved.size())

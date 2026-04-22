@@ -104,102 +104,46 @@ public class MemberRepository {
         }
     }
 
-    public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
+public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
         String insertMemberSql = """
         INSERT INTO member(
             first_name, last_name, birth_date, enrolment_date,
             address, email, phone_number, profession, gender
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
-        String insertMcSql = """
-        INSERT INTO member_collectivity(
-            id_member, id_collectivity, occupation, start_date, end_date
-        )
-        VALUES (?, ?, ?, ?, ?)
-    """;
+        List<Member> result = new ArrayList<>();
 
-        String insertRefSql = """
-        INSERT INTO member_referee(
-            id_candidate, id_referee, id_collectivity, relationship, created_at
-        )
-        VALUES (?, ?, ?, ?, ?)
-    """;
+        try (PreparedStatement memberStmt = connection.prepareStatement(insertMemberSql, Statement.RETURN_GENERATED_KEYS)) {
 
-        try {
-            connection.setAutoCommit(false);
+            for (int i = 0; i < members.size(); i++) {
 
-            List<Member> result = new ArrayList<>();
+                Member member = members.get(i);
 
-            try (
-                    PreparedStatement memberStmt = connection.prepareStatement(insertMemberSql, Statement.RETURN_GENERATED_KEYS);
-                    PreparedStatement mcStmt = connection.prepareStatement(insertMcSql);
-                    PreparedStatement refStmt = connection.prepareStatement(insertRefSql)
-            ) {
+                memberStmt.setString(1, member.getFirstName());
+                memberStmt.setString(2, member.getLastName());
+                memberStmt.setDate(3, Date.valueOf(member.getBirthDate()));
+                memberStmt.setTimestamp(4, Timestamp.from(Instant.now()));
+                memberStmt.setString(5, member.getAddress());
+                memberStmt.setString(6, member.getEmail());
+                memberStmt.setString(7, member.getPhoneNumber());
+                memberStmt.setString(8, member.getProfession());
+                memberStmt.setString(9, member.getGender().name());
 
-                for (int i = 0; i < members.size(); i++) {
+                memberStmt.executeUpdate();
 
-                    Member member = members.get(i);
-                    CreateMember dto = dtos.get(i);
+                ResultSet keys = memberStmt.getGeneratedKeys();
+                if (!keys.next()) throw new RuntimeException("No generated key");
 
-                    // ---------------- MEMBER ----------------
-                    memberStmt.setString(1, member.getFirstName());
-                    memberStmt.setString(2, member.getLastName());
-                    memberStmt.setDate(3, Date.valueOf(member.getBirthDate()));
-                    memberStmt.setTimestamp(4, Timestamp.from(Instant.now()));
-                    memberStmt.setString(5, member.getAddress());
-                    memberStmt.setString(6, member.getEmail());
-                    memberStmt.setString(7, member.getPhoneNumber());
-                    memberStmt.setString(8, member.getProfession());
-                    memberStmt.setString(9, member.getGender().name());
+                int memberId = keys.getInt(1);
+                member.setId(memberId);
 
-                    memberStmt.executeUpdate();
-
-                    ResultSet keys = memberStmt.getGeneratedKeys();
-                    if (!keys.next()) throw new RuntimeException("No generated key");
-
-                    int memberId = keys.getInt(1);
-                    member.setId(memberId);
-
-                    // ---------------- MEMBER_COLLECTIVITY ----------------
-                    mcStmt.setInt(1, memberId);
-                    mcStmt.setInt(2, dto.getCollectivityIdentifier());
-                    mcStmt.setString(3, dto.getOccupation().name());
-                    mcStmt.setTimestamp(4, Timestamp.from(Instant.now()));
-                    mcStmt.setTimestamp(5, null);
-
-                    mcStmt.executeUpdate();
-
-                    // ---------------- REFEREES ----------------
-                    if (dto.getReferees() != null) {
-                        for (Integer refId : dto.getReferees()) {
-
-                            refStmt.setInt(1, memberId);
-                            refStmt.setInt(2, refId);
-                            refStmt.setInt(3, dto.getCollectivityIdentifier());
-                            refStmt.setString(4, "FRIEND");
-                            refStmt.setTimestamp(5, Timestamp.from(Instant.now()));
-
-                            refStmt.addBatch();
-                        }
-
-                        refStmt.executeBatch();
-                    }
-
-                    result.add(member);
-                }
-
-                connection.commit();
-                return result;
-
-            } catch (Exception e) {
-                connection.rollback();
-                throw new RuntimeException("Save members failed", e);
-            } finally {
-                connection.setAutoCommit(true);
+                result.add(member);
             }
+
+            return result;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
