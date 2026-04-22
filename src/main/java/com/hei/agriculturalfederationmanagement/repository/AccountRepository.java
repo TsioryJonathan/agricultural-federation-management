@@ -13,7 +13,7 @@ public class AccountRepository {
     private final Connection connection;
 
     public Optional<Account> findById(Integer id) {
-        String sql = "SELECT id, id_collectivity, id_federation FROM account WHERE id = ?";
+        String sql = "select id, id_collectivity, id_federation from account where id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -31,7 +31,7 @@ public class AccountRepository {
     }
 
     public boolean existsByIdAndCollectivityId(Integer accountId, Integer collectivityId) {
-        String sql = "SELECT COUNT(id) FROM account WHERE id = ? AND id_collectivity = ?";
+        String sql = "select count(id) from account where id = ? and id_collectivity = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, accountId);

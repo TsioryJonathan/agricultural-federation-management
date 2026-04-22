@@ -624,12 +624,12 @@ public class CollectivityRepository {
 
     private void loadTransactionsForAccount(Account account) {
         String sql = """
-        SELECT
+        select
             id, amount, transaction_type, transaction_date, 
             payment_mode, description, id_member, id_collectivity
-        FROM transaction
-        WHERE id_account = ?
-        ORDER BY transaction_date
+        from transaction
+        where id_account = ?
+        order by transaction_date
     """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -661,11 +661,11 @@ public class CollectivityRepository {
 
     public Collectivity findByMembershipFeeId(Integer membershipFeeId) {
         String sql = """
-        SELECT c.id, c.number, c.name, c.speciality, c.creation_datetime, 
+        select c.id, c.number, c.name, c.speciality, c.creation_datetime,
                c.federation_approval, c.authorization_date, c.location
-        FROM collectivity c
-        JOIN cotisation_plan cp ON c.id = cp.id_collectivity
-        WHERE cp.id = ?
+        from collectivity c
+        join cotisation_plan cp on c.id = cp.id_collectivity
+        where cp.id = ?
     """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

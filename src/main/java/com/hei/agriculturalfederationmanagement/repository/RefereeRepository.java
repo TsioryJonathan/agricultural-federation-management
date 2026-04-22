@@ -18,10 +18,10 @@ public class RefereeRepository {
 
     public void saveRefereeMemberLink(List<MemberRefereeLink> linkToAdd) {
         String insertRefSql = """
-        INSERT INTO member_referee(
+        insert into member_referee(
             id_candidate, id_referee, id_collectivity, relationship, created_at
         )
-        VALUES (?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?)
         """;
 
         try {
@@ -49,12 +49,7 @@ public class RefereeRepository {
                 throw new RuntimeException("Failed to rollback", ex);
             }
             throw new RuntimeException(e);
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to reset auto-commit", e);
-            }
+
         }
     }
 }

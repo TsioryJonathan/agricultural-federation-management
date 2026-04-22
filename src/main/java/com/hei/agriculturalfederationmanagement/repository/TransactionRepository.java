@@ -13,10 +13,10 @@ public class TransactionRepository {
 
     public Transaction save(Transaction transaction) {
         String sql = """
-            INSERT INTO transaction (id_member, id_collectivity, id_cotisation_plan, id_account,
+            insert into transaction (id_member, id_collectivity, id_cotisation_plan, id_account,
                                     transaction_type, amount, transaction_date, payment_mode, description)
-            VALUES (?, ?, ?, ?, ?::transaction_type, ?, ?, ?::payment_mode, ?)
-            RETURNING id
+            values (?, ?, ?, ?, ?::transaction_type, ?, ?, ?::payment_mode, ?)
+            returning id
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

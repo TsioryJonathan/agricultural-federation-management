@@ -15,9 +15,9 @@ public class CotisationPlanRepository {
 
     public Optional<CotisationPlan> findById(Integer id) {
         String sql = """
-            SELECT id, id_collectivity, label, frequency, amount, eligible_from, is_active
-            FROM cotisation_plan
-            WHERE id = ?
+            select id, id_collectivity, label, frequency, amount, eligible_from, is_active
+            from cotisation_plan
+            where id = ?
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
