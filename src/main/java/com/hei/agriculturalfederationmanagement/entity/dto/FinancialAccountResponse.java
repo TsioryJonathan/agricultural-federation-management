@@ -21,5 +21,5 @@ import java.math.BigDecimal;
 })
 public abstract class FinancialAccountResponse {
     private String id;
-    private BigDecimal amount;
+    private Double amount;
 }

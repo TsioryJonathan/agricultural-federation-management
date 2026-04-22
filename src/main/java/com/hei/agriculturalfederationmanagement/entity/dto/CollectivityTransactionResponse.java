@@ -15,7 +15,7 @@ import java.time.Instant;
 public class CollectivityTransactionResponse {
     private String id;
     private Instant creationDate;
-    private BigDecimal amount;
+    private Double amount;
     private PaymentMode paymentMode;
     private FinancialAccountResponse accountCredited;
     private MemberResponse memberDebited;

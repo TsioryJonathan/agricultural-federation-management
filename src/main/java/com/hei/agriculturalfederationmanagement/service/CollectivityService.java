@@ -1,9 +1,6 @@
 package com.hei.agriculturalfederationmanagement.service;
 
-import com.hei.agriculturalfederationmanagement.entity.Collectivity;
-import com.hei.agriculturalfederationmanagement.entity.MembershipFee;
-import com.hei.agriculturalfederationmanagement.entity.Member;
-import com.hei.agriculturalfederationmanagement.entity.Structure;
+import com.hei.agriculturalfederationmanagement.entity.*;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
@@ -98,6 +95,84 @@ public class CollectivityService {
         return buildResponse(updated);
     }
 
+
+    public List<CollectivityTransactionResponse> getCollectivityTransactions(
+            Integer id,
+            Instant from,
+            Instant to) throws BadRequestException {
+
+        Collectivity collectivity = repository.findById(id);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + id);
+        }
+
+        if (from == null || to == null) {
+            throw new BadRequestException("Both 'from' and 'to' dates are required");
+        }
+
+        if (from.isAfter(to)) {
+            throw new BadRequestException("'from' date must be before or equal to 'to' date");
+        }
+
+        List<Transaction> transactions = repository.findTransactionsByCollectivityIdAndDateRange(id, from, to);
+
+        return transactions.stream()
+                .map(this::toTransactionResponse)
+                .toList();
+    }
+
+    private CollectivityTransactionResponse toTransactionResponse(Transaction transaction) {
+        return CollectivityTransactionResponse.builder()
+                .id(String.valueOf(transaction.getId()))
+                .creationDate(transaction.getTransactionDate())
+                .amount(transaction.getAmount())
+                .paymentMode(transaction.getPaymentMode())
+                .accountCredited(toFinancialAccountResponse(transaction.getAccount()))
+                .memberDebited(toMemberResponse(transaction.getMember()))
+                .build();
+    }
+
+    private FinancialAccountResponse toFinancialAccountResponse(Account account) {
+        if (account == null) return null;
+
+        Double balance = calculateAccountBalance(account.getId());
+
+        if (account.getCashAccount() != null) {
+            return CashAccountResponse.builder()
+                    .id(String.valueOf(account.getId()))
+                    .amount(balance)
+                    .build();
+        } else if (account.getBankAccount() != null) {
+            BankAccount ba = account.getBankAccount();
+            return BankAccountResponse.builder()
+                    .id(String.valueOf(account.getId()))
+                    .amount(balance)
+                    .holderName(ba.getHolderName())
+                    .bankName(ba.getBankName())
+                    .bankCode(ba.getBankCode())
+                    .bankBranchCode(ba.getBranchCode())
+                    .bankAccountNumber(ba.getAccountNumber())
+                    .bankAccountKey(ba.getRibKey())
+                    .build();
+        } else if (account.getMobileMoneyAccount() != null) {
+            MobileMoneyAccount ma = account.getMobileMoneyAccount();
+            return MobileBankingAccountResponse.builder()
+                    .id(String.valueOf(account.getId()))
+                    .amount(balance)
+                    .holderName(ma.getHolderName())
+                    .mobileBankingService(ma.getServiceName())
+                    .mobileNumber(ma.getPhoneNumber())
+                    .build();
+        }
+
+        return null;
+    }
+
+
+    private Double calculateAccountBalance(Integer accountId) {
+        // Implement balance calculation from transactions but should be in transaction object
+        return 0.0;
+    }
 
     private MemberResponse toMemberResponse(Member member) {
         if (member == null) return null;
