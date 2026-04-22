@@ -27,7 +27,7 @@ public class CollectivityValidator {
         }
 
 
-        List<Integer> memberIds = createCollectivity.getMemberIds();
+        List<Integer> memberIds = createCollectivity.getMembers();
         if (memberIds == null || memberIds.isEmpty()) {
             throw new BadRequestException("Collectivity must have members");
         }

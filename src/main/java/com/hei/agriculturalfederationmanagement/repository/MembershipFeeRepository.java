@@ -54,7 +54,7 @@ public class MembershipFeeRepository {
     public MembershipFee save(MembershipFee membershipFee, Integer collectivityId) {
         String sql = """
             insert into cotisation_plan (id_collectivity, label, frequency, amount, eligible_from, is_active)
-            values (?, ?, ?::cotisation_frequency, ?, ?, true)
+            values (?, ?, ?::frequency, ?, ?, true)
             returning id
         """;
 
@@ -72,7 +72,7 @@ public class MembershipFeeRepository {
             }
             return membershipFee;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save membership fee", e);
+            throw new RuntimeException("Failed to save membership fee" + e.getMessage());
         }
     }
 

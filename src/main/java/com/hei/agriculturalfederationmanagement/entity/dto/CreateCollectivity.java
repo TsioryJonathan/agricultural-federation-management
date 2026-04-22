@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class CreateCollectivity {
     private String location;
-    private List<Integer> memberIds;
+    private List<Integer> members;
     private boolean federationApproval;
     private CreateStructure structure;
 }

@@ -44,7 +44,7 @@ public class CollectivityService {
                     .build();
 
             collectivitiesToSave.add(collectivity);
-            memberIdsList.add(request.getMemberIds());
+            memberIdsList.add(request.getMembers());
             presidentIds.add(request.getStructure().getPresidentId());
             vicePresidentIds.add(request.getStructure().getVicePresidentId());
             treasurerIds.add(request.getStructure().getTreasurerId());

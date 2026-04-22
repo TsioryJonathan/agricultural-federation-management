@@ -255,11 +255,39 @@ Content-Type: application/json
   {
     "location": "Fianarantsoa",
     "federationApproval": true,
+    "members": [1,2,3,4,5,6,7,8,9,10],
     "structure": {
       "presidentId": 8,
       "vicePresidentId": 13,
       "treasurerId": 9,
       "secretaryId": 10
     }
+  }
+]
+
+
+### 5. Update collectivity name
+PUT http://localhost:8080/collectivities/1/informations
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "number": "21"
+}
+
+### 6. Retrieve collectivities membershipFees
+GET http://localhost:8080/collectivities/1/membershipFees
+
+### 7. Create membershipFees
+POST http://localhost:8080/collectivities/1/membershipFees
+Content-Type: application/json
+
+
+[
+  {
+    "eligibleFrom": "2026-06-22",
+    "frequency": "ANNUALY",
+    "amount": 500000,
+    "label": "Annualy Cotisation"
   }
 ]
