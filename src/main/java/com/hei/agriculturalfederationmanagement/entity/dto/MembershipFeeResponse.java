@@ -18,7 +18,7 @@ public class MembershipFeeResponse {
     private Integer id;
     private LocalDate eligibleFrom;
     private Frequency frequency;
-    private BigDecimal amount;
+    private Double amount;
     private String label;
     private ActivityStatus status;
 }

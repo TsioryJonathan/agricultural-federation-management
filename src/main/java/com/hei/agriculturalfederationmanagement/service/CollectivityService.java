@@ -1,12 +1,14 @@
 package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
+import com.hei.agriculturalfederationmanagement.entity.MembershipFee;
 import com.hei.agriculturalfederationmanagement.entity.Member;
 import com.hei.agriculturalfederationmanagement.entity.Structure;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
+import com.hei.agriculturalfederationmanagement.repository.MembershipFeeRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class CollectivityService {
     private final CollectivityRepository repository;
+    private final MembershipFeeRepository membershipFeeRepository;
     private final CollectivityValidator validator;
 
     public List<CollectivityResponse> createCollectivities(List<CreateCollectivity> createCollectivities) throws BadRequestException {
@@ -139,5 +142,61 @@ public class CollectivityService {
                 .structure(toStructureResponse(collectivity.getStructure()))
                 .members(toMemberResponseList(collectivity.getMembers()))
                 .build();
+    }
+
+    public List<MembershipFeeResponse> getMembershipFees(Integer collectivityId) {
+        Collectivity collectivity = repository.findById(collectivityId);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + collectivityId);
+        }
+
+        return membershipFeeRepository.findByCollectivityId(collectivityId).stream()
+                .map(mf -> MembershipFeeResponse.builder()
+                        .id(mf.getId())
+                        .eligibleFrom(mf.getEligibleFrom())
+                        .frequency(mf.getFrequency())
+                        .amount(mf.getAmount())
+                        .label(mf.getLabel())
+                        .status(mf.getStatus())
+                        .build())
+                .toList();
+    }
+
+    public List<MembershipFeeResponse> createMembershipFees(Integer collectivityId, List<CreateMembershipFee> createMembershipFees) {
+        Collectivity collectivity = repository.findById(collectivityId);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + collectivityId);
+        }
+
+        List<MembershipFee> savedMembershipFees = new ArrayList<>();
+        for (CreateMembershipFee createFee : createMembershipFees) {
+            if (createFee.getFrequency() == null) {
+                throw new BadRequestException("Frequency is required");
+            }
+            if (createFee.getAmount() == null || createFee.getAmount() < 0) {
+                throw new BadRequestException("Amount must be greater than or equal to 0");
+            }
+
+            MembershipFee membershipFee = MembershipFee.builder()
+                    .eligibleFrom(createFee.getEligibleFrom())
+                    .frequency(createFee.getFrequency())
+                    .amount(createFee.getAmount())
+                    .label(createFee.getLabel())
+                    .build();
+
+            MembershipFee saved = membershipFeeRepository.save(membershipFee, collectivityId);
+            savedMembershipFees.add(saved);
+        }
+
+        return savedMembershipFees.stream()
+                .map(mf -> MembershipFeeResponse.builder()
+                        .id(mf.getId())
+                        .eligibleFrom(mf.getEligibleFrom())
+                        .frequency(mf.getFrequency())
+                        .amount(mf.getAmount())
+                        .label(mf.getLabel())
+                        .status(mf.getStatus())
+                        .build())
+                .toList();
     }
 }
