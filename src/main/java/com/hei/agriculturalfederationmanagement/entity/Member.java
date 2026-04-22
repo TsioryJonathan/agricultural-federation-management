@@ -40,7 +40,7 @@ public class Member {
 
     public boolean isAValidSponsor() {
         return enrolmentDate != null &&
-                Duration.between(enrolmentDate, Instant.now()).toDays() >= 90;
+                Duration.between(enrolmentDate, Instant.now()).toDays() >= 180;
     }
 
     public List<Integer> getIdsOfActualBelongingCollectivities() {
