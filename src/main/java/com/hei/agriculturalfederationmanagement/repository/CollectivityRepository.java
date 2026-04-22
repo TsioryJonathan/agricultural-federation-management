@@ -127,10 +127,10 @@ public class CollectivityRepository {
 
     public Collectivity findById(Integer id) {
         String collectivitySql = """
-            SELECT id, number, name, speciality, creation_datetime, 
+            select id, number, name, speciality, creation_datetime, 
                    federation_approval, authorization_date, location
-            FROM collectivity
-            WHERE id = ?
+            from collectivity
+            where id = ?
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(collectivitySql)) {
