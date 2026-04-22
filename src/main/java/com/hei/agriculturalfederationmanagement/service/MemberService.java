@@ -1,9 +1,12 @@
 package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.Member;
+import com.hei.agriculturalfederationmanagement.entity.MemberRefereeLink;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateMember;
 import com.hei.agriculturalfederationmanagement.entity.dto.MemberResponse;
+import com.hei.agriculturalfederationmanagement.repository.MemberCollectivityRepository;
 import com.hei.agriculturalfederationmanagement.repository.MemberRepository;
+import com.hei.agriculturalfederationmanagement.repository.RefereeRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityRuleValidator;
 import com.hei.agriculturalfederationmanagement.validator.PaymentValidator;
 import com.hei.agriculturalfederationmanagement.validator.SponsorCountValidator;
@@ -17,7 +20,9 @@ import java.util.stream.IntStream;
 @AllArgsConstructor
 public class MemberService {
 
-    private final MemberRepository repository;
+    private final MemberRepository memberRepository;
+    private final MemberCollectivityRepository memberCollectivityRepository;
+    private final RefereeRepository refereeRepository;
     private final PaymentValidator paymentValidator;
     private final CollectivityRuleValidator collectivityRuleValidator;
     private final SponsorCountValidator sponsorCountValidator;
@@ -33,22 +38,51 @@ public class MemberService {
                 .distinct()
                 .toList();
 
-        List<Member> sponsors = repository.findByIds(sponsorIds);
+        List<Member> sponsors = memberRepository.findByIds(sponsorIds);
 
         memberList.forEach(m ->
                 collectivityRuleValidator.validate(m, sponsors)
         );
 
-        // ================= MAPPING DTO → ENTITY =================
         List<Member> members = memberList.stream()
                 .map(this::toEntity)
                 .toList();
 
-        // ================= SAVE =================
-        List<Member> saved = repository.saveAll(members, memberList);
+        // ================= SAVE MEMBERS =================
+        List<Member> savedMembers = memberRepository.saveAll(members, memberList);
 
-        // ================= RESPONSE =================
-        return buildResponse(saved, memberList);
+        // ================= SAVE MEMBER_COLLECTIVITY LINKS =================
+        for (int i = 0; i < savedMembers.size(); i++) {
+            Member saved = savedMembers.get(i);
+            CreateMember dto = memberList.get(i);
+            memberCollectivityRepository.saveMemberCollectivityLink(
+                    saved.getId(),
+                    dto.getCollectivityIdentifier(),
+                    dto.getOccupation()
+            );
+        }
+
+        // ================= SAVE REFEREES =================
+        List<MemberRefereeLink> refereeLinks = new java.util.ArrayList<>();
+        for (int i = 0; i < savedMembers.size(); i++) {
+            Member saved = savedMembers.get(i);
+            CreateMember dto = memberList.get(i);
+            if (dto.getReferees() != null) {
+                for (Integer refId : dto.getReferees()) {
+                    refereeLinks.add(MemberRefereeLink.builder()
+                            .idMember(saved.getId())
+                            .idReferee(refId)
+                            .idCollectivity(dto.getCollectivityIdentifier())
+                            .link("FRIEND")
+                            .build());
+                }
+            }
+        }
+        if (!refereeLinks.isEmpty()) {
+            refereeRepository.saveRefereeMemberLink(refereeLinks);
+        }
+
+        return buildResponse(savedMembers, memberList);
     }
 
     // ---------------- DTO → ENTITY ----------------
