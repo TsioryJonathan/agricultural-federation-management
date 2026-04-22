@@ -29,6 +29,7 @@ public class Member {
     private String phoneNumber;
     private String profession;
     private Gender gender;
+    private boolean superuser;
 
     @JsonIgnore
     @Builder.Default

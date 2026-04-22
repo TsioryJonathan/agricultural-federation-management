@@ -1,0 +1,181 @@
+### 1. Get Federation
+GET http://localhost:8080/federation
+Content-Type: application/json
+
+###
+
+### 2. Create Members (using superuser as sponsor - no collectivity needed)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+[
+  {
+    "firstName": "Jean",
+    "lastName": "Rabenrasoa",
+    "birthDate": "1985-03-15",
+    "gender": "MALE",
+    "address": "Lot II B 45, Antananarivo",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261341234567",
+    "email": "jean.rabenrasoa@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Marie",
+    "lastName": "Randriamanantena",
+    "birthDate": "1988-07-22",
+    "gender": "FEMALE",
+    "address": "Lot VA 12, Antananarivo",
+    "profession": "Enseignante",
+    "phoneNumber": "+261329876543",
+    "email": "marie.randria@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 3],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Pierre",
+    "lastName": "Ratsimba",
+    "birthDate": "1990-01-10",
+    "gender": "MALE",
+    "address": "Lot III B 78, Antananarivo",
+    "profession": "Commercant",
+    "phoneNumber": "+261334512389",
+    "email": "pierre.ratsimba@gmail.com",
+    "occupation": "PRESIDENT",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Sophie",
+    "lastName": "Rakotovao",
+    "birthDate": "1992-05-18",
+    "gender": "FEMALE",
+    "address": "Lot I C 23, Antananarivo",
+    "profession": "Agricultrice",
+    "phoneNumber": "+261345678912",
+    "email": "sophie.rakotovao@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Marc",
+    "lastName": "Randria",
+    "birthDate": "1987-09-25",
+    "gender": "MALE",
+    "address": "Lot IV D 56, Antananarivo",
+    "profession": "Eleveur",
+    "phoneNumber": "+261321122233",
+    "email": "marc.randria@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 3],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Lucie",
+    "lastName": "Ramasindrazana",
+    "birthDate": "1995-11-30",
+    "gender": "FEMALE",
+    "address": "Lot VI A 89, Antananarivo",
+    "profession": "Technicienne Agricole",
+    "phoneNumber": "+261334455566",
+    "email": "lucie.ramasindrazana@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 4],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Philippe",
+    "lastName": "Rakotozon",
+    "birthDate": "1983-02-14",
+    "gender": "MALE",
+    "address": "Lot VIII E 12, Antananarivo",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261347788899",
+    "email": "philippe.rakotozon@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 5],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Claire",
+    "lastName": "Ralantoanina",
+    "birthDate": "1991-08-08",
+    "gender": "FEMALE",
+    "address": "Lot X F 34, Antananarivo",
+    "profession": "Formatrice",
+    "phoneNumber": "+261329900011",
+    "email": "claire.ralantoanina@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Alain",
+    "lastName": "Ramanantsoa",
+    "birthDate": "1986-12-20",
+    "gender": "MALE",
+    "address": "Lot XII G 56, Antananarivo",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261331122233",
+    "email": "alain.ramanantsoa@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 3],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Florence",
+    "lastName": "Rabesial",
+    "birthDate": "1989-04-05",
+    "gender": "FEMALE",
+    "address": "Lot XIV H 78, Antananarivo",
+    "profession": "Commercante",
+    "phoneNumber": "+261344455566",
+    "email": "florence.rabesial@gmail.com",
+    "occupation": "CONFIRMED",
+    "collectivityIdentifier": 1,
+    "referees": [1, 4],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  }
+]
+
+###
+
+### 3. Create Collectivity (needs 10+ members)
+POST http://localhost:8080/collectivities
+Content-Type: application/json
+
+[
+  {
+    "location": "Antananarivo",
+    "federationApproval": true,
+    "structure": {
+      "presidentId": 3,
+      "vicePresidentId": 1,
+      "treasurerId": 2,
+      "secretaryId": 4
+    }
+  }
+]

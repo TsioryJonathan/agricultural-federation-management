@@ -22,6 +22,7 @@ CREATE TABLE "public"."member" (
                                    "phone_number"    varchar     NOT NULL UNIQUE,
                                    "profession"      varchar     NOT NULL,
                                    "gender"          gender      NOT NULL,
+                                   "superuser"       boolean     NOT NULL DEFAULT false,
                                    PRIMARY KEY ("id")
 );
 
