@@ -4,6 +4,7 @@ import com.hei.agriculturalfederationmanagement.entity.dto.CreateMemberPayment;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.repository.AccountRepository;
+import com.hei.agriculturalfederationmanagement.repository.CotisationPlanRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Component;
 public class MemberPaymentValidator {
 
     private final AccountRepository accountRepository;
+    private final CotisationPlanRepository cotisationPlanRepository;
+
 
     public void validatePaymentRequest(CreateMemberPayment request, Integer collectivityId) {
         if (request.getAmount() == null || request.getAmount() <= 0) {
