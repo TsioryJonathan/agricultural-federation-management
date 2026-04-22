@@ -24,6 +24,7 @@ public class MemberPaymentService {
     private final TransactionRepository transactionRepository;
     private final CotisationPlanRepository cotisationPlanRepository;
     private final MemberPaymentValidator validator;
+    private final AccountRepository accountRepository;
     private final CollectivityRepository collectivityRepository;
 
     public List<MemberPaymentResponse> createPayments(Integer memberId, List<CreateMemberPayment> requests) {
@@ -44,8 +45,11 @@ public class MemberPaymentService {
                     .transactionType(TransactionType.IN)
                     .amount(request.getAmount())
                     .transactionDate(Instant.now())
+                    .member(memberRepository.findById(memberId).orElseThrow(()-> new NotFoundException("Member not found")))
                     .paymentMode(request.getPaymentMode())
                     .description(buildDescription(request, member))
+                    .collectivity(collectivityRepository.findByMembershipFeeId(request.getMembershipFeeIdentifier()))
+                    .account(accountRepository.findById(request.getAccountCreditedIdentifier()).orElseThrow(()-> new NotFoundException("Account not found")))
                     .build();
 
             transaction = transactionRepository.save(transaction);
@@ -64,7 +68,7 @@ public class MemberPaymentService {
         description.append("Paiement - ").append(member.getFirstName()).append(" ").append(member.getLastName());
 
         if (request.getMembershipFeeIdentifier() != null) {
-            var fee = cotisationPlanRepository.findById(Integer.parseInt(request.getMembershipFeeIdentifier()));
+            var fee = cotisationPlanRepository.findById((request.getMembershipFeeIdentifier()));
             fee.ifPresent(f -> description.append(" - ").append(f.getLabel()));
         } else {
             description.append(" - Frais d'adhésion");

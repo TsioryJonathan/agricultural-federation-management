@@ -224,7 +224,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
     public Integer findActiveCollectivityIdByMemberId(Integer memberId) {
         String sql = """
         select id_collectivity
-        from member_collectivity 
+        from member_collectivity
         where id_member = ? and end_date is null
         limit 1
     """;

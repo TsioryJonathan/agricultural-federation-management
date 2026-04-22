@@ -20,6 +20,8 @@ public class TransactionRepository {
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1,transaction.getMember().getId());
+            stmt.setInt(2,transaction.getCollectivity().getId());
             if (transaction.getCotisationPlan() != null) {
                 stmt.setInt(3, transaction.getCotisationPlan().getId());
             } else {
@@ -27,7 +29,7 @@ public class TransactionRepository {
             }
             stmt.setInt(4, transaction.getAccount().getId());
             stmt.setString(5, transaction.getTransactionType().name());
-            stmt.setBigDecimal(6, java.math.BigDecimal.valueOf(transaction.getAmount()));
+            stmt.setDouble(6, transaction.getAmount());
             stmt.setTimestamp(7, Timestamp.from(transaction.getTransactionDate()));
             stmt.setString(8, transaction.getPaymentMode() != null ? transaction.getPaymentMode().name() : null);
             stmt.setString(9, transaction.getDescription());
@@ -38,7 +40,7 @@ public class TransactionRepository {
             }
             return transaction;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save transaction", e);
+            throw new RuntimeException("Failed to save transaction " + e.getMessage());
         }
     }
 }

@@ -29,13 +29,13 @@ public class MemberPaymentValidator {
             throw new BadRequestException("Account credited identifier is required");
         }
 
-        Integer accountId = Integer.parseInt(request.getAccountCreditedIdentifier());
+        Integer accountId = (request.getAccountCreditedIdentifier());
         if (!accountRepository.existsByIdAndCollectivityId(accountId, collectivityId)) {
             throw new BadRequestException("Account not found or does not belong to the member's collectivity");
         }
 
         if (request.getMembershipFeeIdentifier() != null) {
-            Integer feeId = Integer.parseInt(request.getMembershipFeeIdentifier());
+            Integer feeId = (request.getMembershipFeeIdentifier());
             var fee = cotisationPlanRepository.findById(feeId)
                     .orElseThrow(() -> new NotFoundException("Membership fee not found with id: " + feeId));
 

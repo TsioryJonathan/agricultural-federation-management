@@ -658,4 +658,40 @@ public class CollectivityRepository {
             throw new RuntimeException("Failed to load transactions for account", e);
         }
     }
+
+    public Collectivity findByMembershipFeeId(Integer membershipFeeId) {
+        String sql = """
+        SELECT c.id, c.number, c.name, c.speciality, c.creation_datetime, 
+               c.federation_approval, c.authorization_date, c.location
+        FROM collectivity c
+        JOIN cotisation_plan cp ON c.id = cp.id_collectivity
+        WHERE cp.id = ?
+    """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, membershipFeeId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Collectivity collectivity = Collectivity.builder()
+                        .id(rs.getInt("id"))
+                        .number(rs.getString("number"))
+                        .name(rs.getString("name"))
+                        .speciality(rs.getString("speciality"))
+                        .creationDatetime(rs.getTimestamp("creation_datetime").toInstant())
+                        .federationApproval(rs.getBoolean("federation_approval"))
+                        .authorizationDate(rs.getTimestamp("authorization_date") != null ?
+                                rs.getTimestamp("authorization_date").toInstant() : null)
+                        .location(rs.getString("location"))
+                        .build();
+
+                fetchMembersAndStructure(collectivity);
+
+                return collectivity;
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find collectivity by membership fee id: " + membershipFeeId, e);
+        }
+    }
 }
