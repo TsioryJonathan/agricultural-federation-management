@@ -9,6 +9,45 @@ info:
 servers:
   - url: 'https://localhost:8080'
 paths:
+
+  '/federation/collectivities/{id}/assign-identity':
+    patch:
+      summary: Federation assigns unique number and name to a collectivity
+      description: |
+        The federation assigns a unique number and name to a collectivity.
+        **This operation can only be performed ONCE.** Once assigned, the number and name become immutable.
+        Any attempt to modify them will result in a 400 error.
+      # should be collectivity identifier component
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the collectivity to assign identity to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignCollectivityIdentityRequest'
+      responses:
+        '200':
+          description: Identity successfully assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+        '400':
+          description: |
+            Bad request cases:
+            - Collectivity already has a number/name assigned (immutable)
+            - Invalid collectivity ID
+            - Number or name already exists
+        '404':
+          description: Collectivity not found
+        '409':
+          description: Number or name already exists
   '/collectivities':
     post:
       summary: Create list of collectivities
@@ -35,6 +74,8 @@ paths:
           description: Collectivity without federation approval or structure missing.
         404:
           description: Member not found.
+
+
   '/members':
     post:
       summary: Create list of members
@@ -63,6 +104,20 @@ paths:
           description: Either collectivity or member not found.
 components:
   schemas:
+    AssignCollectivityIdentityRequest:
+      type: object
+      required:
+        - number
+        - name
+      properties:
+        number:
+          type: string
+          description: Unique collectivity number assigned by the federation (immutable once set)
+          example: "COL-2026-001"
+        name:
+          type: string
+          description: Unique collectivity name assigned by the federation (immutable once set)
+          example: "Collectivité des Riziculteurs d'Antananarivo"
     CreateCollectivity:
       type: object
       properties:
@@ -99,19 +154,33 @@ components:
           $ref: '#/components/schemas/Member'
         secretary:
           $ref: '#/components/schemas/Member'
+
     Collectivity:
       type: object
       properties:
         id:
           type: string
+        number:
+          type: string
+          nullable: true
+          description: Unique number assigned by federation (null until assigned, immutable once set)
+        name:
+          type: string
+          nullable: true
+          description: Unique name assigned by federation (null until assigned, immutable once set)
         location:
           type: string
+        speciality:
+          type: string
+        federationApproval:
+          type: boolean
         structure:
           $ref: '#/components/schemas/CollectivityStructure'
         members:
           type: array
           items:
             $ref: '#/components/schemas/Member'
+
     MemberIdentifier:
       type: string
     CreateMember:
