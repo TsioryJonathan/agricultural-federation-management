@@ -272,30 +272,6 @@ public class CollectivityRepository {
     }
 
     public void assignIdentity(Integer id, String number, String name) {
-        String checkSql = "select number, name from collectivity where id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(checkSql)) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String existingNumber = rs.getString("number");
-                String existingName = rs.getString("name");
-                if (existingNumber != null || existingName != null) {
-                    throw new IllegalStateException("Collectivity identity already assigned and is immutable");
-                }
-            } else {
-                throw new RuntimeException("Collectivity not found with id: " + id);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to check existing identity", e);
-        }
-
-        if (existsByNumber(number)) {
-            throw new IllegalArgumentException("Number already exists: " + number);
-        }
-        if (existsByName(name)) {
-            throw new IllegalArgumentException("Name already exists: " + name);
-        }
-
         String updateSql = "update collectivity set number = ?, name = ? where id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(updateSql)) {
             stmt.setString(1, number);
@@ -304,21 +280,6 @@ public class CollectivityRepository {
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to assign identity", e);
-        }
-    }
-
-
-    public boolean hasIdentity(Integer id) {
-        String sql = "select number, name from collectivity where id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("number") != null || rs.getString("name") != null;
-            }
-            return false;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to check identity", e);
         }
     }
 

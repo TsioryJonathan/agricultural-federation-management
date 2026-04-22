@@ -33,15 +33,15 @@ public class FederationController {
         }
     }
 
-    @PatchMapping("/{id}/assign-identity")
+    @PatchMapping("/{collectivityId}/assign-identity")
     public ResponseEntity<?> assignIdentity(
-            @PathVariable Integer id,
+            @PathVariable Integer collectivityId,
             @RequestBody(required = false) AssignCollectivityIdentityRequest request) {
         try {
-            if (request == null){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory request body required");
+            if(request == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory request body not provided");
             }
-            CollectivityResponse response = collectivityService.assignIdentity(id, request);
+            CollectivityResponse response = collectivityService.assignIdentity(collectivityId, request);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
