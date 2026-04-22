@@ -42,7 +42,7 @@ CREATE TABLE "public"."collectivity" (
                                          "id"                 serial                NOT NULL,
                                          "number"             varchar               UNIQUE,
                                          "name"               varchar               UNIQUE,
-                                         "speciality"         varchar               NOT NULL,
+                                         "speciality"         varchar               ,
                                          "creation_datetime"  timestamp             NOT NULL,
                                          "federation_approval" boolean DEFAULT FALSE,
                                          "authorization_date" timestamp,
