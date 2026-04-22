@@ -18,7 +18,6 @@ paths:
         The federation assigns a unique number and name to a collectivity.
         **This operation can only be performed ONCE.** Once assigned, the number and name become immutable.
         Any attempt to modify them will result in a 400 error.
-      # should be collectivity identifier component
       parameters:
         - $ref: '#/components/parameters/CollectivityId'
       requestBody:
