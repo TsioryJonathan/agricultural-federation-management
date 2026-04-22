@@ -79,7 +79,9 @@ public class CollectivityService {
             throw new NotFoundException("Collectivity not found with id: " + id);
         }
 
-        if (collectivity.getNumber() != null || collectivity.getName() != null) {
+        if (collectivity.getName() != null && !collectivity.getName().isBlank()
+                && collectivity.getNumber() != null && !collectivity.getNumber().isBlank()) {
+
             throw new BadRequestException("Collectivity identity already assigned and cannot be modified");
         }
 
