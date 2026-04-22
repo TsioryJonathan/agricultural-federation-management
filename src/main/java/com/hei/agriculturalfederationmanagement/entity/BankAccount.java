@@ -1,21 +1,22 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
-import com.hei.agriculturalfederationmanagement.entity.enums.Bank;
+import com.hei.agriculturalfederationmanagement.entity.enums.BankName;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-
-import java.math.BigDecimal;
 
 @Data
+@Builder
 @NoArgsConstructor
-@SuperBuilder
-public class BankAccount extends FinancialAccount {
+@AllArgsConstructor
+public class BankAccount {
+    private Integer id;
+    private Account account;
     private String holderName;
-    private Bank bankName;
-    private Integer bankCode;
-    private Integer bankBranchCode;
-    private Integer bankAccountNumber;
-    private Integer bankAccountKey;
+    private BankName bankName;
+    private String bankCode;
+    private String branchCode;
+    private String accountNumber;
+    private String ribKey;
 }

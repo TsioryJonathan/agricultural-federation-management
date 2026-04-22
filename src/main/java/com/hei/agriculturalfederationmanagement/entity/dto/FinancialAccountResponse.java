@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
+// TODO: check out what are those json things
 @Data
 @Builder
 @NoArgsConstructor

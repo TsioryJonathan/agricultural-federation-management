@@ -9,7 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CashAccount {
+public class Account {
     private Integer id;
-    private Account account;
+    private Integer idCollectivity;
+    private Integer idFederation;
+    private CashAccount cashAccount;
+    private BankAccount bankAccount;
+    private MobileMoneyAccount mobileMoneyAccount;
 }
