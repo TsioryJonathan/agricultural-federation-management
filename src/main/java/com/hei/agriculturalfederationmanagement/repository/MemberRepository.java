@@ -107,13 +107,19 @@ public class MemberRepository {
 
 public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
-String insertMemberSql = """
+        String insertMemberSql = """
         INSERT INTO member(
             first_name, last_name, birth_date, enrolment_date,
             address, email, phone_number, profession, gender
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
+
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to set auto-commit", e);
+        }
 
         List<Member> result = new ArrayList<>();
 
