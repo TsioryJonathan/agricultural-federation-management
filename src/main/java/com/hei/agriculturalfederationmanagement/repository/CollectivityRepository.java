@@ -260,7 +260,7 @@ public class CollectivityRepository {
 
     public boolean existsByName(String name) {
         if (name == null) return false;
-        String sql = "SELECT count(id) from collectivity where name = ?";
+        String sql = "select count(id) from collectivity where name = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, name);
             ResultSet rs = stmt.executeQuery();
