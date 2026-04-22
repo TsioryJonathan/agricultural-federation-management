@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
@@ -20,7 +19,7 @@ public class Transaction {
     private Integer idCotisationPlan;
     private Integer idAccount;
     private TransactionType transactionType;
-    private BigDecimal amount;
+    private Double amount;
     private Instant transactionDate;
     private PaymentMode paymentMode;
     private String description;

@@ -1,10 +1,7 @@
 package com.hei.agriculturalfederationmanagement.repository;
 
-import com.hei.agriculturalfederationmanagement.entity.Collectivity;
-import com.hei.agriculturalfederationmanagement.entity.Member;
-import com.hei.agriculturalfederationmanagement.entity.Structure;
-import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
-import com.hei.agriculturalfederationmanagement.entity.enums.Gender;
+import com.hei.agriculturalfederationmanagement.entity.*;
+import com.hei.agriculturalfederationmanagement.entity.enums.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -346,6 +343,140 @@ public class CollectivityRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Failed to assign identity", e);
         }
+    }
+
+
+
+    public List<Transaction> findTransactionsByCollectivityIdAndDateRange(
+            Integer collectivityId,
+            Instant from,
+            Instant to) {
+// TODO: member mapping lacks some attributes in it
+        String sql = """
+        select
+            t.id,
+            t.amount,
+            t.transaction_date,
+            t.payment_mode,
+            t.id_account,
+            t.id_member,
+            a.id_collectivity,
+            a.id_federation,
+            ca.id as cash_account_id,
+            ba.id as bank_account_id,
+            ba.holder_name as bank_holder_name,
+            ba.bank_name,
+            ba.bank_code,
+            ba.branch_code,
+            ba.account_number,
+            ba.rib_key,
+            ma.id as mobile_account_id,
+            ma.holder_name as mobile_holder_name,
+            ma.service_name,
+            ma.phone_number,
+            m.first_name,
+            m.last_name,
+            m.email,
+            m.phone_number as member_phone,
+            m.gender
+        from transaction t
+        join account a on t.id_account = a.id
+        join member m on t.id_member = m.id
+        left join cash_account ca on a.id = ca.id_account
+        left join bank_account ba on a.id = ba.id_account
+        left join mobile_money_account ma on a.id = ma.id_account
+        where t.id_collectivity = ?
+          and t.transaction_type = 'IN'
+          and t.transaction_date >= ?
+          and t.transaction_date < ?
+        order by t.transaction_date desc
+    """;
+
+        List<Transaction> transactions = new ArrayList<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, collectivityId);
+            stmt.setTimestamp(2, Timestamp.from(from));
+            stmt.setTimestamp(3, Timestamp.from(to));
+            ResultSet rs = stmt.executeQuery();
+
+
+            // what if amount is null ? should it be null in java?
+            while (rs.next()) {
+                Transaction transaction = Transaction.builder()
+                        .id(rs.getInt("id"))
+                        .amount(rs.getDouble("amount"))
+                        .transactionDate(rs.getTimestamp("transaction_date").toInstant())
+                        .paymentMode(rs.getString("payment_mode") != null ?
+                                PaymentMode.valueOf(rs.getString("payment_mode")) : null)
+                        .idAccount(rs.getInt("id_account"))
+                        .idMember(rs.getInt("id_member"))
+                        .build();
+
+                Account account = buildAccountFromResultSet(rs);
+                transaction.setAccount(account);
+
+                Member member = Member.builder()
+                        .id(rs.getInt("id_member"))
+                        .firstName(rs.getString("first_name"))
+                        .lastName(rs.getString("last_name"))
+                        .email(rs.getString("email"))
+                        .phoneNumber(rs.getString("member_phone"))
+                        .gender(Gender.valueOf(rs.getString("gender")))
+                        .build();
+                transaction.setMember(member);
+
+                transactions.add(transaction);
+            }
+
+            return transactions;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find transactions", e);
+        }
+    }
+
+    private Account buildAccountFromResultSet(ResultSet rs) throws SQLException {
+        Integer accountId = rs.getInt("id_account");
+        Integer collectivityId = rs.getInt("id_collectivity");
+        Integer federationId = rs.getInt("id_federation");
+
+        Account account = Account.builder()
+                .id(accountId)
+                .idCollectivity(collectivityId)
+                .idFederation(federationId)
+                .build();
+
+        if (rs.getObject("cash_account_id") != null) {
+            CashAccount cashAccount = CashAccount.builder()
+                    .id(rs.getInt("cash_account_id"))
+                    .account(account)
+                    .build();
+            account.setCashAccount(cashAccount);
+        } else if (rs.getObject("bank_account_id") != null) {
+            BankAccount bankAccount = BankAccount.builder()
+                    .id(rs.getInt("bank_account_id"))
+                    .account(account)
+                    .holderName(rs.getString("bank_holder_name"))
+                    .bankName(BankName.valueOf(rs.getString("bank_name")))
+                    .bankCode(rs.getString("bank_code"))
+                    .branchCode(rs.getString("branch_code"))
+                    .accountNumber(rs.getString("account_number"))
+                    .ribKey(rs.getString("rib_key"))
+                    .build();
+            account.setBankAccount(bankAccount);
+        } else if (rs.getObject("mobile_account_id") != null) {
+            MobileMoneyAccount mobileAccount = MobileMoneyAccount.builder()
+                    .id(rs.getInt("mobile_account_id"))
+                    .account(account)
+                    .holderName(rs.getString("mobile_holder_name"))
+                    .serviceName(MobileMoneyService.valueOf(rs.getString("service_name")))
+                    .phoneNumber(rs.getString("phone_number"))
+                    .build();
+            account.setMobileMoneyAccount(mobileAccount);
+        }
+
+        return account;
     }
 
 }

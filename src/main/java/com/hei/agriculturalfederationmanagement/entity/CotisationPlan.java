@@ -1,5 +1,6 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
+import com.hei.agriculturalfederationmanagement.entity.enums.Frequency;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
