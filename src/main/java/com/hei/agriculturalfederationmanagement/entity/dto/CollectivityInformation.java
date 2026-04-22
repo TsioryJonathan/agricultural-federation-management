@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AssignCollectivityIdentityRequest {
+public class CollectivityInformation {
     private String number;
     private String name;
 }

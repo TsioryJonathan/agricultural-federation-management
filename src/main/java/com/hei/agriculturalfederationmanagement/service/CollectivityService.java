@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -63,7 +64,7 @@ public class CollectivityService {
     }
 
 
-    public CollectivityResponse assignIdentity(Integer id, AssignCollectivityIdentityRequest request) throws BadRequestException {
+    public CollectivityResponse assignIdentity(Integer id, CollectivityInformation request) throws BadRequestException {
         if (request.getNumber() == null || request.getNumber().trim().isEmpty()) {
             throw new BadRequestException("Number is required");
         }
@@ -81,10 +82,10 @@ public class CollectivityService {
         }
 
         if (repository.existsByNumber(request.getNumber())) {
-            throw new ConflictException("Collectivity number already exists: " + request.getNumber());
+            throw new BadRequestException("Collectivity number already exists: " + request.getNumber());
         }
         if (repository.existsByName(request.getName())) {
-            throw new ConflictException("Collectivity name already exists: " + request.getName());
+            throw new BadRequestException("Collectivity name already exists: " + request.getName());
         }
 
         repository.assignIdentity(id, request.getNumber(), request.getName());
@@ -107,7 +108,7 @@ public class CollectivityService {
                 .profession(member.getProfession())
                 .phoneNumber(member.getPhoneNumber())
                 .email(member.getEmail())
-                .referees(member.getReferees())
+                .referees(member.getRefereesId())
                 .build();
     }
 

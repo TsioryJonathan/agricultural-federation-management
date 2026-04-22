@@ -1,7 +1,7 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
 import com.hei.agriculturalfederationmanagement.entity.Federation;
-import com.hei.agriculturalfederationmanagement.entity.dto.AssignCollectivityIdentityRequest;
+import com.hei.agriculturalfederationmanagement.entity.dto.CollectivityInformation;
 import com.hei.agriculturalfederationmanagement.entity.dto.CollectivityResponse;
 import com.hei.agriculturalfederationmanagement.exception.ConflictException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
@@ -36,7 +36,7 @@ public class FederationController {
     @PatchMapping("/{collectivityId}/assign-identity")
     public ResponseEntity<?> assignIdentity(
             @PathVariable Integer collectivityId,
-            @RequestBody(required = false) AssignCollectivityIdentityRequest request) {
+            @RequestBody(required = false) CollectivityInformation request) {
         try {
             if(request == null){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory request body not provided");

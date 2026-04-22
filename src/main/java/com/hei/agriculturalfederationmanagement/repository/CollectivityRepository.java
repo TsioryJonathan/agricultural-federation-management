@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @AllArgsConstructor
@@ -162,14 +163,14 @@ public class CollectivityRepository {
 
     private void fetchMembersAndStructure(Collectivity collectivity) {
         String sql = """
-            select 
-                m.id, m.first_name, m.last_name, m.birth_date, m.enrolment_date,
-                m.address, m.email, m.phone_number, m.profession, m.gender,
-                mc.occupation
-            from member_collectivity mc
-            join member m on mc.id_member = m.id
-            where mc.id_collectivity = ? AND mc.end_date is null
-        """;
+        select
+            m.id, m.first_name, m.last_name, m.birth_date, m.enrolment_date,
+            m.address, m.email, m.phone_number, m.profession, m.gender,
+            mc.occupation
+        from member_collectivity mc
+        join member m on mc.id_member = m.id
+        where mc.id_collectivity = ? AND mc.end_date is null
+    """;
 
         List<Member> members = new ArrayList<>();
         Structure structure = Structure.builder().build();
@@ -195,6 +196,7 @@ public class CollectivityRepository {
                                 .phoneNumber(rs.getString("phone_number"))
                                 .profession(rs.getString("profession"))
                                 .gender(Gender.valueOf(rs.getString("gender")))
+                                .referees(new ArrayList<>())
                                 .build();
                     } catch (SQLException e) {
                         throw new RuntimeException("Failed to map member", e);
@@ -212,11 +214,74 @@ public class CollectivityRepository {
                 }
             }
 
+            loadRefereesForMembers(members);
+
             collectivity.setMembers(members);
             collectivity.setStructure(structure);
 
         } catch (SQLException e) {
             throw new RuntimeException("Failed to fetch members and structure", e);
+        }
+    }
+
+    private void loadRefereesForMembers(List<Member> members) {
+        if (members == null || members.isEmpty()) {
+            return;
+        }
+
+        Map<Integer, Member> memberMap = members.stream()
+                .collect(Collectors.toMap(Member::getId, m -> m));
+
+        List<Integer> memberIds = members.stream()
+                .map(Member::getId)
+                .toList();
+
+        String placeholders = memberIds.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+
+        String sql = """
+        select
+            mr.id_candidate,
+            mr.id_referee,
+            m.first_name,
+            m.last_name,
+            m.email,
+            m.phone_number,
+            m.gender
+        from member_referee mr
+        join member m ON mr.id_referee = m.id
+        where mr.id_candidate in (%s)
+    """.formatted(placeholders);
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            for (int i = 0; i < memberIds.size(); i++) {
+                stmt.setInt(i + 1, memberIds.get(i));
+            }
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer candidateId = rs.getInt("id_candidate");
+                Integer refereeId = rs.getInt("id_referee");
+
+                Member candidate = memberMap.get(candidateId);
+                if (candidate != null) {
+                    Member referee = Member.builder()
+                            .id(refereeId)
+                            .firstName(rs.getString("first_name"))
+                            .lastName(rs.getString("last_name"))
+                            .email(rs.getString("email"))
+                            .phoneNumber(rs.getString("phone_number"))
+                            .gender(Gender.valueOf(rs.getString("gender")))
+                            .build();
+
+                    candidate.getReferees().add(referee);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load referees for members", e);
         }
     }
 
