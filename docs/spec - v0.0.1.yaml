@@ -4,6 +4,7 @@ info:
   description: |
     # Versioning
     This API uses semantic versioning (MAJOR.MINOR.PATCH). Available versions are : 
+    - v0.0.2 (2026-04-22) : Added PATCH /federation/collectivities/{collectivityId}/assign-identity for federation to assign unique number and name
     - v0.0.1 (2026-04-21) : POST /collectivities for collectivities creation and POST /members for members creation.
   version: 0.0.1
 servers:
@@ -19,12 +20,7 @@ paths:
         Any attempt to modify them will result in a 400 error.
       # should be collectivity identifier component
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: ID of the collectivity to assign identity to
+        - $ref: '#/components/parameters/CollectivityId'
       requestBody:
         required: true
         content:
@@ -103,6 +99,17 @@ paths:
         404:
           description: Either collectivity or member not found.
 components:
+  parameters:
+    CollectivityId:
+      name: collectivityId
+      in: path
+      required: true
+      schema:
+        type: string
+        description: Unique identifier of a collectivity
+        example: "123"
+      description: Unique identifier of the collectivity
+
   schemas:
     AssignCollectivityIdentityRequest:
       type: object
