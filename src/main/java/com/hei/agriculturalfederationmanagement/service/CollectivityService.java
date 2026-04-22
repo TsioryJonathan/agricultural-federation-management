@@ -105,13 +105,4 @@ public class CollectivityService {
                 .build();
     }
 
-   // private String generateCollectivityNumber() {
-     //   return "COL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-    //}
-
-    //private String generateCollectivityName(String locationName) {
-   //     return "Collectivité de " + locationName;
-    //}
-
-
 }
