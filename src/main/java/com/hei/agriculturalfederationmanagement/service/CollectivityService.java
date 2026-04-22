@@ -63,6 +63,8 @@ public class CollectivityService {
                 .toList();
     }
 
+
+    // should we really make both of them required, or can be interchangeable?
     public CollectivityResponse assignIdentity(Integer id, AssignCollectivityIdentityRequest request) throws BadRequestException {
         if (request.getNumber() == null || request.getNumber().trim().isEmpty()) {
             throw new BadRequestException("Number is required");

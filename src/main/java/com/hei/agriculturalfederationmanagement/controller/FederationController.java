@@ -1,20 +1,24 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
 import com.hei.agriculturalfederationmanagement.entity.Federation;
+import com.hei.agriculturalfederationmanagement.entity.dto.AssignCollectivityIdentityRequest;
+import com.hei.agriculturalfederationmanagement.entity.dto.CollectivityResponse;
+import com.hei.agriculturalfederationmanagement.exception.ConflictException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
+import com.hei.agriculturalfederationmanagement.service.CollectivityService;
 import com.hei.agriculturalfederationmanagement.service.FederationService;
 import lombok.AllArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/federation")
 @AllArgsConstructor
 public class FederationController {
     private final FederationService federationService;
+    private final CollectivityService collectivityService;
 
     @GetMapping
     public ResponseEntity<?> getFederation() {
@@ -23,6 +27,28 @@ public class FederationController {
             return ResponseEntity.status(HttpStatus.OK).body(federation);
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/assign-identity")
+    public ResponseEntity<?> assignIdentity(
+            @PathVariable Integer id,
+            @RequestBody(required = false) AssignCollectivityIdentityRequest request) {
+        try {
+            if (request == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory request body required");
+            }
+            CollectivityResponse response = collectivityService.assignIdentity(id, request);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
