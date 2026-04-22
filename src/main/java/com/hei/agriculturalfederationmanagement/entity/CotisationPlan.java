@@ -17,7 +17,7 @@ public class CotisationPlan {
     private Integer idCollectivity;
     private String label;
     private Frequency frequency;
-    private BigDecimal amount;
+    private Double amount;
     private LocalDate eligibleFrom;
     private Boolean isActive;
 }
