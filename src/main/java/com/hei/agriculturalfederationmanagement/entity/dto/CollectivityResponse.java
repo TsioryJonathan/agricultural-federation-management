@@ -18,6 +18,6 @@ public class CollectivityResponse {
     private String number;
     private String name;
     private String location;
-    private Structure structure;
-    private List<Member> members;
+    private StructureResponse structure;
+    private List<MemberResponse> members;
 }
