@@ -112,7 +112,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
             first_name, last_name, birth_date, enrolment_date,
             address, email, phone_number, profession, gender
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         try {
