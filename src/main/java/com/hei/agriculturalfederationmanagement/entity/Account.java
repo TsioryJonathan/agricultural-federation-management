@@ -41,46 +41,4 @@ public class Account {
         return totalIn - totalOut;
     }
 
-    public Double getBalanceAsOf(java.time.Instant date) {
-        if (transactions == null || transactions.isEmpty()) {
-            return 0.0;
-        }
-
-        double totalIn = transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.IN)
-                .filter(t -> !t.getTransactionDate().isAfter(date))
-                .mapToDouble(Transaction::getAmount)
-                .sum();
-
-        double totalOut = transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.OUT)
-                .filter(t -> !t.getTransactionDate().isAfter(date))
-                .mapToDouble(Transaction::getAmount)
-                .sum();
-
-        return totalIn - totalOut;
-    }
-
-    public Double getTotalIn() {
-        if (transactions == null || transactions.isEmpty()) {
-            return 0.0;
-        }
-
-        return transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.IN)
-                .mapToDouble(Transaction::getAmount)
-                .sum();
-    }
-
-    public Double getTotalOut() {
-        if (transactions == null || transactions.isEmpty()) {
-            return 0.0;
-        }
-
-        return transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.OUT)
-                .mapToDouble(Transaction::getAmount)
-                .sum();
-    }
-
 }
