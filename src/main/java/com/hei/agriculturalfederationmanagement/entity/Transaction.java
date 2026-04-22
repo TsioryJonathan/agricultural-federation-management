@@ -14,10 +14,8 @@ import java.time.Instant;
 @AllArgsConstructor
 public class Transaction {
     private Integer id;
-    private Integer idMember;
-    private Integer idCollectivity;
-    private Integer idCotisationPlan;
-    private Integer idAccount;
+    private Collectivity Collectivity;
+    private CotisationPlan CotisationPlan;
     private TransactionType transactionType;
     private Double amount;
     private Instant transactionDate;
@@ -25,5 +23,4 @@ public class Transaction {
     private String description;
     private Account account;
     private Member member;
-    private CotisationPlan cotisationPlan;
 }
