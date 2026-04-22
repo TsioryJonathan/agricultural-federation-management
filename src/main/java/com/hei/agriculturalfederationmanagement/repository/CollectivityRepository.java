@@ -345,13 +345,11 @@ public class CollectivityRepository {
         }
     }
 
-
-
     public List<Transaction> findTransactionsByCollectivityIdAndDateRange(
             Integer collectivityId,
             Instant from,
             Instant to) {
-// TODO: member mapping lacks some attributes in it
+
         String sql = """
         select
             t.id,
@@ -376,8 +374,12 @@ public class CollectivityRepository {
             ma.phone_number,
             m.first_name,
             m.last_name,
+            m.birth_date,
+            m.enrolment_date,
+            m.address,
             m.email,
             m.phone_number as member_phone,
+            m.profession,
             m.gender
         from transaction t
         join account a on t.id_account = a.id
@@ -393,6 +395,7 @@ public class CollectivityRepository {
     """;
 
         List<Transaction> transactions = new ArrayList<>();
+        Map<Integer, Member> memberCache = new HashMap<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, collectivityId);
@@ -400,12 +403,10 @@ public class CollectivityRepository {
             stmt.setTimestamp(3, Timestamp.from(to));
             ResultSet rs = stmt.executeQuery();
 
-
-            // what if amount is null ? should it be null in java?
             while (rs.next()) {
                 Transaction transaction = Transaction.builder()
                         .id(rs.getInt("id"))
-                        .amount(rs.getDouble("amount"))
+                        .amount(rs.getBigDecimal("amount").doubleValue())
                         .transactionDate(rs.getTimestamp("transaction_date").toInstant())
                         .paymentMode(rs.getString("payment_mode") != null ?
                                 PaymentMode.valueOf(rs.getString("payment_mode")) : null)
@@ -416,18 +417,33 @@ public class CollectivityRepository {
                 Account account = buildAccountFromResultSet(rs);
                 transaction.setAccount(account);
 
-                Member member = Member.builder()
-                        .id(rs.getInt("id_member"))
-                        .firstName(rs.getString("first_name"))
-                        .lastName(rs.getString("last_name"))
-                        .email(rs.getString("email"))
-                        .phoneNumber(rs.getString("member_phone"))
-                        .gender(Gender.valueOf(rs.getString("gender")))
-                        .build();
-                transaction.setMember(member);
+                Integer memberId = rs.getInt("id_member");
+                Member member = memberCache.computeIfAbsent(memberId, id -> {
+                    try {
+                        return Member.builder()
+                                .id(id)
+                                .firstName(rs.getString("first_name"))
+                                .lastName(rs.getString("last_name"))
+                                .birthDate(rs.getDate("birth_date").toLocalDate())
+                                .enrolmentDate(rs.getTimestamp("enrolment_date").toInstant())
+                                .address(rs.getString("address"))
+                                .email(rs.getString("email"))
+                                .phoneNumber(rs.getString("member_phone"))
+                                .profession(rs.getString("profession"))
+                                .gender(Gender.valueOf(rs.getString("gender")))
+                                .referees(new ArrayList<>())
+                                .build();
+                    } catch (SQLException e) {
+                        throw new RuntimeException("Failed to map member", e);
+                    }
+                });
 
+                transaction.setMember(member);
                 transactions.add(transaction);
             }
+
+            List<Member> uniqueMembers = new ArrayList<>(memberCache.values());
+            loadRefereesForMembers(uniqueMembers);
 
             return transactions;
 
@@ -435,6 +451,7 @@ public class CollectivityRepository {
             throw new RuntimeException("Failed to find transactions", e);
         }
     }
+
 
     private Account buildAccountFromResultSet(ResultSet rs) throws SQLException {
         Integer accountId = rs.getInt("id_account");
