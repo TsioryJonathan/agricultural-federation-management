@@ -203,4 +203,57 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
         return mc;
     }
+
+    public Optional<Member> findById(Integer id) {
+        String sql = "select id, first_name,last_name,birth_date,enrolment_date,address,email,phone_number,profession,gender,superuser from member where id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Member member = mapResultSetToMember(rs);
+                return Optional.of(member);
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find member", e);
+        }
+    }
+
+    public Integer findActiveCollectivityIdByMemberId(Integer memberId) {
+        String sql = """
+        select id_collectivity
+        from member_collectivity 
+        where id_member = ? and end_date is null
+        limit 1
+    """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, memberId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id_collectivity");
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find member's collectivity", e);
+        }
+    }
+
+    private Member mapResultSetToMember(ResultSet rs) throws SQLException {
+        return Member.builder()
+                .id(rs.getInt("id"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .birthDate(rs.getDate("birth_date").toLocalDate())
+                .enrolmentDate(rs.getTimestamp("enrolment_date").toInstant())
+                .address(rs.getString("address"))
+                .email(rs.getString("email"))
+                .phoneNumber(rs.getString("phone_number"))
+                .profession(rs.getString("profession"))
+                .gender(Gender.valueOf(rs.getString("gender")))
+                .superuser(rs.getBoolean("superuser"))
+                .build();
+    }
 }
