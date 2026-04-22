@@ -56,7 +56,7 @@ public class CollectivityController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Request body is required");
             }
             List<MembershipFeeResponse> membershipFees = service.createMembershipFees(id, createMembershipFees);
-            return ResponseEntity.ok(membershipFees);
+            return ResponseEntity.status(HttpStatus.CREATED).body(membershipFees);
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
