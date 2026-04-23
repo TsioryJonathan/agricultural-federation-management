@@ -291,3 +291,12 @@ Content-Type: application/json
     "label": "Annualy Cotisation"
   }
 ]
+
+### 8. Get financial accounts (current balance)
+GET http://localhost:8080/collectivities/1/financialAccounts
+
+### 9. Get financial accounts at specific date
+GET http://localhost:8080/collectivities/1/financialAccounts?at=2026-04-23T10:00:00Z
+
+### 10. Get transactions by date range
+GET http://localhost:8080/collectivities/1/transactions?from=2026-04-01T00:00:00Z&to=2026-04-30T23:59:59Z

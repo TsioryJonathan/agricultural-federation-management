@@ -469,8 +469,16 @@ public class CollectivityRepository {
         }
     }
 
-    private Map<Integer, Account> loadAccountsWithAllTransactions(Integer collectivityId) {
-        String sql = """
+    public Map<Integer, Account> loadAccountsWithAllTransactions(Integer collectivityId) {
+        return loadAccountsWithTransactions(collectivityId, null);
+    }
+
+    public Map<Integer, Account> loadAccountsWithTransactionsAt(Integer collectivityId, Instant at) {
+        return loadAccountsWithTransactions(collectivityId, at);
+    }
+
+    private Map<Integer, Account> loadAccountsWithTransactions(Integer collectivityId, Instant at) {
+        String baseSql = """
         select
             a.id as account_id,
             a.id_collectivity,
@@ -498,14 +506,21 @@ public class CollectivityRepository {
         left join bank_account ba on a.id = ba.id_account
         left join mobile_money_account ma on a.id = ma.id_account
         left join transaction t on a.id = t.id_account
-        where a.id_collectivity = ?
-        order by a.id, t.transaction_date
-    """;
+        """;
+
+        String whereClause = at != null 
+            ? "where a.id_collectivity = ? and t.transaction_date <= ?"
+            : "where a.id_collectivity = ?";
+
+        String sql = baseSql + " " + whereClause + " order by a.id, t.transaction_date";
 
         Map<Integer, Account> accountMap = new HashMap<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, collectivityId);
+            if (at != null) {
+                stmt.setTimestamp(2, Timestamp.from(at));
+            }
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {

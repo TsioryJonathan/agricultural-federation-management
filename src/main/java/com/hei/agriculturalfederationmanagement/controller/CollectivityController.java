@@ -120,4 +120,19 @@ public class CollectivityController {
         }
     }
 
+    @GetMapping("/{id}/financialAccounts")
+    public ResponseEntity<?> getFinancialAccounts(
+            @PathVariable Integer id,
+            @RequestParam(required = false) Instant at) {
+        try {
+            List<CollectivityFinancialAccountResponse> accounts = service.getFinancialAccounts(id, at);
+            return ResponseEntity.ok(accounts);
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
 }
