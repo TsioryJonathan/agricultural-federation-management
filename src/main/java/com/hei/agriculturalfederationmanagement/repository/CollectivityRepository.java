@@ -9,10 +9,7 @@ import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -153,6 +150,41 @@ public class CollectivityRepository {
                 return collectivity;
             }
             return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find collectivity", e);
+        }
+    }
+
+    public Optional<Collectivity> findByIdOptional(Integer id) {
+        String collectivitySql = """
+        select id, number, name, speciality, creation_datetime,
+               federation_approval, authorization_date, location
+        from collectivity
+        where id = ?
+    """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(collectivitySql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Collectivity collectivity = Collectivity.builder()
+                        .id(rs.getInt("id"))
+                        .number(rs.getString("number"))
+                        .name(rs.getString("name"))
+                        .speciality(rs.getString("speciality"))
+                        .creationDatetime(rs.getTimestamp("creation_datetime").toInstant())
+                        .federationApproval(rs.getBoolean("federation_approval"))
+                        .authorizationDate(rs.getTimestamp("authorization_date") != null ?
+                                rs.getTimestamp("authorization_date").toInstant() : null)
+                        .location(rs.getString("location"))
+                        .build();
+
+                fetchMembersAndStructure(collectivity);
+
+                return Optional.of(collectivity);
+            }
+            return Optional.empty();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to find collectivity", e);
         }

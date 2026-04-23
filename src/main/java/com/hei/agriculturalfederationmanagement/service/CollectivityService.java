@@ -275,4 +275,8 @@ public class CollectivityService {
                         .build())
                 .toList();
     }
+
+    public Collectivity getCollectivityById(Integer id) {
+        return repository.findByIdOptional(id).orElseThrow(()->new NotFoundException("Collectivity id=" + id + " not found"));
+    }
 }

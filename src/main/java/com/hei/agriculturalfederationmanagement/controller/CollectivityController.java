@@ -1,5 +1,6 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
+import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
@@ -35,6 +36,20 @@ public class CollectivityController {
                     .body("An unexpected error occurred: " + e.getMessage());
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCollectivity(@PathVariable Integer id){
+        try{
+            Collectivity collectivity = service.getCollectivityById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(collectivity);
+        }catch (NotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
 
     @GetMapping("/{id}/membershipFees")
     public ResponseEntity<?> getMembershipFees(@PathVariable Integer id) {
