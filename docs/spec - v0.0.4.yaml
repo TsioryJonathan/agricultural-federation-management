@@ -153,6 +153,7 @@ paths:
       description: |
         Returns the list of financial accounts (cash, mobile banking, or bank) for a collectivity.
         The optional `at` query parameter allows retrieving the balance at a specific date.
+        Response includes total amount (sum of all accounts) and list of account details.
       parameters:
         - in: path
           name: id
@@ -168,13 +169,11 @@ paths:
           description: Date to get account balance at (inclusive)
       responses:
         200:
-          description: List of financial accounts with current or historical balance
+          description: Financial accounts with total amount and account details
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FinancialAccount'
+                $ref: '#/components/schemas/CollectivityFinancialAccounts'
         404:
           description: Collectivity not found.
   '/members':
@@ -233,6 +232,46 @@ paths:
 
 components:
   schemas:
+    CollectivityFinancialAccounts:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: number
+          description: Total sum of all accounts balance
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancialAccountDetail'
+    FinancialAccountDetail:
+      type: object
+      discriminator:
+        propertyName: type
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [CASH, BANK, MOBILE_BANKING]
+        amount:
+          type: number
+        holderName:
+          type: string
+        bankName:
+          $ref: '#/components/schemas/Bank'
+        bankCode:
+          type: string
+        bankBranchCode:
+          type: string
+        bankAccountNumber:
+          type: string
+        bankAccountKey:
+          type: string
+        mobileBankingService:
+          $ref: '#/components/schemas/MobileBankingService'
+        mobileNumber:
+          type: string
     CreateCollectivity:
       type: object
       properties:

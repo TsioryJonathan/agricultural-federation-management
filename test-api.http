@@ -251,7 +251,7 @@ Content-Type: application/json
 POST http://localhost:8080/collectivities
 Content-Type: application/json
 
-[
+
   {
     "location": "Fianarantsoa",
     "federationApproval": true,
@@ -263,7 +263,6 @@ Content-Type: application/json
       "secretaryId": 10
     }
   }
-]
 
 
 ### 5. Update collectivity name
@@ -286,7 +285,7 @@ Content-Type: application/json
 [
   {
     "eligibleFrom": "2026-06-22",
-    "frequency": "ANNUALY",
+    "frequency": "ANNUALLY",
     "amount": 500000,
     "label": "Annualy Cotisation"
   }
@@ -296,7 +295,4 @@ Content-Type: application/json
 GET http://localhost:8080/collectivities/1/financialAccounts
 
 ### 9. Get financial accounts at specific date
-GET http://localhost:8080/collectivities/1/financialAccounts?at=2026-04-23T10:00:00Z
-
-### 10. Get transactions by date range
-GET http://localhost:8080/collectivities/1/transactions?from=2026-04-01T00:00:00Z&to=2026-04-30T23:59:59Z
+GET http://localhost:8080/collectivities/1/financialAccounts?at=2024-04-23T10:00:00Z

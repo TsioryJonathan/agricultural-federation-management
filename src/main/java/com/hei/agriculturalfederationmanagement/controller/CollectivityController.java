@@ -125,7 +125,7 @@ public class CollectivityController {
             @PathVariable Integer id,
             @RequestParam(required = false) Instant at) {
         try {
-            List<CollectivityFinancialAccountResponse> accounts = service.getFinancialAccounts(id, at);
+            CollectivityFinancialAccountResponse accounts = service.getFinancialAccounts(id, at);
             return ResponseEntity.ok(accounts);
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

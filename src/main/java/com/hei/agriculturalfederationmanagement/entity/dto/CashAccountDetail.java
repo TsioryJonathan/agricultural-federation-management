@@ -5,14 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CollectivityFinancialAccountResponse {
-    private Integer id;
+public class CashAccountDetail {
+    private String id;
+    private String type;
     private Double amount;
-    private List<Object> accounts;
+
+    public CashAccountDetail(String id, Double amount) {
+        this.id = id;
+        this.type = "CASH";
+        this.amount = amount;
+    }
 }

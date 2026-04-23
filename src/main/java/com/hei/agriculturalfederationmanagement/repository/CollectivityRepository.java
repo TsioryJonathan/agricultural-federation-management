@@ -151,7 +151,7 @@ public class CollectivityRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find collectivity", e);
+            throw new RuntimeException("Failed to find collectivity " + e.getMessage());
         }
     }
 
