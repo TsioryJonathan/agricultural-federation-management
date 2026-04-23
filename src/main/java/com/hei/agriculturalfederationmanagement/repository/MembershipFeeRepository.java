@@ -17,7 +17,7 @@ import java.util.List;
 public class MembershipFeeRepository {
     private final Connection connection;
 
-    public List<MembershipFee> findByCollectivityId(Integer collectivityId) {
+    public List<MembershipFee> findByCollectivityId(String collectivityId) {
         String sql = """
             select id, label, frequency, amount, eligible_from, is_active
             from cotisation_plan
@@ -28,7 +28,7 @@ public class MembershipFeeRepository {
         List<MembershipFee> membershipFees = new ArrayList<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, collectivityId);
+            stmt.setString(1, collectivityId);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -42,7 +42,7 @@ public class MembershipFeeRepository {
 
     private MembershipFee mapResultSetToMembershipFee(ResultSet rs) throws SQLException {
         return MembershipFee.builder()
-                .id(rs.getInt("id"))
+                .id(rs.getString("id"))
                 .label(rs.getString("label"))
                 .frequency(Frequency.valueOf(rs.getString("frequency")))
                 .amount(rs.getDouble("amount"))
@@ -51,7 +51,7 @@ public class MembershipFeeRepository {
                 .build();
     }
 
-    public MembershipFee save(MembershipFee membershipFee, Integer collectivityId) {
+    public MembershipFee save(MembershipFee membershipFee, String collectivityId) {
         String sql = """
             insert into cotisation_plan (id_collectivity, label, frequency, amount, eligible_from, is_active)
             values (?, ?, ?::frequency, ?, ?, true)
@@ -59,7 +59,7 @@ public class MembershipFeeRepository {
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, collectivityId);
+            stmt.setString(1, collectivityId);
             stmt.setString(2, membershipFee.getLabel());
             stmt.setObject(3, membershipFee.getFrequency().name(), Types.OTHER);
             stmt.setDouble(4, membershipFee.getAmount());
@@ -67,7 +67,7 @@ public class MembershipFeeRepository {
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                membershipFee.setId(rs.getInt("id"));
+                membershipFee.setId(rs.getString("id"));
                 membershipFee.setStatus(ActivityStatus.ACTIVE);
             }
             return membershipFee;

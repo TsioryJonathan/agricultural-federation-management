@@ -20,7 +20,7 @@ public class MemberRepository {
 
     private final Connection connection;
 
-    public List<Member> findByIds(List<Integer> ids) {
+    public List<Member> findByIds(List<String> ids) {
         if (ids == null || ids.isEmpty()) return new ArrayList<>();
 
         String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
@@ -60,15 +60,15 @@ public class MemberRepository {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             for (int i = 0; i < ids.size(); i++) {
-                stmt.setInt(i + 1, ids.get(i));
+                stmt.setString(i + 1, ids.get(i));
             }
 
             ResultSet rs = stmt.executeQuery();
 
-            Map<Integer, Member> map = new HashMap<>();
+            Map<String, Member> map = new HashMap<>();
 
             while (rs.next()) {
-                int id = rs.getInt("m_id");
+                String id = rs.getString("m_id");
 
                 Member member = map.get(id);
                 if (member == null) {
@@ -89,11 +89,11 @@ public class MemberRepository {
         }
     }
 
-    public \1 existsById(String id) {
+    public boolean existsById(String id) {
         String sql = "SELECT COUNT(*) FROM member WHERE id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
+            stmt.setString(1, id);
 
             ResultSet rs = stmt.executeQuery();
             rs.next();
@@ -105,14 +105,14 @@ public class MemberRepository {
         }
     }
 
-public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
+    public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
         String insertMemberSql = """
         INSERT INTO member(
-            first_name, last_name, birth_date, enrolment_date,
+            id, first_name, last_name, birth_date, enrolment_date,
             address, email, phone_number, profession, gender
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         try {
@@ -123,33 +123,29 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
         List<Member> result = new ArrayList<>();
 
-        try (PreparedStatement memberStmt = connection.prepareStatement(insertMemberSql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement memberStmt = connection.prepareStatement(insertMemberSql)) {
 
             for (int i = 0; i < members.size(); i++) {
 
                 Member member = members.get(i);
 
-                memberStmt.setString(1, member.getFirstName());
-                memberStmt.setString(2, member.getLastName());
-                memberStmt.setDate(3, Date.valueOf(member.getBirthDate()));
-                memberStmt.setTimestamp(4, Timestamp.from(Instant.now()));
-                memberStmt.setString(5, member.getAddress());
-                memberStmt.setString(6, member.getEmail());
-                memberStmt.setString(7, member.getPhoneNumber());
-                memberStmt.setString(8, member.getProfession());
-                memberStmt.setObject(9, member.getGender().name(), Types.OTHER);
+                memberStmt.setString(1, member.getId());
+                memberStmt.setString(2, member.getFirstName());
+                memberStmt.setString(3, member.getLastName());
+                memberStmt.setDate(4, Date.valueOf(member.getBirthDate()));
+                memberStmt.setTimestamp(5, Timestamp.from(Instant.now()));
+                memberStmt.setString(6, member.getAddress());
+                memberStmt.setString(7, member.getEmail());
+                memberStmt.setString(8, member.getPhoneNumber());
+                memberStmt.setString(9, member.getProfession());
+                memberStmt.setObject(10, member.getGender().name(), Types.OTHER);
 
                 memberStmt.executeUpdate();
-
-                ResultSet keys = memberStmt.getGeneratedKeys();
-                if (!keys.next()) throw new RuntimeException("No generated key");
-
-                int memberId = keys.getInt(1);
-                member.setId(memberId);
 
                 result.add(member);
             }
 
+            connection.commit();
             return result;
 
         } catch (SQLException e) {
@@ -159,7 +155,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
     private Member mapBasicMember(ResultSet rs) throws SQLException {
         return Member.builder()
-                .id(rs.getInt("m_id"))
+                .id(rs.getString("m_id"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
                 .birthDate(rs.getDate("birth_date").toLocalDate())
@@ -177,7 +173,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
     private MemberCollectivity mapMemberCollectivity(ResultSet rs, Member member) throws SQLException {
 
         Collectivity c = Collectivity.builder()
-                .id(rs.getInt("c_id"))
+                .id(rs.getString("c_id"))
                 .name(rs.getString("name"))
                 .number(rs.getString("number"))
                 .speciality(rs.getString("speciality"))
@@ -190,7 +186,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
                 .build();
 
         MemberCollectivity mc = MemberCollectivity.builder()
-                .id(rs.getInt("mc_id"))
+                .id(rs.getString("mc_id"))
                 .startDate(rs.getTimestamp("start_date").toInstant())
                 .endDate(rs.getTimestamp("end_date") != null
                         ? rs.getTimestamp("end_date").toInstant()
@@ -204,11 +200,11 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
         return mc;
     }
 
-    public \1 findById(String id) {
+    public Optional<Member> findById(String id) {
         String sql = "select id, first_name,last_name,birth_date,enrolment_date,address,email,phone_number,profession,gender,superuser from member where id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
+            stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -221,7 +217,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
         }
     }
 
-    public Integer findActiveCollectivityIdByMemberId(Integer memberId) {
+    public String findActiveCollectivityIdByMemberId(String memberId) {
         String sql = """
         select id_collectivity
         from member_collectivity
@@ -230,10 +226,10 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
     """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, memberId);
+            stmt.setString(1, memberId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt("id_collectivity");
+                return rs.getString("id_collectivity");
             }
             return null;
         } catch (SQLException e) {
@@ -243,7 +239,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
 
     private Member mapResultSetToMember(ResultSet rs) throws SQLException {
         return Member.builder()
-                .id(rs.getInt("id"))
+                .id(rs.getString("id"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
                 .birthDate(rs.getDate("birth_date").toLocalDate())

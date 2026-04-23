@@ -50,7 +50,7 @@ public class FederationRepository {
             while (rs.next()) {
                 if (federation == null) {
                     federation = Federation.builder()
-                            .id(rs.getInt("federation_id"))
+                            .id(rs.getString("federation_id"))
                             .cotisationPercentage(rs.getDouble("cotisation_percentage"))
                             .build();
                 }
@@ -82,7 +82,7 @@ public class FederationRepository {
 
     private Member mapResultSetToMember(ResultSet rs) throws SQLException {
         return Member.builder()
-                .id(rs.getInt("id_member"))
+                .id(rs.getString("id_member"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
                 .birthDate(rs.getDate("birth_date").toLocalDate())

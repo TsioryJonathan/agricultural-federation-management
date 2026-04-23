@@ -42,7 +42,7 @@ public class MemberService {
         /* Validate Sponsor count */
         memberList.forEach(sponsorCountValidator::validate);
 
-        List<Integer> sponsorIds = memberList.stream()
+        List<String> sponsorIds = memberList.stream()
                 .flatMap(m -> m.getReferees().stream())
                 .distinct()
                 .toList();
@@ -105,7 +105,7 @@ public class MemberService {
 
     // transactions
 
-    public List<MemberPaymentResponse> createPayments(Integer memberId, List<CreateMemberPayment> requests) {
+    public List<MemberPaymentResponse> createPayments(String memberId, List<CreateMemberPayment> requests) {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException("Member not found with id: " + memberId));

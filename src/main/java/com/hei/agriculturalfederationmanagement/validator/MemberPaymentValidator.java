@@ -16,7 +16,7 @@ public class MemberPaymentValidator {
     private final CotisationPlanRepository cotisationPlanRepository;
 
 
-    public void validatePaymentRequest(CreateMemberPayment request, Integer collectivityId) {
+    public void validatePaymentRequest(CreateMemberPayment request, String collectivityId) {
         if (request.getAmount() == null || request.getAmount() <= 0) {
             throw new BadRequestException("Amount must be greater than 0");
         }
@@ -29,13 +29,13 @@ public class MemberPaymentValidator {
             throw new BadRequestException("Account credited identifier is required");
         }
 
-        Integer accountId = (request.getAccountCreditedIdentifier());
+        String accountId = (request.getAccountCreditedIdentifier());
         if (!accountRepository.existsByIdAndCollectivityId(accountId, collectivityId)) {
             throw new BadRequestException("Account not found or does not belong to the member's collectivity");
         }
 
         if (request.getMembershipFeeIdentifier() != null) {
-            Integer feeId = (request.getMembershipFeeIdentifier());
+            String feeId = (request.getMembershipFeeIdentifier());
             var fee = cotisationPlanRepository.findById(feeId)
                     .orElseThrow(() -> new NotFoundException("Membership fee not found with id: " + feeId));
 

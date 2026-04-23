@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateStructure {
-    private Integer presidentId;
-    private Integer vicePresidentId;
-    private Integer treasurerId;
-    private Integer secretaryId;
+    private String presidentId;
+    private String vicePresidentId;
+    private String treasurerId;
+    private String secretaryId;
 }

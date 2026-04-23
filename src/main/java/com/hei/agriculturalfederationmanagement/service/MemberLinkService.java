@@ -36,7 +36,7 @@ public class MemberLinkService {
             Member saved = savedMembers.get(i);
             CreateMember dto = dtos.get(i);
             if (dto.getReferees() != null) {
-                for (Integer refId : dto.getReferees()) {
+                for (String refId : dto.getReferees()) {
                     refereeLinks.add(MemberRefereeLink.builder()
                             .idMember(saved.getId())
                             .idReferee(refId)

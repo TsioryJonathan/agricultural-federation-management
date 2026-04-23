@@ -32,9 +32,9 @@ public class RefereeRepository {
 
         try(PreparedStatement pstmt = connection.prepareStatement(insertRefSql)){
             for(MemberRefereeLink link : linkToAdd){
-                pstmt.setInt(1, link.getIdMember());
-                pstmt.setInt(2, link.getIdReferee());
-                pstmt.setInt(3, link.getIdCollectivity());
+                pstmt.setString(1, link.getIdMember());
+                pstmt.setString(2, link.getIdReferee());
+                pstmt.setString(3, link.getIdCollectivity());
                 pstmt.setString(4, link.getLink());
                 pstmt.setTimestamp(5, Timestamp.from(Instant.now()));
 

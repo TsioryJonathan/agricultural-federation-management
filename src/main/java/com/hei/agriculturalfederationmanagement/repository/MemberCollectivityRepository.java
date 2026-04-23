@@ -15,7 +15,7 @@ import java.util.List;
 public class MemberCollectivityRepository {
     private final Connection connection;
 
-    public void saveMemberCollectivityLink(int memberId, int collectivityId, CollectivityOccupation occupation) {
+    public void saveMemberCollectivityLink(String memberId, String collectivityId, CollectivityOccupation occupation) {
         String sql = """
         insert into member_collectivity(
             id_member, id_collectivity, occupation, start_date, end_date
@@ -24,8 +24,8 @@ public class MemberCollectivityRepository {
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, memberId);
-            stmt.setInt(2, collectivityId);
+            stmt.setString(1, memberId);
+            stmt.setString(2, collectivityId);
             stmt.setObject(3, occupation.name(), Types.OTHER);
             stmt.setTimestamp(4, Timestamp.from(Instant.now()));
             stmt.setTimestamp(5, null);

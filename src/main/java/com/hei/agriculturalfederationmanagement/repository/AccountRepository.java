@@ -12,16 +12,16 @@ import java.util.Optional;
 public class AccountRepository {
     private final Connection connection;
 
-    public \1 findById(String id) {
+    public Optional<Account> findById(String id) {
         String sql = "select id, id_collectivity, id_federation from account where id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
+            stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return Optional.of(Account.builder()
-                        .id(rs.getInt("id"))
+                        .id(rs.getString("id"))
                         .build());
             }
             return Optional.empty();
@@ -30,12 +30,12 @@ public class AccountRepository {
         }
     }
 
-    public boolean existsByIdAndCollectivityId(Integer accountId, Integer collectivityId) {
+    public boolean existsByIdAndCollectivityId(String accountId, String collectivityId) {
         String sql = "select count(id) from account where id = ? and id_collectivity = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, accountId);
-            stmt.setInt(2, collectivityId);
+            stmt.setString(1, accountId);
+            stmt.setString(2, collectivityId);
             ResultSet rs = stmt.executeQuery();
             rs.next();
             return rs.getInt(1) > 0;

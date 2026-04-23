@@ -25,11 +25,11 @@ public class CollectivityService {
 
     public List<CollectivityResponse> createCollectivities(List<CreateCollectivity> createCollectivities) throws BadRequestException {
         List<Collectivity> collectivitiesToSave = new ArrayList<>();
-        List<List<Integer>> memberIdsList = new ArrayList<>();
-        List<Integer> presidentIds = new ArrayList<>();
-        List<Integer> vicePresidentIds = new ArrayList<>();
-        List<Integer> treasurerIds = new ArrayList<>();
-        List<Integer> secretaryIds = new ArrayList<>();
+        List<List<String>> memberIdsList = new ArrayList<>();
+        List<String> presidentIds = new ArrayList<>();
+        List<String> vicePresidentIds = new ArrayList<>();
+        List<String> treasurerIds = new ArrayList<>();
+        List<String> secretaryIds = new ArrayList<>();
 
         for (CreateCollectivity request : createCollectivities) {
             validator.validateCollectivityCreation(request);
@@ -64,7 +64,7 @@ public class CollectivityService {
     }
 
 
-    public CollectivityResponse assignIdentity(Integer id, CollectivityInformation request) throws BadRequestException {
+    public CollectivityResponse assignIdentity(String id, CollectivityInformation request) throws BadRequestException {
         if (request.getNumber() == null || request.getNumber().trim().isEmpty()) {
             throw new BadRequestException("Number is required");
         }
@@ -98,7 +98,7 @@ public class CollectivityService {
 
 
     public List<CollectivityTransactionResponse> getCollectivityTransactions(
-            Integer id,
+            String id,
             Instant from,
             Instant to) throws BadRequestException {
 
@@ -221,7 +221,7 @@ public class CollectivityService {
                 .build();
     }
 
-    public List<MembershipFeeResponse> getMembershipFees(Integer collectivityId) {
+    public List<MembershipFeeResponse> getMembershipFees(String collectivityId) {
         Collectivity collectivity = repository.findById(collectivityId);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);
@@ -239,7 +239,7 @@ public class CollectivityService {
                 .toList();
     }
 
-    public List<MembershipFeeResponse> createMembershipFees(Integer collectivityId, List<CreateMembershipFee> createMembershipFees) {
+    public List<MembershipFeeResponse> createMembershipFees(String collectivityId, List<CreateMembershipFee> createMembershipFees) {
         Collectivity collectivity = repository.findById(collectivityId);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);
@@ -277,17 +277,17 @@ public class CollectivityService {
                 .toList();
     }
 
-    public Collectivity getCollectivityById(Integer id) {
+    public Collectivity getCollectivityById(String id) {
         return repository.findByIdOptional(id).orElseThrow(()->new NotFoundException("Collectivity id=" + id + " not found"));
     }
 
-    public CollectivityFinancialAccountResponse getFinancialAccounts(Integer collectivityId, Instant at) {
+    public CollectivityFinancialAccountResponse getFinancialAccounts(String collectivityId, Instant at) {
         Collectivity collectivity = repository.findById(collectivityId);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);
         }
 
-        Map<Integer, Account> accounts = at != null 
+        Map<String, Account> accounts = at != null
             ? repository.loadAccountsWithTransactionsAt(collectivityId, at)
             : repository.loadAccountsWithAllTransactions(collectivityId);
 

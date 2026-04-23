@@ -20,14 +20,14 @@ public class TransactionRepository {
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1,transaction.getMember().getId());
-            stmt.setInt(2,transaction.getCollectivity().getId());
+            stmt.setString(1,transaction.getMember().getId());
+            stmt.setString(2,transaction.getCollectivity().getId());
             if (transaction.getCotisationPlan() != null) {
-                stmt.setInt(3, transaction.getCotisationPlan().getId());
+                stmt.setString(3, transaction.getCotisationPlan().getId());
             } else {
                 stmt.setNull(3, Types.INTEGER);
             }
-            stmt.setInt(4, transaction.getAccount().getId());
+            stmt.setString(4, transaction.getAccount().getId());
             stmt.setString(5, transaction.getTransactionType().name());
             stmt.setDouble(6, transaction.getAmount());
             stmt.setTimestamp(7, Timestamp.from(transaction.getTransactionDate()));
@@ -36,7 +36,7 @@ public class TransactionRepository {
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                transaction.setId(rs.getInt("id"));
+                transaction.setId(rs.getString("id"));
             }
             return transaction;
         } catch (SQLException e) {

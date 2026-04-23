@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class MemberRefereeLink {
-    private int idMember;
-    private int idReferee;
-    private int idCollectivity;
+    private String idMember;
+    private String idReferee;
+    private String idCollectivity;
     private String link;
 }
