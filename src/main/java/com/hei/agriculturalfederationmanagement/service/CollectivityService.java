@@ -119,24 +119,24 @@ public class CollectivityService {
 
 
         return transactions.stream()
-                .map(this::toTransactionResponse)
+                .map(t -> toTransactionResponse(t,t.getTransactionDate()))
                 .toList();
     }
 
-    private CollectivityTransactionResponse toTransactionResponse(Transaction transaction) {
+    private CollectivityTransactionResponse toTransactionResponse(Transaction transaction,Instant at) {
         return CollectivityTransactionResponse.builder()
                 .id(String.valueOf(transaction.getId()))
                 .creationDate(transaction.getTransactionDate())
                 .amount(transaction.getAmount())
                 .paymentMode(transaction.getPaymentMode())
-                .accountCredited(toFinancialAccountResponse(transaction.getAccount()))
+                .accountCredited(toFinancialAccountResponse(transaction.getAccount(),at))
                 .memberDebited(toMemberResponse(transaction.getMember()))
                 .build();
     }
 
-    private FinancialAccountResponse toFinancialAccountResponse(Account account) {
+    private FinancialAccountResponse toFinancialAccountResponse(Account account,Instant at) {
 
-        Double balance = account.getBalance();
+        Double balance = account.getBalance(at);
 
         if (account.getBankAccount() != null) {
             BankAccount ba = account.getBankAccount();
