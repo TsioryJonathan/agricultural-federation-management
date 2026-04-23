@@ -7,7 +7,6 @@ import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.InsufficientSponsorCount;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.exception.PaymentException;
-import com.hei.agriculturalfederationmanagement.service.MemberPaymentService;
 import com.hei.agriculturalfederationmanagement.service.MemberService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,8 +21,6 @@ import java.util.List;
 public class MemberController {
 
     private final MemberService service;
-    private final MemberPaymentService memberPaymentService;
-
 
     @PostMapping
     public ResponseEntity<?> createMember(@RequestBody List<CreateMember> members) {
@@ -54,7 +51,7 @@ public class MemberController {
             @PathVariable Integer id,
             @RequestBody List<CreateMemberPayment> requests) {
         try {
-            List<MemberPaymentResponse> responses = memberPaymentService.createPayments(id, requests);
+            List<MemberPaymentResponse> responses = service.createPayments(id, requests);
             return ResponseEntity.status(HttpStatus.CREATED).body(responses);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

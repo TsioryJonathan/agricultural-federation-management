@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,29 @@ public class Account {
                 .sum();
 
         double totalOut = transactions.stream()
+                .filter(t -> t.getTransactionType() == TransactionType.OUT)
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+
+        return totalIn - totalOut;
+    }
+
+    public Double getBalance(Instant from,Instant to){
+        if (transactions == null || transactions.isEmpty()) {
+            return 0.0;
+        }
+
+        List<Transaction> filteredTransactions = transactions.stream() .filter(t ->
+                (from == null || !t.getTransactionDate().isBefore(from)) &&
+                        (to == null || !t.getTransactionDate().isAfter(to))
+        ).toList();
+
+        double totalIn = filteredTransactions.stream()
+                .filter(t -> t.getTransactionType() == TransactionType.IN)
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+
+        double totalOut = filteredTransactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.OUT)
                 .mapToDouble(Transaction::getAmount)
                 .sum();

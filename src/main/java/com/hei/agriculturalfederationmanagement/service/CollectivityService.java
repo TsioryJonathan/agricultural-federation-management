@@ -116,6 +116,8 @@ public class CollectivityService {
 
         List<Transaction> transactions = repository.findTransactionsByCollectivityIdAndDateRange(id, from, to);
 
+
+
         return transactions.stream()
                 .map(this::toTransactionResponse)
                 .toList();
@@ -133,7 +135,6 @@ public class CollectivityService {
     }
 
     private FinancialAccountResponse toFinancialAccountResponse(Account account) {
-        if (account == null) return null;
 
         Double balance = account.getBalance();
 

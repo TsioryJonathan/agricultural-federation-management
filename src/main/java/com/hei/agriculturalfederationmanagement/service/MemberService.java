@@ -1,15 +1,22 @@
 package com.hei.agriculturalfederationmanagement.service;
 
-import com.hei.agriculturalfederationmanagement.entity.Member;
-import com.hei.agriculturalfederationmanagement.entity.dto.CreateMember;
-import com.hei.agriculturalfederationmanagement.entity.dto.MemberResponse;
+import com.hei.agriculturalfederationmanagement.entity.*;
+import com.hei.agriculturalfederationmanagement.entity.dto.*;
+import com.hei.agriculturalfederationmanagement.entity.enums.TransactionType;
+import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
+import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
+import com.hei.agriculturalfederationmanagement.repository.AccountRepository;
+import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
 import com.hei.agriculturalfederationmanagement.repository.MemberRepository;
+import com.hei.agriculturalfederationmanagement.repository.TransactionRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityRuleValidator;
+import com.hei.agriculturalfederationmanagement.validator.MemberPaymentValidator;
 import com.hei.agriculturalfederationmanagement.validator.PaymentValidator;
 import com.hei.agriculturalfederationmanagement.validator.SponsorCountValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -22,6 +29,10 @@ public class MemberService {
     private final PaymentValidator paymentValidator;
     private final CollectivityRuleValidator collectivityRuleValidator;
     private final SponsorCountValidator sponsorCountValidator;
+    private final MemberPaymentValidator memberPaymentValidator;
+    private final CollectivityRepository collectivityRepository;
+    private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
     public List<MemberResponse> createMembers(List<CreateMember> memberList) {
 
@@ -91,4 +102,96 @@ public class MemberService {
                 })
                 .toList();
     }
+
+    // transactions
+
+    public List<MemberPaymentResponse> createPayments(Integer memberId, List<CreateMemberPayment> requests) {
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException("Member not found with id: " + memberId));
+
+        List<MemberPaymentResponse> responses = new ArrayList<>();
+
+
+        for (CreateMemberPayment request : requests) {
+
+            Collectivity collectivity =  collectivityRepository.findByMembershipFeeId(request.getMembershipFeeIdentifier());
+            Account account = accountRepository.findById(request.getAccountCreditedIdentifier()).orElseThrow(()-> new NotFoundException("Account not found"));
+
+            if (collectivity == null) {
+                throw new BadRequestException("Collectivity with that membership fee not found");
+            }
+
+            memberPaymentValidator.validatePaymentRequest(request, collectivity.getId());
+
+            Transaction transaction = Transaction.builder()
+                    .transactionType(TransactionType.IN)
+                    .amount(request.getAmount())
+                    .transactionDate(Instant.now())
+                    .member(member)
+                    .description("-")
+                    .paymentMode(request.getPaymentMode())
+                    .collectivity(collectivity)
+                    .account(account)
+                    .build();
+
+            Transaction savedTransaction = transactionRepository.save(transaction);
+
+            MemberPaymentResponse response = buildPaymentResponse(savedTransaction);
+            responses.add(response);
+        }
+
+        return responses;
+    }
+
+    private MemberPaymentResponse buildPaymentResponse(Transaction transaction) {
+        var account = collectivityRepository.findAccountById(transaction.getAccount().getId());
+
+        return MemberPaymentResponse.builder()
+                .id(String.valueOf(transaction.getId()))
+                .amount(transaction.getAmount())
+                .paymentMode(transaction.getPaymentMode())
+                .accountCredited(toFinancialAccountResponse(account))
+                .creationDate(transaction.getTransactionDate())
+                .build();
+    }
+
+    private FinancialAccountResponse toFinancialAccountResponse(Account account) {
+
+        Double balance = account.getBalance();
+
+        if (account.getBankAccount() != null) {
+            BankAccount ba = account.getBankAccount();
+            BankAccountResponse response = BankAccountResponse.builder()
+                    .holderName(ba.getHolderName())
+                    .bankName(ba.getBankName())
+                    .bankCode(ba.getBankCode())
+                    .bankBranchCode(ba.getBranchCode())
+                    .bankAccountNumber(ba.getAccountNumber())
+                    .bankAccountKey(ba.getRibKey())
+                    .build();
+            response.setId(String.valueOf(account.getId()));
+            response.setAmount(balance);
+            return response;
+        } else if (account.getMobileMoneyAccount() != null) {
+            MobileMoneyAccount ma = account.getMobileMoneyAccount();
+            MobileBankingAccountResponse response = MobileBankingAccountResponse.builder()
+                    .holderName(ma.getHolderName())
+                    .mobileBankingService(ma.getServiceName())
+                    .mobileNumber(ma.getPhoneNumber())
+                    .build();
+            response.setId(String.valueOf(account.getId()));
+            response.setAmount(balance);
+            return response;
+        } else if (account.getCashAccount() != null) {
+            CashAccountResponse response = CashAccountResponse.builder().build();
+            response.setId(String.valueOf(account.getId()));
+            response.setAmount(balance);
+            return response;
+        }
+
+        return null;
+    }
+
+
 }
