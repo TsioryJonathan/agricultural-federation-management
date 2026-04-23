@@ -38,6 +38,27 @@ paths:
           description: Collectivity without federation approval or structure missing.
         404:
           description: Member not found.
+  '/collectivities/{id}':
+    get:
+      summary: Get collectivity by ID
+      description: |
+        Retrieves detailed information about a specific collectivity including its structure and members.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Collectivity identifier
+      responses:
+        200:
+          description: Collectivity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+        404:
+          description: Collectivity not found.
   '/collectivities/{id}/informations':
     put:
       summary: Attribute collectivity informations to specific collectivity
