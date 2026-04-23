@@ -89,7 +89,6 @@ CREATE TABLE "public"."mandate_federation" (
                                        PRIMARY KEY ("id")
 );
 
--- Membership Fee (cotisation_plan)
 CREATE TABLE "public"."cotisation_plan" (
                                      "id"              varchar                NOT NULL,
                                      "id_collectivity" varchar               NOT NULL,
@@ -101,7 +100,6 @@ CREATE TABLE "public"."cotisation_plan" (
                                      PRIMARY KEY ("id")
 );
 
--- Transaction
 CREATE TABLE "public"."transaction" (
                                      "id"                  varchar          NOT NULL,
                                      "id_member"           varchar         NOT NULL,
@@ -116,7 +114,6 @@ CREATE TABLE "public"."transaction" (
                                      PRIMARY KEY ("id")
 );
 
--- Account (mère)
 CREATE TABLE "public"."account" (
                                      "id"              varchar  NOT NULL,
                                      "id_collectivity" varchar,
@@ -128,7 +125,6 @@ CREATE TABLE "public"."account" (
                                          )
 );
 
--- Cash Account
 CREATE TABLE "public"."cash_account" (
                                      "id"          varchar NOT NULL,
                                      "id_account"  varchar NOT NULL UNIQUE,
@@ -136,7 +132,6 @@ CREATE TABLE "public"."cash_account" (
                                      PRIMARY KEY ("id")
 );
 
--- Bank Account
 CREATE TABLE "public"."bank_account" (
                                      "id"             varchar           NOT NULL,
                                      "id_account"     varchar           NOT NULL UNIQUE,
@@ -150,7 +145,6 @@ CREATE TABLE "public"."bank_account" (
                                      PRIMARY KEY ("id")
 );
 
--- Mobile Money Account
 CREATE TABLE "public"."mobile_money_account" (
                                        "id"           varchar               NOT NULL,
                                        "id_account"   varchar               NOT NULL UNIQUE,

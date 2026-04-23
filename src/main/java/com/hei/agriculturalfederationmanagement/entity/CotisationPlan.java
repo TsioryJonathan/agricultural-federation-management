@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CotisationPlan {
-    private Integer id;
+    private String id;
     private Integer idCollectivity;
     private String label;
     private Frequency frequency;

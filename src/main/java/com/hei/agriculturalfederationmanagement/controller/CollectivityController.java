@@ -38,7 +38,7 @@ public class CollectivityController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCollectivity(@PathVariable Integer id){
+    public ResponseEntity<?> getCollectivity(@PathVariable String id){
         try{
             Collectivity collectivity = service.getCollectivityById(id);
             return ResponseEntity.status(HttpStatus.OK).body(collectivity);
@@ -52,7 +52,7 @@ public class CollectivityController {
 
 
     @GetMapping("/{id}/membershipFees")
-    public ResponseEntity<?> getMembershipFees(@PathVariable Integer id) {
+    public ResponseEntity<?> getMembershipFees(@PathVariable String id) {
         try {
             List<MembershipFeeResponse> membershipFees = service.getMembershipFees(id);
             return ResponseEntity.ok(membershipFees);
@@ -65,7 +65,7 @@ public class CollectivityController {
     }
 
     @PostMapping("/{id}/membershipFees")
-    public ResponseEntity<?> createMembershipFees(@PathVariable Integer id, @RequestBody(required = false) List<CreateMembershipFee> createMembershipFees) {
+    public ResponseEntity<?> createMembershipFees(@PathVariable String id, @RequestBody(required = false) List<CreateMembershipFee> createMembershipFees) {
         try {
             if (createMembershipFees == null || createMembershipFees.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Request body is required");
@@ -81,7 +81,7 @@ public class CollectivityController {
     }
 
     @PutMapping("/{id}/informations")
-    public ResponseEntity<?> assignInformations(@PathVariable Integer id, @RequestBody(required = false) CollectivityInformation collectivityInformation){
+    public ResponseEntity<?> assignInformations(@PathVariable String id, @RequestBody(required = false) CollectivityInformation collectivityInformation){
         try{
             if(collectivityInformation == null){
                 return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory body not provided");
@@ -100,7 +100,7 @@ public class CollectivityController {
 
     @GetMapping("/{id}/transactions")
     public ResponseEntity<?> getCollectivityTransactions(
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to) {
         try {
@@ -122,7 +122,7 @@ public class CollectivityController {
 
     @GetMapping("/{id}/financialAccounts")
     public ResponseEntity<?> getFinancialAccounts(
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestParam(required = false) Instant at) {
         try {
             CollectivityFinancialAccountResponse accounts = service.getFinancialAccounts(id, at);

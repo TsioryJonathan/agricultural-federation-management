@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class MembershipFeeResponse {
-    private Integer id;
+    private String id;
     private LocalDate eligibleFrom;
     private Frequency frequency;
     private Double amount;

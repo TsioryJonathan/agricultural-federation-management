@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 public class MemberResponse {
 
-    private Integer id;
+    private String id;
     private String firstName;
     private String lastName;
     private LocalDate birthDate;
@@ -21,5 +21,5 @@ public class MemberResponse {
     private String phoneNumber;
     private String email;
 
-    private List<Integer> referees;
+    private List<String> referees;
 }

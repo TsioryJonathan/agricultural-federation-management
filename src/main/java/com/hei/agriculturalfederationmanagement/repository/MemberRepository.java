@@ -89,7 +89,7 @@ public class MemberRepository {
         }
     }
 
-    public boolean existsById(Integer id) {
+    public \1 existsById(String id) {
         String sql = "SELECT COUNT(*) FROM member WHERE id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -204,7 +204,7 @@ public List<Member> saveAll(List<Member> members, List<CreateMember> dtos) {
         return mc;
     }
 
-    public Optional<Member> findById(Integer id) {
+    public \1 findById(String id) {
         String sql = "select id, first_name,last_name,birth_date,enrolment_date,address,email,phone_number,profession,gender,superuser from member where id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

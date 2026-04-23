@@ -120,7 +120,7 @@ public class CollectivityRepository {
         }
     }
 
-    public Collectivity findById(Integer id) {
+    public \1 findById(String id) {
         String collectivitySql = """
             select id, number, name, speciality, creation_datetime, 
                    federation_approval, authorization_date, location
@@ -155,7 +155,7 @@ public class CollectivityRepository {
         }
     }
 
-    public Optional<Collectivity> findByIdOptional(Integer id) {
+    public \1 findByIdOptional(String id) {
         String collectivitySql = """
         select id, number, name, speciality, creation_datetime,
                federation_approval, authorization_date, location
@@ -365,7 +365,7 @@ public class CollectivityRepository {
         }
     }
 
-    public void assignIdentity(Integer id, String number, String name) {
+    String id, String number, String name) {
         String updateSql = "update collectivity set number = ?, name = ? where id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(updateSql)) {
             stmt.setString(1, number);

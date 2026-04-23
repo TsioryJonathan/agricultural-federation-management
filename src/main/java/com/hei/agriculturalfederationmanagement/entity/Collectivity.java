@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class Collectivity {
-    private Integer id;
+    private String id;
     private String number;
     private String name;
     private String speciality;

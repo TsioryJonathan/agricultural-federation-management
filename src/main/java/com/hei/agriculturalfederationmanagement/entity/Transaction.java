@@ -13,7 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {
-    private Integer id;
+    private String id;
     private Collectivity collectivity;
     private CotisationPlan cotisationPlan;
     private TransactionType transactionType;

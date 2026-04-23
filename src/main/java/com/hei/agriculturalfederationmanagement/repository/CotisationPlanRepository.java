@@ -13,7 +13,7 @@ import java.util.Optional;
 public class CotisationPlanRepository {
     private final Connection connection;
 
-    public Optional<CotisationPlan> findById(Integer id) {
+    public \1 findById(String id) {
         String sql = """
             select id, id_collectivity, label, frequency, amount, eligible_from, is_active
             from cotisation_plan

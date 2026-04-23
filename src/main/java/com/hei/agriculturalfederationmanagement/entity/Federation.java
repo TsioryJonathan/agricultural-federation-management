@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class Federation {
-    private Integer id;
+    private String id;
     private double cotisationPercentage;
     private Structure structure;
 }

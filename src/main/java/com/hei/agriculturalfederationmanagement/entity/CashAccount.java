@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CashAccount {
-    private Integer id;
+    private String id;
     private Account account;
 }

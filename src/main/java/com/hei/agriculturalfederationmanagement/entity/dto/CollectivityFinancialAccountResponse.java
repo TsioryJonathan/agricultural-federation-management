@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class CollectivityFinancialAccountResponse {
-    private Integer id;
+    private String id;
     private Double amount;
     private List<Object> accounts;
 }

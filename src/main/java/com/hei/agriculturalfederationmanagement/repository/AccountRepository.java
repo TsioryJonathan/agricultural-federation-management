@@ -12,7 +12,7 @@ import java.util.Optional;
 public class AccountRepository {
     private final Connection connection;
 
-    public Optional<Account> findById(Integer id) {
+    public \1 findById(String id) {
         String sql = "select id, id_collectivity, id_federation from account where id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

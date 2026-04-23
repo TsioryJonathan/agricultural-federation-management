@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MobileMoneyAccount {
-    private Integer id;
+    private String id;
     private Account account;
     private String holderName;
     private MobileMoneyService serviceName;
