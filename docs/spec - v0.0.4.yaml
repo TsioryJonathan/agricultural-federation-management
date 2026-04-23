@@ -44,12 +44,7 @@ paths:
       description: |
         Retrieves detailed information about a specific collectivity including its structure and members.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Collectivity identifier
+        - $ref: '#/components/parameters/CollectivityId'
       responses:
         200:
           description: Collectivity details
@@ -63,11 +58,7 @@ paths:
     put:
       summary: Attribute collectivity informations to specific collectivity
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
+        - $ref: '#/components/parameters/CollectivityId'
       requestBody:
         content:
           application/json:
@@ -88,11 +79,7 @@ paths:
     get:
       summary: Retrieve collectivity membership fees
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
+        - $ref: '#/components/parameters/CollectivityId'
       responses:
         200:
           description: List of membership fees for the specific collectivity
@@ -106,11 +93,7 @@ paths:
           description: Collectivity not found.
     post:
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
+        - $ref: '#/components/parameters/CollectivityId'
       summary: Create new membership fees for a specific collectivity
       requestBody:
         content:
@@ -138,23 +121,9 @@ paths:
       description: |
         Query parameters `from` and `to` are mandatory to filters collectivity transactions.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-        - in: query
-          name: from
-          schema:
-            type: string
-            format: date-time
-          required: true
-        - in: query
-          name: to
-          schema:
-            type: string
-            format: date-time
-          required: true
+        - $ref: '#/components/parameters/CollectivityId'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
       responses:
         200:
           description: List of collectivity transactions between provided dates
@@ -176,18 +145,8 @@ paths:
         The optional `at` query parameter allows retrieving the balance at a specific date.
         Response includes total amount (sum of all accounts) and list of account details.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-        - in: query
-          name: at
-          schema:
-            type: string
-            format: date-time
-          required: false
-          description: Date to get account balance at (inclusive)
+        - $ref: '#/components/parameters/CollectivityId'
+        - $ref: '#/components/parameters/AtDate'
       responses:
         200:
           description: Financial accounts with total amount and account details
@@ -229,11 +188,7 @@ paths:
       description: |
         Each time a member create a payment, a transaction is store automatically inside collectivities transactions.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
+        - $ref: '#/components/parameters/MemberId'
       requestBody:
         content:
           application/json:
@@ -252,6 +207,50 @@ paths:
                   $ref: '#/components/schemas/MemberPayment'
 
 components:
+  parameters:
+    CollectivityId:
+      name: id
+      in: path
+      required: true
+      description: Collectivity identifier
+      schema:
+        type: integer
+
+    MemberId:
+      name: id
+      in: path
+      required: true
+      description: Member identifier
+      schema:
+        type: integer
+
+    FromDate:
+      name: from
+      in: query
+      required: true
+      description: Start date for filtering (inclusive)
+      schema:
+        type: string
+        format: date-time
+
+    ToDate:
+      name: to
+      in: query
+      required: true
+      description: End date for filtering (inclusive)
+      schema:
+        type: string
+        format: date-time
+
+    AtDate:
+      name: at
+      in: query
+      required: false
+      description: Date to get account balance at (inclusive)
+      schema:
+        type: string
+        format: date-time
+
   schemas:
     CollectivityFinancialAccounts:
       type: object
@@ -540,7 +539,7 @@ components:
         - BOA
         - BGFI
         - AFG
-        - ACCES_BAQUE
+        - ACCES_BANQUE
         - BAOBAB
         - SIPEM
     Gender:
