@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -278,5 +279,68 @@ public class CollectivityService {
 
     public Collectivity getCollectivityById(Integer id) {
         return repository.findByIdOptional(id).orElseThrow(()->new NotFoundException("Collectivity id=" + id + " not found"));
+    }
+
+    public CollectivityFinancialAccountResponse getFinancialAccounts(Integer collectivityId, Instant at) {
+        Collectivity collectivity = repository.findById(collectivityId);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + collectivityId);
+        }
+
+        Map<Integer, Account> accounts = at != null 
+            ? repository.loadAccountsWithTransactionsAt(collectivityId, at)
+            : repository.loadAccountsWithAllTransactions(collectivityId);
+
+        CollectivityFinancialAccountResponse response = CollectivityFinancialAccountResponse.builder()
+                .id(collectivityId)
+                .amount(accounts.values().stream().mapToDouble(Account::getBalance).sum())
+                .accounts(new ArrayList<>())
+                .build();
+
+        for (Account account : accounts.values()) {
+            Object accountDetail = toAccountDetail(account);
+            if (accountDetail != null) {
+                response.getAccounts().add(accountDetail);
+            }
+        }
+
+        return response;
+    }
+
+    private Object toAccountDetail(Account account) {
+        Double balance = account.getBalance();
+
+        if (account.getCashAccount() != null) {
+            return CashAccountDetail.builder()
+                    .id(String.valueOf(account.getId()))
+                    .amount(balance)
+                    .type("CASH")
+                    .build();
+        } else if (account.getBankAccount() != null) {
+            BankAccount ba = account.getBankAccount();
+            return BankAccountDetail.builder()
+                    .id(String.valueOf(account.getId()))
+                    .amount(balance)
+                    .type("BANK")
+                    .holderName(ba.getHolderName())
+                    .bankName(ba.getBankName())
+                    .bankCode(ba.getBankCode())
+                    .bankBranchCode(ba.getBranchCode())
+                    .bankAccountNumber(ba.getAccountNumber())
+                    .bankAccountKey(ba.getRibKey())
+                    .build();
+        } else if (account.getMobileMoneyAccount() != null) {
+            MobileMoneyAccount ma = account.getMobileMoneyAccount();
+            return MobileBankingAccountDetail.builder()
+                    .id(String.valueOf(account.getId()))
+                    .amount(balance)
+                    .type("MOBILE_BANKING")
+                    .holderName(ma.getHolderName())
+                    .mobileBankingService(ma.getServiceName())
+                    .mobileNumber(ma.getPhoneNumber())
+                    .build();
+        }
+
+        return null;
     }
 }
