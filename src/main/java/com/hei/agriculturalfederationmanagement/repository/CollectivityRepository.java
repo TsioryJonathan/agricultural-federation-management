@@ -173,7 +173,7 @@ public class CollectivityRepository {
                                 rs.getDate("enrolment_date").toLocalDate() : null)
                         .address(rs.getString("address"))
                         .email(rs.getString("email"))
-                        .phoneNumber(rs.getInt("phone_number"))
+                        .phoneNumber(rs.getString("phone_number"))
                         .profession(rs.getString("profession"))
                         .gender(Gender.valueOf(rs.getString("gender")))
                         .referees(new ArrayList<>())
@@ -231,7 +231,7 @@ public class CollectivityRepository {
                             .firstName(rs.getString("first_name"))
                             .lastName(rs.getString("last_name"))
                             .email(rs.getString("email"))
-                            .phoneNumber(rs.getInt("phone_number"))
+                            .phoneNumber(rs.getString("phone_number"))
                             .gender(Gender.valueOf(rs.getString("gender")))
                             .build();
                     candidate.getReferees().add(referee);
@@ -362,7 +362,7 @@ public class CollectivityRepository {
                                     .id(rs.getString("mobile_account_id"))
                                     .holderName(rs.getString("mobile_holder_name"))
                                     .serviceName(MobileBankingService.valueOf(rs.getString("service_name")))
-                                    .phoneNumber(rs.getInt("phone_number"))
+                                    .phoneNumber(rs.getString("phone_number"))
                                     .build());
                         }
                         return newAccount;
@@ -433,7 +433,7 @@ public class CollectivityRepository {
                                         rs.getDate("enrolment_date").toLocalDate() : null)
                                 .address(rs.getString("address"))
                                 .email(rs.getString("email"))
-                                .phoneNumber(rs.getInt("phone_number"))
+                                .phoneNumber(rs.getString("phone_number"))
                                 .profession(rs.getString("profession"))
                                 .gender(Gender.valueOf(rs.getString("gender")))
                                 .referees(new ArrayList<>())

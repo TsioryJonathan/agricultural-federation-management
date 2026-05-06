@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 public class MobileBankingAccountResponse extends FinancialAccountResponse {
     private String holderName;
     private MobileBankingService mobileBankingService;
-    private Integer mobileNumber;
+    private String mobileNumber;
 
     @Builder
     public MobileBankingAccountResponse(String id, Double amount, String holderName,
-                                        MobileBankingService mobileBankingService, Integer mobileNumber) {
+                                        MobileBankingService mobileBankingService, String mobileNumber) {
         super(id, amount);
         this.holderName = holderName;
         this.mobileBankingService = mobileBankingService;

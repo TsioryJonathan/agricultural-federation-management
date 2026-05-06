@@ -186,7 +186,7 @@ public class ActivityRepository {
                         .lastName(rs.getString("last_name"))
                         .email(rs.getString("email"))
                         .gender(Gender.valueOf(rs.getString("gender")))
-                        .phoneNumber(rs.getInt("phone_number"))
+                        .phoneNumber(rs.getString("phone_number"))
                         .build();
 
                 ActivityAttendance attendance = ActivityAttendance.builder()

@@ -16,5 +16,5 @@ public class MobileBankingAccountDetail {
     private Double amount;
     private String holderName;
     private MobileBankingService mobileBankingService;
-    private Integer mobileNumber;
+    private String mobileNumber;
 }

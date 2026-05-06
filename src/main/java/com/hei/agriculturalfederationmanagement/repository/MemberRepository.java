@@ -41,7 +41,7 @@ public class MemberRepository {
             stmt.setString(5, member.getGender().name());
             stmt.setString(6, member.getAddress());
             stmt.setString(7, member.getProfession());
-            stmt.setInt(8, member.getPhoneNumber());
+            stmt.setString(8, member.getPhoneNumber());
             stmt.setString(9, member.getEmail());
             stmt.setBoolean(10, member.isSuperuser());
             stmt.executeUpdate();
@@ -122,7 +122,7 @@ public class MemberRepository {
                 .gender(Gender.valueOf(rs.getString("gender")))
                 .address(rs.getString("address"))
                 .profession(rs.getString("profession"))
-                .phoneNumber(rs.getInt("phone_number"))
+                .phoneNumber(rs.getString("phone_number"))
                 .email(rs.getString("email"))
                 .enrolmentDate(rs.getDate("enrolment_date").toLocalDate() != null ?
                         rs.getDate("enrolment_date").toLocalDate() : null)
