@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.sql.Date;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,8 +41,8 @@ public class CollectivityRepository {
                 stmt.setString(3, collectivity.getName());
                 stmt.setString(4, collectivity.getSpeciality());
                 stmt.setBoolean(5, collectivity.isFederationApproval());
-                stmt.setTimestamp(6, collectivity.getAuthorizationDate() != null ?
-                        Timestamp.from(collectivity.getAuthorizationDate()) : null);
+                stmt.setDate(6, collectivity.getAuthorizationDate() != null ?
+                        Date.valueOf(collectivity.getAuthorizationDate()) : null);
                 stmt.setString(7, collectivity.getLocation());
                 stmt.executeUpdate();
             }
@@ -126,10 +127,10 @@ public class CollectivityRepository {
                         .name(rs.getString("name"))
                         .speciality(rs.getString("speciality"))
                         .creationDatetime(rs.getTimestamp("creation_datetime") != null ?
-                                rs.getTimestamp("creation_datetime").toInstant() : null)
+                                rs.getDate("creation_datetime").toLocalDate() : null)
                         .federationApproval(rs.getBoolean("federation_approval"))
                         .authorizationDate(rs.getTimestamp("authorization_date") != null ?
-                                rs.getTimestamp("authorization_date").toInstant() : null)
+                                rs.getDate("authorization_date").toLocalDate() : null)
                         .location(rs.getString("location"))
                         .build();
 
@@ -168,11 +169,11 @@ public class CollectivityRepository {
                         .lastName(rs.getString("last_name"))
                         .birthDate(rs.getDate("birth_date") != null ?
                                 rs.getDate("birth_date").toLocalDate() : null)
-                        .enrolmentDate(rs.getTimestamp("enrolment_date") != null ?
-                                rs.getTimestamp("enrolment_date").toInstant() : null)
+                        .enrolmentDate(rs.getDate("enrolment_date").toLocalDate() != null ?
+                                rs.getDate("enrolment_date").toLocalDate() : null)
                         .address(rs.getString("address"))
                         .email(rs.getString("email"))
-                        .phoneNumber(rs.getString("phone_number"))
+                        .phoneNumber(rs.getInt("phone_number"))
                         .profession(rs.getString("profession"))
                         .gender(Gender.valueOf(rs.getString("gender")))
                         .referees(new ArrayList<>())
@@ -230,7 +231,7 @@ public class CollectivityRepository {
                             .firstName(rs.getString("first_name"))
                             .lastName(rs.getString("last_name"))
                             .email(rs.getString("email"))
-                            .phoneNumber(rs.getString("phone_number"))
+                            .phoneNumber(rs.getInt("phone_number"))
                             .gender(Gender.valueOf(rs.getString("gender")))
                             .build();
                     candidate.getReferees().add(referee);
@@ -376,7 +377,7 @@ public class CollectivityRepository {
                             .id(transactionId)
                             .amount(rs.getDouble("transaction_amount"))
                             .transactionType(TransactionType.valueOf(rs.getString("transaction_type")))
-                            .transactionDate(rs.getTimestamp("transaction_date").toInstant())
+                            .transactionDate(rs.getDate("transaction_date").toLocalDate())
                             .paymentMode(PaymentMode.valueOf(rs.getString("payment_mode")))
                             .account(account)
                             .build();
@@ -420,7 +421,7 @@ public class CollectivityRepository {
                 Transaction transaction = Transaction.builder()
                         .id(rs.getString("id"))
                         .amount(rs.getDouble("amount"))
-                        .transactionDate(rs.getTimestamp("transaction_date").toInstant())
+                        .transactionDate(rs.getDate("transaction_date").toLocalDate())
                         .paymentMode(PaymentMode.valueOf(rs.getString("payment_mode")))
                         .account(accountMap.get(rs.getString("id_account")))
                         .member(Member.builder()
@@ -429,11 +430,11 @@ public class CollectivityRepository {
                                 .lastName(rs.getString("last_name"))
                                 .birthDate(rs.getDate("birth_date") != null ?
                                         rs.getDate("birth_date").toLocalDate() : null)
-                                .enrolmentDate(rs.getTimestamp("enrolment_date") != null ?
-                                        rs.getTimestamp("enrolment_date").toInstant() : null)
+                                .enrolmentDate(rs.getDate("enrolment_date").toLocalDate() != null ?
+                                        rs.getDate("enrolment_date").toLocalDate() : null)
                                 .address(rs.getString("address"))
                                 .email(rs.getString("email"))
-                                .phoneNumber(rs.getString("phone_number"))
+                                .phoneNumber(rs.getInt("phone_number"))
                                 .profession(rs.getString("profession"))
                                 .gender(Gender.valueOf(rs.getString("gender")))
                                 .build())
