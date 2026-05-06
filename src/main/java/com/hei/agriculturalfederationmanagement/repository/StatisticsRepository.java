@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class StatisticsRepository {
      * Get local statistics for a collectivity:
      * - Earned amount per member
      * - Unpaid amount per member (based on active cotisations)
+     * - Assiduity percentage per member (based on activity attendance)
      */
     public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, Instant from, Instant to) {
         String sql = """
@@ -58,6 +60,25 @@ public class StatisticsRepository {
                 SELECT COALESCE(SUM(amount), 0) as total_amount
                 FROM active_cotisations
                 WHERE eligible_from <= ?::date
+            ),
+            member_activities AS (
+                SELECT 
+                    a.id AS activity_id,
+                    aa.id_member,
+                    aa.attendance_status
+                FROM activity a
+                JOIN activity_attendance aa ON a.id = aa.id_activity
+                WHERE a.id_collectivity = ?
+                AND a.executive_date >= ?::date
+                AND a.executive_date <= ?::date
+            ),
+            member_attendance_stats AS (
+                SELECT 
+                    ma.id_member,
+                    COUNT(ma.activity_id) as total_activities,
+                    COUNT(CASE WHEN ma.attendance_status = 'ATTENDED' THEN 1 END) as attended_activities
+                FROM member_activities ma
+                GROUP BY ma.id_member
             )
             SELECT 
                 cm.id,
@@ -69,22 +90,31 @@ public class StatisticsRepository {
                 CASE 
                     WHEN tac.total_amount - COALESCE(mp.earned_amount, 0) < 0 THEN 0
                     ELSE tac.total_amount - COALESCE(mp.earned_amount, 0)
-                END as unpaid_amount
+                END as unpaid_amount,
+                CASE 
+                    WHEN mas.total_activities IS NULL OR mas.total_activities = 0 THEN 0.0
+                    ELSE ROUND((mas.attended_activities::decimal / mas.total_activities::decimal) * 100, 2)
+                END as assiduity_percentage
             FROM collectivity_members cm
             CROSS JOIN total_active_cotisation tac
             LEFT JOIN member_payments mp ON cm.id = mp.id_member
+            LEFT JOIN member_attendance_stats mas ON cm.id = mas.id_member
             ORDER BY cm.id
         """;
 
         List<CollectivityLocalStatistics> statistics = new ArrayList<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, collectivityId);
-            stmt.setString(2, collectivityId);
-            stmt.setTimestamp(3, Timestamp.from(from));
-            stmt.setTimestamp(4, Timestamp.from(to));
-            stmt.setString(5, collectivityId);
-            stmt.setDate(6, Date.valueOf(LocalDate.ofInstant(to, java.time.ZoneId.systemDefault())));
+            int paramIndex = 1;
+            stmt.setString(paramIndex++, collectivityId);
+            stmt.setString(paramIndex++, collectivityId);
+            stmt.setTimestamp(paramIndex++, Timestamp.from(from));
+            stmt.setTimestamp(paramIndex++, Timestamp.from(to));
+            stmt.setString(paramIndex++, collectivityId);
+            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
+            stmt.setString(paramIndex++, collectivityId);
+            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(from, ZoneId.systemDefault())));
+            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
 
             ResultSet rs = stmt.executeQuery();
 
@@ -101,7 +131,7 @@ public class StatisticsRepository {
                         .memberDescription(memberDescription)
                         .earnedAmount(rs.getDouble("earned_amount"))
                         .unpaidAmount(rs.getDouble("unpaid_amount"))
-                        .assiduityPercentage(0.0) // Will be filled later when activities are implemented
+                        .assiduityPercentage(rs.getDouble("assiduity_percentage"))
                         .build();
 
                 statistics.add(stat);
@@ -117,6 +147,7 @@ public class StatisticsRepository {
      * Get overall statistics for all collectivities:
      * - Percentage of members current with their dues
      * - Number of new members in period
+     * - Overall assiduity percentage per collectivity
      */
     public List<CollectivityOverallStatistics> getOverallStatistics(Instant from, Instant to) {
         String sql = """
@@ -166,12 +197,32 @@ public class StatisticsRepository {
                 FROM member_payments mp
                 LEFT JOIN total_cotisation_per_collectivity tc ON mp.id_collectivity = tc.id_collectivity
             ),
+            collectivity_attendance AS (
+                SELECT 
+                    a.id_collectivity,
+                    aa.id_member,
+                    aa.attendance_status
+                FROM activity a
+                JOIN activity_attendance aa ON a.id = aa.id_activity
+                WHERE a.executive_date >= ?::date
+                AND a.executive_date <= ?::date
+            ),
+            collectivity_attendance_stats AS (
+                SELECT 
+                    ca.id_collectivity,
+                    COUNT(DISTINCT ca.id_member) as total_members_with_activities,
+                    COUNT(DISTINCT CASE WHEN ca.attendance_status = 'ATTENDED' THEN ca.id_member END) as members_attended,
+                    COUNT(*) as total_attendance_records,
+                    COUNT(CASE WHEN ca.attendance_status = 'ATTENDED' THEN 1 END) as attended_records
+                FROM collectivity_attendance ca
+                GROUP BY ca.id_collectivity
+            ),
             collectivity_stats AS (
                 SELECT 
                     cl.id,
                     cl.number,
                     cl.name,
-                    COUNT(DISTINCT mcs.id_member) as total_members,
+                    COUNT(DISTINCT mc.id_member) as total_members,
                     COUNT(DISTINCT CASE WHEN mcs.is_current THEN mcs.id_member END) as current_members,
                     COUNT(DISTINCT CASE 
                         WHEN m.enrolment_date >= ? AND m.enrolment_date <= ? 
@@ -185,29 +236,39 @@ public class StatisticsRepository {
                 GROUP BY cl.id, cl.number, cl.name
             )
             SELECT 
-                id,
-                number,
-                name,
-                total_members,
-                current_members,
-                new_members,
+                cs.id,
+                cs.number,
+                cs.name,
+                cs.total_members,
+                cs.current_members,
+                cs.new_members,
                 CASE 
-                    WHEN total_members > 0 THEN 
-                        ROUND((current_members::decimal / total_members::decimal) * 100, 2)
+                    WHEN cs.total_members > 0 THEN 
+                        ROUND((cs.current_members::decimal / cs.total_members::decimal) * 100, 2)
                     ELSE 0
-                END as current_due_percentage
-            FROM collectivity_stats
-            ORDER BY id
+                END as current_due_percentage,
+                COALESCE(cas.total_members_with_activities, 0) as total_with_activities,
+                COALESCE(cas.members_attended, 0) as attended_members,
+                CASE 
+                    WHEN cas.total_attendance_records IS NULL OR cas.total_attendance_records = 0 THEN 0.0
+                    ELSE ROUND((cas.attended_records::decimal / cas.total_attendance_records::decimal) * 100, 2)
+                END as assiduity_percentage
+            FROM collectivity_stats cs
+            LEFT JOIN collectivity_attendance_stats cas ON cs.id = cas.id_collectivity
+            ORDER BY cs.id
         """;
 
         List<CollectivityOverallStatistics> statistics = new ArrayList<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(LocalDate.ofInstant(to, java.time.ZoneId.systemDefault())));
-            stmt.setTimestamp(2, Timestamp.from(from));
-            stmt.setTimestamp(3, Timestamp.from(to));
-            stmt.setTimestamp(4, Timestamp.from(from));
-            stmt.setTimestamp(5, Timestamp.from(to));
+            int paramIndex = 1;
+            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
+            stmt.setTimestamp(paramIndex++, Timestamp.from(from));
+            stmt.setTimestamp(paramIndex++, Timestamp.from(to));
+            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(from, ZoneId.systemDefault())));
+            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
+            stmt.setTimestamp(paramIndex++, Timestamp.from(from));
+            stmt.setTimestamp(paramIndex++, Timestamp.from(to));
 
             ResultSet rs = stmt.executeQuery();
 
@@ -220,7 +281,7 @@ public class StatisticsRepository {
                         .collectivityInformation(info)
                         .newMembersNumber(rs.getInt("new_members"))
                         .overallMemberCurrentDuePercentage(rs.getDouble("current_due_percentage"))
-                        .overallMemberAssiduityPercentage(0.0) // Will be filled for bonus
+                        .overallMemberAssiduityPercentage(rs.getDouble("assiduity_percentage"))
                         .build();
 
                 statistics.add(stat);

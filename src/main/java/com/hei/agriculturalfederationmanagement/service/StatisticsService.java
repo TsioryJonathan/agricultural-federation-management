@@ -20,6 +20,7 @@ public class StatisticsService {
 
     /**
      * Get local statistics for a specific collectivity
+     * Includes: earned amount, unpaid amount, and assiduity percentage per member
      */
     public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, Instant from, Instant to) {
         if (collectivityId == null || collectivityId.trim().isEmpty()) {
@@ -44,6 +45,7 @@ public class StatisticsService {
 
     /**
      * Get overall statistics for all collectivities
+     * Includes: current due percentage, new members, and overall assiduity percentage
      */
     public List<CollectivityOverallStatistics> getOverallStatistics(Instant from, Instant to) {
         if (from == null || to == null) {
