@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -20,7 +21,7 @@ public class Transaction {
     private CotisationPlan cotisationPlan;
     private TransactionType transactionType;
     private Double amount;
-    private Instant transactionDate;
+    private LocalDate transactionDate;
     private PaymentMode paymentMode;
     private String description;
     private Account account;

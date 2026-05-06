@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -14,8 +15,8 @@ import java.time.Instant;
 @AllArgsConstructor
 public class CollectivityTransactionResponse {
     private String id;
-    private Instant creationDate;
-    private int amount;
+    private LocalDate creationDate;
+    private Double amount;
     private PaymentMode paymentMode;
     private FinancialAccountResponse accountCredited;
     private MemberResponse memberDebited;

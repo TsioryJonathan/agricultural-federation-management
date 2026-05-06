@@ -1,12 +1,11 @@
 -- ============================================
 -- DATABASE SCHEMA
 -- ============================================
-
 -- Federation table
 CREATE TABLE IF NOT EXISTS federation (
                                           id VARCHAR PRIMARY KEY DEFAULT 'fed-1',
                                           name VARCHAR NOT NULL DEFAULT 'Fédération Agricole de Madagascar',
-                                          creation_date TIMESTAMP DEFAULT NOW()
+                                          creation_date DATE DEFAULT CURRENT_DATE
 );
 
 -- Member table
@@ -18,9 +17,9 @@ CREATE TABLE IF NOT EXISTS member (
                                       gender VARCHAR(10) CHECK (gender IN ('MALE', 'FEMALE')),
                                       address VARCHAR,
                                       profession VARCHAR,
-                                      phone_number INTEGER,
+                                      phone_number VARCHAR,
                                       email VARCHAR UNIQUE NOT NULL,
-                                      enrolment_date TIMESTAMP DEFAULT NOW(),
+                                      enrolment_date DATE DEFAULT CURRENT_DATE,
                                       is_superuser BOOLEAN DEFAULT FALSE
 );
 
@@ -38,9 +37,9 @@ CREATE TABLE IF NOT EXISTS collectivity (
                                             number VARCHAR UNIQUE,
                                             name VARCHAR UNIQUE,
                                             speciality VARCHAR NOT NULL,
-                                            creation_datetime TIMESTAMP DEFAULT NOW(),
+                                            creation_date DATE DEFAULT CURRENT_DATE,
                                             federation_approval BOOLEAN NOT NULL,
-                                            authorization_date TIMESTAMP,
+                                            authorization_date DATE,
                                             location VARCHAR NOT NULL,
                                             id_federation VARCHAR REFERENCES federation(id)
 );
@@ -49,9 +48,11 @@ CREATE TABLE IF NOT EXISTS collectivity (
 CREATE TABLE IF NOT EXISTS member_collectivity (
                                                    id_member VARCHAR REFERENCES member(id),
                                                    id_collectivity VARCHAR REFERENCES collectivity(id),
-                                                   occupation VARCHAR CHECK (occupation IN ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT')),
-                                                   start_date TIMESTAMP DEFAULT NOW(),
-                                                   end_date TIMESTAMP,
+                                                   occupation VARCHAR CHECK (
+                                                       occupation IN ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT')
+                                                       ),
+                                                   start_date DATE DEFAULT CURRENT_DATE,
+                                                   end_date DATE,
                                                    PRIMARY KEY (id_member, id_collectivity, start_date)
 );
 
@@ -74,7 +75,9 @@ CREATE TABLE IF NOT EXISTS bank_account (
                                             id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
                                             id_account VARCHAR UNIQUE REFERENCES account(id),
                                             holder_name VARCHAR NOT NULL,
-                                            bank_name VARCHAR CHECK (bank_name IN ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM')),
+                                            bank_name VARCHAR CHECK (
+                                                bank_name IN ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM')
+                                                ),
                                             bank_code VARCHAR(5),
                                             branch_code VARCHAR(5),
                                             account_number VARCHAR(11),
@@ -86,17 +89,21 @@ CREATE TABLE IF NOT EXISTS mobile_money_account (
                                                     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
                                                     id_account VARCHAR UNIQUE REFERENCES account(id),
                                                     holder_name VARCHAR NOT NULL,
-                                                    service_name VARCHAR CHECK (service_name IN ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY')),
+                                                    service_name VARCHAR CHECK (
+                                                        service_name IN ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY')
+                                                        ),
                                                     phone_number VARCHAR NOT NULL
 );
 
--- Cotisation (Membership fee) plan
-CREATE TABLE IF NOT EXISTS mobile_money_account (
-                                                    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
-                                                    id_account VARCHAR UNIQUE REFERENCES account(id),
-                                                    holder_name VARCHAR NOT NULL,
-                                                    service_name VARCHAR CHECK (service_name IN ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY')),
-                                                    phone_number INTEGER NOT NULL
+-- Cotisation plan (FIXED missing table)
+CREATE TABLE IF NOT EXISTS cotisation_plan (
+                                               id VARCHAR PRIMARY KEY,
+                                               label VARCHAR NOT NULL,
+                                               id_collectivity VARCHAR REFERENCES collectivity(id),
+                                               status VARCHAR CHECK (status IN ('ACTIVE', 'INACTIVE')),
+                                               frequency VARCHAR CHECK (frequency IN ('MONTHLY', 'ANNUALLY')),
+                                               eligible_from DATE,
+                                               amount DECIMAL(15,2)
 );
 
 -- Transaction
@@ -107,8 +114,10 @@ CREATE TABLE IF NOT EXISTS transaction (
                                            id_cotisation_plan VARCHAR REFERENCES cotisation_plan(id),
                                            transaction_type VARCHAR CHECK (transaction_type IN ('IN', 'OUT')),
                                            amount DECIMAL(15,2),
-                                           transaction_date TIMESTAMP DEFAULT NOW(),
-                                           payment_mode VARCHAR CHECK (payment_mode IN ('CASH', 'MOBILE_BANKING', 'BANK_TRANSFER')),
+                                           transaction_date DATE DEFAULT CURRENT_DATE,
+                                           payment_mode VARCHAR CHECK (
+                                               payment_mode IN ('CASH', 'MOBILE_BANKING', 'BANK_TRANSFER')
+                                               ),
                                            description VARCHAR,
                                            id_account VARCHAR REFERENCES account(id)
 );
@@ -121,14 +130,18 @@ CREATE TABLE IF NOT EXISTS activity (
                                         activity_type VARCHAR CHECK (activity_type IN ('MEETING', 'TRAINING', 'OTHER')),
                                         executive_date DATE,
                                         week_ordinal INTEGER CHECK (week_ordinal BETWEEN 1 AND 5),
-                                        day_of_week VARCHAR CHECK (day_of_week IN ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')),
-                                        creation_date TIMESTAMP DEFAULT NOW()
+                                        day_of_week VARCHAR CHECK (
+                                            day_of_week IN ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
+                                            ),
+                                        creation_date DATE DEFAULT CURRENT_DATE
 );
 
--- Activity member occupation concern
+-- Activity member occupation
 CREATE TABLE IF NOT EXISTS activity_member_occupation (
                                                           id_activity VARCHAR REFERENCES activity(id),
-                                                          occupation VARCHAR CHECK (occupation IN ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT')),
+                                                          occupation VARCHAR CHECK (
+                                                              occupation IN ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT')
+                                                              ),
                                                           PRIMARY KEY (id_activity, occupation)
 );
 
@@ -137,7 +150,9 @@ CREATE TABLE IF NOT EXISTS activity_attendance (
                                                    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
                                                    id_activity VARCHAR REFERENCES activity(id),
                                                    id_member VARCHAR REFERENCES member(id),
-                                                   attendance_status VARCHAR DEFAULT 'UNDEFINED' CHECK (attendance_status IN ('UNDEFINED', 'ATTENDED', 'MISSING')),
+                                                   attendance_status VARCHAR DEFAULT 'UNDEFINED' CHECK (
+                                                       attendance_status IN ('UNDEFINED', 'ATTENDED', 'MISSING')
+                                                       ),
                                                    UNIQUE (id_activity, id_member)
 );
 

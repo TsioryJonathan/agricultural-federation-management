@@ -22,9 +22,9 @@ public class Member {
     private Gender gender;
     private String address;
     private String profession;
-    private String phoneNumber;
+    private int phoneNumber;
     private String email;
-    private Instant enrolmentDate;
+    private LocalDate enrolmentDate;
     private List<Member> referees;
     private boolean isSuperuser;
 }

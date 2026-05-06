@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateMemberPayment {
-    private Integer amount; // int as per spec
+    private Integer amount;
     private String membershipFeeIdentifier;
     private String accountCreditedIdentifier;
     private PaymentMode paymentMode;

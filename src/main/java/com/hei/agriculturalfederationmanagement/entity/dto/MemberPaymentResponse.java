@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -17,5 +18,5 @@ public class MemberPaymentResponse {
     private Integer amount;
     private PaymentMode paymentMode;
     private FinancialAccountResponse accountCredited;
-    private Instant creationDate;
+    private LocalDate creationDate;
 }
