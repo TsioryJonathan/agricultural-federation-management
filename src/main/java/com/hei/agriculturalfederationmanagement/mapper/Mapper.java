@@ -2,10 +2,12 @@ package com.hei.agriculturalfederationmanagement.mapper;
 
 import com.hei.agriculturalfederationmanagement.entity.*;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
+import com.hei.agriculturalfederationmanagement.entity.enums.MemberOccupation;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -23,6 +25,47 @@ public class Mapper {
                 .members(toMemberResponseList(collectivity.getMembers()))
                 .build();
     }
+    public MemberResponse toMemberResponse(Member member, Map<String, String> occupations) {
+        String occupation = occupations != null ? occupations.get(member.getId()) : null;
+
+        return MemberResponse.builder()
+                .id(member.getId())
+                .firstName(member.getFirstName())
+                .lastName(member.getLastName())
+                .birthDate(member.getBirthDate())
+                .gender(member.getGender())
+                .address(member.getAddress())
+                .profession(member.getProfession())
+                .phoneNumber(member.getPhoneNumber())
+                .email(member.getEmail())
+                .occupation(occupation != null ? MemberOccupation.valueOf(occupation) : null)
+                .referees(member.getReferees() != null
+                        ? member.getReferees().stream()
+                          .map(this::toMemberSummary)
+                          .toList()
+                        : List.of())
+                .build();
+    }
+
+    public CollectivityResponse toResponse(Collectivity collectivity, Map<String, String> occupations) {
+        List<MemberResponse> memberResponses = collectivity.getMembers().stream()
+                .map(member -> toMemberResponse(member, occupations))
+                .toList();
+
+        return CollectivityResponse.builder()
+                .id(collectivity.getId())
+                .number(collectivity.getNumber())
+                .name(collectivity.getName())
+                .location(collectivity.getLocation())
+                .structure(CollectivityStructureResponse.builder()
+                        .president(toMemberResponse(collectivity.getStructure().getPresident(), occupations))
+                        .vicePresident(toMemberResponse(collectivity.getStructure().getVicePresident(), occupations))
+                        .treasurer(toMemberResponse(collectivity.getStructure().getTreasurer(), occupations))
+                        .secretary(toMemberResponse(collectivity.getStructure().getSecretary(), occupations))
+                        .build())
+                .members(memberResponses)
+                .build();
+    }
 
     public CollectivityStructureResponse toStructureResponse(Structure structure) {
         if (structure == null) return null;
@@ -36,8 +79,9 @@ public class Mapper {
     }
 
     public MemberResponse toMemberResponse(Member member) {
-        if (member == null) return null;
-
+        if (member == null) {
+            return null;
+        }
         return MemberResponse.builder()
                 .id(member.getId())
                 .firstName(member.getFirstName())
@@ -48,10 +92,13 @@ public class Mapper {
                 .profession(member.getProfession())
                 .phoneNumber(member.getPhoneNumber())
                 .email(member.getEmail())
-                .referees((member.getReferees().stream().map(Member::getId).toList()))
+                .referees(member.getReferees() != null
+                        ? member.getReferees().stream()
+                          .map(this::toMemberSummary)
+                          .toList()
+                        : List.of())
                 .build();
     }
-
     public List<MemberResponse> toMemberResponseList(List<Member> members) {
         if (members == null) return new ArrayList<>();
         return members.stream()
@@ -147,7 +194,7 @@ public class Mapper {
         return null;
     }
 
-    public CollectivityTransactionResponse toTransactionResponse(Transaction transaction) {
+    public CollectivityTransactionResponse toTransactionResponse(Transaction transaction,Map<String,String> occupations) {
         if (transaction == null) return null;
 
         return CollectivityTransactionResponse.builder()
@@ -156,7 +203,7 @@ public class Mapper {
                 .amount(transaction.getAmount())
                 .paymentMode(transaction.getPaymentMode())
                 .accountCredited(toFinancialAccountResponse(transaction.getAccount()))
-                .memberDebited(toMemberResponse(transaction.getMember()))
+                .memberDebited(toMemberResponse(transaction.getMember(),occupations))
                 .build();
     }
 
@@ -169,6 +216,19 @@ public class Mapper {
                 .paymentMode(transaction.getPaymentMode())
                 .accountCredited(toFinancialAccountResponse(transaction.getAccount()))
                 .creationDate(transaction.getTransactionDate())
+                .build();
+    }
+    public MemberSummary toMemberSummary(Member member) {
+        if (member == null) {
+            return null;
+        }
+        return MemberSummary.builder()
+                .id(member.getId())
+                .firstName(member.getFirstName())
+                .lastName(member.getLastName())
+                .email(member.getEmail())
+                .phoneNumber(member.getPhoneNumber())
+                .gender(member.getGender() != null ? member.getGender().name() : null)
                 .build();
     }
 }

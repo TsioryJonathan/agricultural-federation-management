@@ -25,5 +25,5 @@ public class MemberResponse {
     private String phoneNumber;
     private String email;
     private MemberOccupation occupation;
-    private List<String> referees;
+    private List<MemberSummary> referees;
 }

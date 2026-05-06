@@ -56,7 +56,10 @@ public class CollectivityService {
         );
 
         return savedCollectivities.stream()
-                .map(mapper::toResponse)
+                .map(collectivity -> {
+                    Map<String, String> occupations = repository.findMemberOccupations(collectivity.getId());
+                    return mapper.toResponse(collectivity, occupations);
+                })
                 .toList();
     }
 
@@ -87,7 +90,8 @@ public class CollectivityService {
 
         repository.assignIdentity(id, request.getNumber(), request.getName());
         Collectivity updated = repository.findById(id);
-        return mapper.toResponse(updated);
+        Map<String, String> occupations = repository.findMemberOccupations(id);
+        return mapper.toResponse(updated, occupations);
     }
 
     public CollectivityResponse getCollectivityById(String id) {
@@ -95,7 +99,9 @@ public class CollectivityService {
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + id);
         }
-        return mapper.toResponse(collectivity);
+
+        Map<String, String> occupations = repository.findMemberOccupations(id);
+        return mapper.toResponse(collectivity, occupations);
     }
 
     public List<CollectivityTransactionResponse> getCollectivityTransactions(
@@ -110,9 +116,10 @@ public class CollectivityService {
         }
 
         List<Transaction> transactions = repository.findTransactionsByCollectivityIdAndDateRange(id, from, to);
+        Map<String, String> occupations = repository.findMemberOccupations(id);
 
         return transactions.stream()
-                .map(mapper::toTransactionResponse)
+                .map(tx -> mapper.toTransactionResponse(tx, occupations))
                 .toList();
     }
 

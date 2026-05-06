@@ -198,7 +198,27 @@ public class CollectivityRepository {
             throw new RuntimeException("Failed to fetch members and structure " + e.getMessage());
         }
     }
+    public Map<String, String> findMemberOccupations(String collectivityId) {
+        String sql = """
+        SELECT id_member, occupation
+        FROM member_collectivity
+        WHERE id_collectivity = ? AND end_date IS NULL
+    """;
 
+        Map<String, String> occupations = new HashMap<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, collectivityId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                occupations.put(rs.getString("id_member"), rs.getString("occupation"));
+            }
+            return occupations;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find occupations " + e.getMessage());
+        }
+    }
     public void loadRefereesForMembers(List<Member> members) {
         if (members == null || members.isEmpty()) return;
 

@@ -71,12 +71,11 @@ public class MemberService {
             String occupation = dto.getOccupation() != null ? dto.getOccupation().name() : "JUNIOR";
             memberRepository.addToCollectivity(savedMember.getId(), dto.getCollectivityIdentifier(), occupation);
 
-
-            // Fetch the member with referees for response
             Member memberWithReferees = memberRepository.findById(savedMember.getId())
                     .orElseThrow(() -> new NotFoundException("Member not found after creation"));
 
-            responses.add(mapper.toMemberResponse(memberWithReferees));
+            Map<String, String> occupations = Map.of(savedMember.getId(), occupation);
+            responses.add(mapper.toMemberResponse(memberWithReferees, occupations));
         }
 
         return responses;
