@@ -71,26 +71,6 @@ public class MemberService {
             String occupation = dto.getOccupation() != null ? dto.getOccupation().name() : "JUNIOR";
             memberRepository.addToCollectivity(savedMember.getId(), dto.getCollectivityIdentifier(), occupation);
 
-            // Handle registration fee payment (50,000 MGA)
-            if (dto.isRegistrationFeePaid()) {
-                createMemberPaymentTransaction(savedMember.getId(), dto.getCollectivityIdentifier(),
-                        50000.0, PaymentMode.MOBILE_BANKING, "Registration fee");
-            }
-
-            // Handle membership dues payment
-            if (dto.isMembershipDuesPaid()) {
-                List<CotisationPlan> activePlans = cotisationPlanRepository
-                        .findByCollectivityId(dto.getCollectivityIdentifier())
-                        .stream()
-                        .filter(plan -> plan.getStatus() == ActivityStatus.ACTIVE)
-                        .toList();
-
-                for (CotisationPlan plan : activePlans) {
-                    createMemberPaymentTransaction(savedMember.getId(), dto.getCollectivityIdentifier(),
-                            plan.getAmount(), PaymentMode.MOBILE_BANKING,
-                            "Membership dues: " + plan.getLabel());
-                }
-            }
 
             // Fetch the member with referees for response
             Member memberWithReferees = memberRepository.findById(savedMember.getId())
