@@ -3,10 +3,9 @@ package com.hei.agriculturalfederationmanagement.controller;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateMember;
 import com.hei.agriculturalfederationmanagement.entity.dto.CreateMemberPayment;
 import com.hei.agriculturalfederationmanagement.entity.dto.MemberPaymentResponse;
+import com.hei.agriculturalfederationmanagement.entity.dto.MemberResponse;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
-import com.hei.agriculturalfederationmanagement.exception.InsufficientSponsorCount;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
-import com.hei.agriculturalfederationmanagement.exception.PaymentException;
 import com.hei.agriculturalfederationmanagement.service.MemberService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,23 +24,14 @@ public class MemberController {
     @PostMapping
     public ResponseEntity<?> createMember(@RequestBody List<CreateMember> members) {
         try {
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(service.createMembers(members));
-
-        } catch (PaymentException | InsufficientSponsorCount ex) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ex.getMessage());
-
+            List<MemberResponse> createdMembers = service.createMembers(members);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdMembers);
+        } catch (BadRequestException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         } catch (NotFoundException ex) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(ex.getMessage());
-
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (RuntimeException ex) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Internal server error: " + ex.getMessage());
         }
     }

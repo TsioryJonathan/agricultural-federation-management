@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -20,14 +21,14 @@ public class CollectivityController {
     private final CollectivityService service;
 
     @PostMapping
-    public ResponseEntity<?> createCollectivities(@RequestBody(required = false) List<CreateCollectivity> createCollectivities){
-        try{
-            if(createCollectivities == null){
+    public ResponseEntity<?> createCollectivities(@RequestBody(required = false) List<CreateCollectivity> createCollectivities) {
+        try {
+            if (createCollectivities == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory body not provided");
             }
             List<CollectivityResponse> collectivities = service.createCollectivities(createCollectivities);
             return ResponseEntity.status(HttpStatus.CREATED).body(collectivities);
-        }catch (BadRequestException e) {
+        } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -38,18 +39,17 @@ public class CollectivityController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCollectivity(@PathVariable String id){
-        try{
+    public ResponseEntity<?> getCollectivity(@PathVariable String id) {
+        try {
             Collectivity collectivity = service.getCollectivityById(id);
             return ResponseEntity.status(HttpStatus.OK).body(collectivity);
-        }catch (NotFoundException e){
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
         }
     }
-
 
     @GetMapping("/{id}/membershipFees")
     public ResponseEntity<?> getMembershipFees(@PathVariable String id) {
@@ -65,7 +65,8 @@ public class CollectivityController {
     }
 
     @PostMapping("/{id}/membershipFees")
-    public ResponseEntity<?> createMembershipFees(@PathVariable String id, @RequestBody(required = false) List<CreateMembershipFee> createMembershipFees) {
+    public ResponseEntity<?> createMembershipFees(@PathVariable String id,
+                                                  @RequestBody(required = false) List<CreateMembershipFee> createMembershipFees) {
         try {
             if (createMembershipFees == null || createMembershipFees.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Request body is required");
@@ -81,10 +82,11 @@ public class CollectivityController {
     }
 
     @PutMapping("/{id}/informations")
-    public ResponseEntity<?> assignInformations(@PathVariable String id, @RequestBody(required = false) CollectivityInformation collectivityInformation){
-        try{
-            if(collectivityInformation == null){
-                return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory body not provided");
+    public ResponseEntity<?> assignInformations(@PathVariable String id,
+                                                @RequestBody(required = false) CollectivityInformation collectivityInformation) {
+        try {
+            if (collectivityInformation == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mandatory body not provided");
             }
             CollectivityResponse response = service.assignIdentity(id, collectivityInformation);
             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -92,7 +94,7 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
         }
@@ -101,14 +103,14 @@ public class CollectivityController {
     @GetMapping("/{id}/transactions")
     public ResponseEntity<?> getCollectivityTransactions(
             @PathVariable String id,
-            @RequestParam(required = false) Instant from,
-            @RequestParam(required = false) Instant to) {
+            @RequestParam(required = true) String from,
+            @RequestParam(required = true) String to) {
         try {
-            if(from == null || to == null){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Either mandatory 'to' or 'from' param not provided");
-            }
+            Instant fromDate = Instant.parse(from + "T00:00:00Z");
+            Instant toDate = Instant.parse(to + "T23:59:59Z");
+
             List<CollectivityTransactionResponse> transactions =
-                    service.getCollectivityTransactions(id, from, to);
+                    service.getCollectivityTransactions(id, fromDate, toDate);
             return ResponseEntity.status(HttpStatus.OK).body(transactions);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -123,9 +125,10 @@ public class CollectivityController {
     @GetMapping("/{id}/financialAccounts")
     public ResponseEntity<?> getFinancialAccounts(
             @PathVariable String id,
-            @RequestParam(required = false) Instant at) {
+            @RequestParam(required = false) String at) {
         try {
-            CollectivityFinancialAccountResponse accounts = service.getFinancialAccounts(id, at);
+            Instant atDate = at != null ? Instant.parse(at + "T23:59:59Z") : null;
+            CollectivityFinancialAccountResponse accounts = service.getFinancialAccounts(id, atDate);
             return ResponseEntity.ok(accounts);
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -134,5 +137,4 @@ public class CollectivityController {
                     .body("An unexpected error occurred: " + e.getMessage());
         }
     }
-
 }

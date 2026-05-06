@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 

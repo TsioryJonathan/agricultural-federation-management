@@ -1,0 +1,53 @@
+package com.hei.agriculturalfederationmanagement.repository;
+
+import com.hei.agriculturalfederationmanagement.entity.Account;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Optional;
+
+@Repository
+@AllArgsConstructor
+public class AccountRepository {
+    private final Connection connection;
+
+    public Optional<Account> findById(String id) {
+        String sql = """
+            SELECT id, id_collectivity, id_federation 
+            FROM account 
+            WHERE id = ?
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return Optional.of(Account.builder()
+                        .id(rs.getString("id"))
+                        .build());
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find account", e);
+        }
+    }
+
+    public boolean existsByIdAndCollectivityId(String accountId, String collectivityId) {
+        String sql = "SELECT COUNT(id) FROM account WHERE id = ? AND id_collectivity = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, accountId);
+            stmt.setString(2, collectivityId);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return rs.getInt(1) > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to check account existence", e);
+        }
+    }
+}

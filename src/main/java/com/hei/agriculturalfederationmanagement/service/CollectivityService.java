@@ -1,25 +1,24 @@
+package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.*;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
-import com.hei.agriculturalfederationmanagement.entity.enums.*;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.mapper.CollectivityMapper;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
-import com.hei.agriculturalfederationmanagement.repository.MemberRepository;
+import com.hei.agriculturalfederationmanagement.repository.CotisationPlanRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class CollectivityService {
     private final CollectivityRepository repository;
-    private final MemberRepository memberRepository;
+    private final CotisationPlanRepository cotisationPlanRepository;
     private final CollectivityMapper mapper;
     private final CollectivityValidator validator;
 
@@ -111,22 +110,9 @@ public class CollectivityService {
         List<Transaction> transactions = repository.findTransactionsByCollectivityIdAndDateRange(id, from, to);
 
         return transactions.stream()
-                .map(this::toTransactionResponse)
+                .map(mapper::toTransactionResponse)
                 .toList();
     }
-
-    private CollectivityTransactionResponse toTransactionResponse(Transaction transaction) {
-        return CollectivityTransactionResponse.builder()
-                .id(transaction.getId())
-                .creationDate(transaction.getTransactionDate())
-                .amount(transaction.getAmount())
-                .paymentMode(transaction.getPaymentMode())
-                .accountCredited(toFinancialAccountResponse(transaction.getAccount()))
-                .memberDebited(toMemberResponse(transaction))
-                .build();
-    }
-
-    // ... Additional helper methods would continue here
 
     public CollectivityFinancialAccountResponse getFinancialAccounts(String collectivityId, Instant at) {
         Collectivity collectivity = repository.findById(collectivityId);
@@ -136,28 +122,81 @@ public class CollectivityService {
 
         Map<String, Account> accounts = repository.loadAccountsWithTransactions(collectivityId, at);
 
-        CollectivityFinancialAccountResponse response = CollectivityFinancialAccountResponse.builder()
-                .id(collectivityId)
-                .amount(accounts.values().stream().mapToDouble(Account::getBalance).sum())
-                .accounts(new ArrayList<>())
-                .build();
+        Double totalAmount = accounts.values().stream()
+                .mapToDouble(Account::getBalance)
+                .sum();
 
+        List<Object> accountDetails = new ArrayList<>();
         for (Account account : accounts.values()) {
-            // Build appropriate account detail based on type
-            Double balance = account.getBalance();
-            if (account.getCashAccount() != null) {
-                response.getAccounts().add(CashAccountDetail.builder()
-                        .id(account.getId())
-                        .amount(balance)
-                        .type("CASH")
-                        .build());
-            } else if (account.getMobileMoneyAccount() != null) {
-                // Add mobile money account detail
-            } else if (account.getBankAccount() != null) {
-                // Add bank account detail
+            Object detail = mapper.toAccountDetail(account);
+            if (detail != null) {
+                accountDetails.add(detail);
             }
         }
 
-        return response;
+        return CollectivityFinancialAccountResponse.builder()
+                .id(collectivityId)
+                .amount(totalAmount)
+                .accounts(accountDetails)
+                .build();
+    }
+
+    public List<MembershipFeeResponse> getMembershipFees(String collectivityId) {
+        Collectivity collectivity = repository.findById(collectivityId);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + collectivityId);
+        }
+
+        List<CotisationPlan> plans = cotisationPlanRepository.findByCollectivityId(collectivityId);
+
+        return plans.stream()
+                .map(plan -> MembershipFeeResponse.builder()
+                        .id(plan.getId())
+                        .eligibleFrom(plan.getEligibleFrom())
+                        .frequency(plan.getFrequency())
+                        .amount(plan.getAmount())
+                        .label(plan.getLabel())
+                        .status(plan.getStatus())
+                        .build())
+                .toList();
+    }
+
+    public List<MembershipFeeResponse> createMembershipFees(String collectivityId,
+                                                            List<CreateMembershipFee> createMembershipFees) {
+        Collectivity collectivity = repository.findById(collectivityId);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + collectivityId);
+        }
+
+        List<MembershipFeeResponse> responses = new ArrayList<>();
+
+        for (CreateMembershipFee createFee : createMembershipFees) {
+            if (createFee.getFrequency() == null) {
+                throw new BadRequestException("Frequency is required");
+            }
+            if (createFee.getAmount() == null || createFee.getAmount() < 0) {
+                throw new BadRequestException("Amount must be greater than or equal to 0");
+            }
+
+            CotisationPlan plan = CotisationPlan.builder()
+                    .eligibleFrom(createFee.getEligibleFrom())
+                    .frequency(createFee.getFrequency())
+                    .amount(createFee.getAmount())
+                    .label(createFee.getLabel())
+                    .build();
+
+            CotisationPlan saved = cotisationPlanRepository.save(plan, collectivityId);
+
+            responses.add(MembershipFeeResponse.builder()
+                    .id(saved.getId())
+                    .eligibleFrom(saved.getEligibleFrom())
+                    .frequency(saved.getFrequency())
+                    .amount(saved.getAmount())
+                    .label(saved.getLabel())
+                    .status(saved.getStatus())
+                    .build());
+        }
+
+        return responses;
     }
 }
