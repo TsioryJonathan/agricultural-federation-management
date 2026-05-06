@@ -37,7 +37,6 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
                     registrationFeePaid: true,
                     membershipDuesPaid: true
                 }]);
-            console.log(res.error)
 
             expect(res.status).to.equal(201);
             expect(res.body).to.be.an('array');
@@ -357,6 +356,222 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(res.body.members.length).to.be.at.least(8);
         });
 
+        it('should verify every member in col-1 has a referees property that is an array', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            expect(res.body.members).to.be.an('array');
+            expect(res.body.members.length).to.be.at.least(8);
+
+            res.body.members.forEach(member => {
+                expect(member, `Member ${member.id} should exist`).to.exist;
+                expect(member, `Member ${member.id} should have referees property`).to.have.property('referees');
+                expect(member.referees, `Member ${member.id} referees should not be null`).to.not.be.null;
+                expect(member.referees, `Member ${member.id} referees should be an array`).to.be.an('array');
+            });
+        });
+
+        it('should verify C1-M1 and C1-M2 have no referees (as per PDF "Aucun")', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m1 = res.body.members.find(m => m.id === 'C1-M1');
+            expect(c1m1).to.exist;
+            expect(c1m1.referees).to.be.an('array');
+            expect(c1m1.referees.length).to.equal(0);
+
+            const c1m2 = res.body.members.find(m => m.id === 'C1-M2');
+            expect(c1m2).to.exist;
+            expect(c1m2.referees).to.be.an('array');
+            expect(c1m2.referees.length).to.equal(0);
+        });
+
+        it('should verify C1-M3 has 2 referees: C1-M1 and C1-M2', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m3 = res.body.members.find(m => m.id === 'C1-M3');
+            expect(c1m3).to.exist;
+            expect(c1m3.referees).to.be.an('array');
+            expect(c1m3.referees.length).to.equal(2);
+
+            const refereeIds = c1m3.referees.map(r => r.id);
+            expect(refereeIds).to.include('C1-M1');
+            expect(refereeIds).to.include('C1-M2');
+        });
+
+        it('should verify C1-M4 has 2 referees: C1-M1 and C1-M2', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m4 = res.body.members.find(m => m.id === 'C1-M4');
+            expect(c1m4).to.exist;
+            expect(c1m4.referees).to.be.an('array');
+            expect(c1m4.referees.length).to.equal(2);
+
+            const refereeIds = c1m4.referees.map(r => r.id);
+            expect(refereeIds).to.include('C1-M1');
+            expect(refereeIds).to.include('C1-M2');
+        });
+
+        it('should verify C1-M5 has 2 referees: C1-M1 and C1-M2', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m5 = res.body.members.find(m => m.id === 'C1-M5');
+            expect(c1m5).to.exist;
+            expect(c1m5.referees).to.be.an('array');
+            expect(c1m5.referees.length).to.equal(2);
+
+            const refereeIds = c1m5.referees.map(r => r.id);
+            expect(refereeIds).to.include('C1-M1');
+            expect(refereeIds).to.include('C1-M2');
+        });
+
+        it('should verify C1-M6 has 2 referees: C1-M1 and C1-M2', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m6 = res.body.members.find(m => m.id === 'C1-M6');
+            expect(c1m6).to.exist;
+            expect(c1m6.referees).to.be.an('array');
+            expect(c1m6.referees.length).to.equal(2);
+
+            const refereeIds = c1m6.referees.map(r => r.id);
+            expect(refereeIds).to.include('C1-M1');
+            expect(refereeIds).to.include('C1-M2');
+        });
+
+        it('should verify C1-M7 has 2 referees: C1-M1 and C1-M2', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m7 = res.body.members.find(m => m.id === 'C1-M7');
+            expect(c1m7).to.exist;
+            expect(c1m7.referees).to.be.an('array');
+            expect(c1m7.referees.length).to.equal(2);
+
+            const refereeIds = c1m7.referees.map(r => r.id);
+            expect(refereeIds).to.include('C1-M1');
+            expect(refereeIds).to.include('C1-M2');
+        });
+
+        it('should verify C1-M8 has 2 referees: C1-M6 and C1-M7', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m8 = res.body.members.find(m => m.id === 'C1-M8');
+            expect(c1m8).to.exist;
+            expect(c1m8.referees).to.be.an('array');
+            expect(c1m8.referees.length).to.equal(2);
+
+            const refereeIds = c1m8.referees.map(r => r.id);
+            expect(refereeIds).to.include('C1-M6');
+            expect(refereeIds).to.include('C1-M7');
+        });
+
+        it('should verify referee objects have required fields (id, firstName, lastName, email)', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            const c1m3 = res.body.members.find(m => m.id === 'C1-M3');
+            expect(c1m3.referees.length).to.be.at.least(1);
+
+            c1m3.referees.forEach(referee => {
+                expect(referee).to.have.property('id');
+                expect(referee).to.have.property('firstName');
+                expect(referee).to.have.property('lastName');
+                expect(referee).to.have.property('email');
+                expect(referee).to.have.property('gender');
+                expect(referee).to.have.property('phoneNumber');
+            });
+        });
+
+        it('should verify col-1 members have correct referee data matching PDF', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1');
+
+            // Check C1-M3's first referee is C1-M1 with correct data
+            const c1m3 = res.body.members.find(m => m.id === 'C1-M3');
+            const referee1 = c1m3.referees.find(r => r.id === 'C1-M1');
+            expect(referee1).to.exist;
+            expect(referee1.firstName).to.equal('Nom membre 1');
+            expect(referee1.lastName).to.equal('Prénom membre 1');
+            expect(referee1.email).to.equal('member.1@fed-agri.mg');
+            expect(referee1.gender).to.equal('MALE');
+
+            // Check C1-M8's second referee is C1-M7 with correct data
+            const c1m8 = res.body.members.find(m => m.id === 'C1-M8');
+            const referee2 = c1m8.referees.find(r => r.id === 'C1-M7');
+            expect(referee2).to.exist;
+            expect(referee2.email).to.equal('member.7@fed-agri.mg');
+        });
+
+        it('should retrieve collectivity col-2 with members and verify referees', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-2');
+
+            expect(res.status).to.equal(200);
+            expect(res.body.members).to.be.an('array');
+            expect(res.body.members.length).to.be.at.least(8);
+
+            res.body.members.forEach(member => {
+                expect(member).to.have.property('referees');
+                expect(member.referees).to.not.be.null;
+                expect(member.referees).to.be.an('array');
+            });
+
+            // C2-M1 and C2-M2 should have no referees (Aucun)
+            const c2m1 = res.body.members.find(m => m.id === 'C2-M1');
+            expect(c2m1).to.exist;
+            expect(c2m1.referees).to.be.an('array');
+            expect(c2m1.referees.length).to.equal(0);
+
+            const c2m2 = res.body.members.find(m => m.id === 'C2-M2');
+            expect(c2m2).to.exist;
+            expect(c2m2.referees).to.be.an('array');
+            expect(c2m2.referees.length).to.equal(0);
+
+            // C2-M3 should have referees C1-M1 and C1-M2
+            const c2m3 = res.body.members.find(m => m.id === 'C2-M3');
+            expect(c2m3).to.exist;
+            expect(c2m3.referees.length).to.equal(2);
+            const c2m3RefereeIds = c2m3.referees.map(r => r.id);
+            expect(c2m3RefereeIds).to.include('C1-M1');
+            expect(c2m3RefereeIds).to.include('C1-M2');
+        });
+
+        it('should retrieve collectivity col-3 with members and verify referees', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-3');
+
+            expect(res.status).to.equal(200);
+            expect(res.body.members).to.be.an('array');
+            expect(res.body.members.length).to.be.at.least(8);
+
+            res.body.members.forEach(member => {
+                expect(member).to.have.property('referees');
+                expect(member.referees).to.not.be.null;
+                expect(member.referees).to.be.an('array');
+            });
+
+            // C3-M1 should have referees C1-M1 and C1-M2 (from PDF)
+            const c3m1 = res.body.members.find(m => m.id === 'C3-M1');
+            expect(c3m1).to.exist;
+            expect(c3m1.referees.length).to.equal(2);
+            const c3m1RefereeIds = c3m1.referees.map(r => r.id);
+            expect(c3m1RefereeIds).to.include('C1-M1');
+            expect(c3m1RefereeIds).to.include('C1-M2');
+
+            // C3-M3 should have referees C3-M1 and C3-M2
+            const c3m3 = res.body.members.find(m => m.id === 'C3-M3');
+            expect(c3m3).to.exist;
+            expect(c3m3.referees.length).to.equal(2);
+            const c3m3RefereeIds = c3m3.referees.map(r => r.id);
+            expect(c3m3RefereeIds).to.include('C3-M1');
+            expect(c3m3RefereeIds).to.include('C3-M2');
+        });
+
         it('should return 404 for non-existent collectivity', async function() {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/NONEXISTENT');
@@ -476,7 +691,6 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
                     amount: 25000,
                     eligibleFrom: '2026-05-01'
                 }]);
-            console.log(res.error)
             expect(res.status).to.equal(201);
             expect(res.body).to.be.an('array');
             expect(res.body[0]).to.have.property('id');
@@ -621,7 +835,6 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
         it('should retrieve local statistics for col-1', async function() {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/col-1/statistics?from=2026-01-01&to=2026-12-31');
-            console.log(res.error)
             expect(res.status).to.equal(200);
             expect(res.body).to.be.an('array');
             expect(res.body.length).to.be.at.least(1);
@@ -802,96 +1015,336 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(res.status).to.equal(404);
         });
     });
-
     // ============================================
     // 11. ATTENDANCE TESTS
     // ============================================
     describe('POST /collectivities/{id}/activities/{activityId}/attendance - Create Attendance', function() {
 
-        it('should record attendance for an activity', async function() {
-            if (!createdActivityId) {
+        let firstActivityId = null;
+
+        before(async function() {
+            // Create a fresh activity for attendance testing
+            const res = await chai.request(BASE_URL)
+                .post('/collectivities/col-1/activities')
+                .send([{
+                    label: 'Test Attendance Activity',
+                    activityType: 'MEETING',
+                    memberOccupationConcerned: ['PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'TREASURER', 'SENIOR'],
+                    executiveDate: '2026-07-01'
+                }]);
+
+            if (res.status === 201 || res.status === 200) {
+                firstActivityId = res.body[0].id;
+            }
+        });
+
+        it('should update attendance from UNDEFINED to ATTENDED/MISSING', async function() {
+            if (!firstActivityId) {
                 this.skip();
                 return;
             }
 
             const res = await chai.request(BASE_URL)
-                .post(`/collectivities/col-1/activities/${createdActivityId}/attendance`)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
                 .send([
                     { memberIdentifier: 'C1-M1', attendanceStatus: 'ATTENDED' },
                     { memberIdentifier: 'C1-M2', attendanceStatus: 'ATTENDED' },
                     { memberIdentifier: 'C1-M3', attendanceStatus: 'MISSING' }
                 ]);
 
-            console.log(res.error)
             expect(res.status).to.equal(201);
             expect(res.body).to.be.an('array');
             expect(res.body.length).to.equal(3);
-            expect(res.body[0]).to.have.property('id');
-            expect(res.body[0]).to.have.property('memberDescription');
-            expect(res.body[0]).to.have.property('attendanceStatus');
+            res.body.forEach(attendance => {
+                expect(attendance).to.have.property('id');
+                expect(attendance).to.have.property('memberDescription');
+                expect(attendance).to.have.property('attendanceStatus');
+                expect(['ATTENDED', 'MISSING']).to.include(attendance.attendanceStatus);
+            });
         });
 
-        it('should reject attendance for non-existent member', async function() {
-            if (!createdActivityId) {
+        it('should reject modifying already confirmed attendance (ATTENDED -> MISSING)', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // Try to modify C1-M1 from ATTENDED to MISSING (should fail)
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M1', attendanceStatus: 'MISSING' }
+                ]);
+
+            expect(res.status).to.equal(400);
+            expect(res.text).to.include('already confirmed');
+        });
+
+        it('should reject modifying already confirmed attendance (MISSING -> ATTENDED)', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // Try to modify C1-M3 from MISSING to ATTENDED (should fail)
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M3', attendanceStatus: 'ATTENDED' }
+                ]);
+
+            expect(res.status).to.equal(400);
+            expect(res.text).to.include('already confirmed');
+        });
+
+        it('should reject adding duplicate ATTENDED for already confirmed member', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // Try to set C1-M2 to ATTENDED again (already ATTENDED from first test)
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M2', attendanceStatus: 'ATTENDED' }
+                ]);
+
+            expect(res.status).to.equal(400);
+        });
+
+        it('should allow setting ATTENDED for member outside collectivity', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // C3-M1 is from collectivity 3, not col-1 - should be allowed to set ATTENDED
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C3-M1', attendanceStatus: 'ATTENDED' }
+                ]);
+
+            expect(res.status).to.equal(201);
+            expect(res.body).to.be.an('array');
+            expect(res.body[0].memberDescription.id).to.equal('C3-M1');
+            expect(res.body[0].attendanceStatus).to.equal('ATTENDED');
+        });
+
+        it('should allow setting ATTENDED for member from another collectivity (C2-M5)', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // C2-M5 is from collectivity 2
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C2-M5', attendanceStatus: 'ATTENDED' }
+                ]);
+
+            expect(res.status).to.equal(201);
+        });
+
+        it('should allow updating UNDEFINED members that were not yet set', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // C1-M4 and C1-M5 should still be UNDEFINED (not set in first test)
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M4', attendanceStatus: 'ATTENDED' },
+                    { memberIdentifier: 'C1-M5', attendanceStatus: 'MISSING' }
+                ]);
+
+            expect(res.status).to.equal(201);
+            expect(res.body).to.be.an('array');
+            expect(res.body.length).to.equal(2);
+        });
+
+        it('should return 404 for non-existent member', async function() {
+            if (!firstActivityId) {
                 this.skip();
                 return;
             }
 
             const res = await chai.request(BASE_URL)
-                .post(`/collectivities/col-1/activities/${createdActivityId}/attendance`)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
                 .send([
-                    { memberIdentifier: 'NONEXISTENT', attendanceStatus: 'ATTENDED' }
+                    { memberIdentifier: 'NONEXISTENT-MEMBER', attendanceStatus: 'ATTENDED' }
                 ]);
 
             expect(res.status).to.equal(404);
         });
 
-        it('should reject modifying already confirmed attendance', async function() {
-            if (!createdActivityId) {
-                this.skip();
-                return;
-            }
-
-            // Try to modify C1-M1 from ATTENDED to MISSING
-            const res = await chai.request(BASE_URL)
-                .post(`/collectivities/col-1/activities/${createdActivityId}/attendance`)
-                .send([
-                    { memberIdentifier: 'C1-M1', attendanceStatus: 'MISSING' }
-                ]);
-            console.log(res.error)
-            expect(res.status).to.equal(400);
-        });
-
         it('should return 404 for non-existent activity', async function() {
             const res = await chai.request(BASE_URL)
-                .post('/collectivities/col-1/activities/NONEXISTENT/attendance')
+                .post('/collectivities/col-1/activities/NONEXISTENT-ACTIVITY/attendance')
                 .send([
                     { memberIdentifier: 'C1-M1', attendanceStatus: 'ATTENDED' }
                 ]);
 
             expect(res.status).to.equal(404);
         });
-    });
 
-    describe('GET /collectivities/{id}/activities/{activityId}/attendance - Get Attendance', function() {
+        it('should return 404 for non-existent collectivity', async function() {
+            const res = await chai.request(BASE_URL)
+                .post('/collectivities/NONEXISTENT/activities/some-activity/attendance')
+                .send([
+                    { memberIdentifier: 'C1-M1', attendanceStatus: 'ATTENDED' }
+                ]);
 
-        it('should retrieve attendance for an activity', async function() {
-            if (!createdActivityId) {
+            expect(res.status).to.equal(404);
+        });
+
+        it('should reject empty request body', async function() {
+            if (!firstActivityId) {
                 this.skip();
                 return;
             }
 
             const res = await chai.request(BASE_URL)
-                .get(`/collectivities/col-1/activities/${createdActivityId}/attendance`);
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([]);
+
+            expect(res.status).to.equal(400);
+        });
+
+        it('should reject request without body', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send();
+
+            expect(res.status).to.equal(400);
+        });
+
+        it('should reject invalid attendance status value', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M6', attendanceStatus: 'PRESENT' }
+                ]);
+
+            expect(res.status).to.equal(400);
+        });
+
+        it('should reject mixing valid and already confirmed members', async function() {
+            if (!firstActivityId) {
+                this.skip();
+                return;
+            }
+
+            // C1-M1 is already confirmed (ATTENDED), C1-M6 should still be UNDEFINED
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${firstActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M1', attendanceStatus: 'MISSING' },
+                    { memberIdentifier: 'C1-M6', attendanceStatus: 'ATTENDED' }
+                ]);
+
+            // Should fail because C1-M1 is already confirmed
+            expect(res.status).to.equal(400);
+        });
+    });
+
+    describe('GET /collectivities/{id}/activities/{activityId}/attendance - Get Attendance', function() {
+
+        let testActivityId = null;
+
+        before(async function() {
+            // Get the first available activity
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/col-1/activities');
+
+            if (res.body && res.body.length > 0) {
+                testActivityId = res.body[0].id;
+            }
+        });
+
+        it('should retrieve attendance including UNDEFINED, ATTENDED, MISSING statuses', async function() {
+            if (!testActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .get(`/collectivities/col-1/activities/${testActivityId}/attendance`);
 
             expect(res.status).to.equal(200);
             expect(res.body).to.be.an('array');
+            expect(res.body.length).to.be.at.least(1);
+
+            const statuses = res.body.map(a => a.attendanceStatus);
+            const hasUndefined = statuses.includes('UNDEFINED');
+            const hasAttended = statuses.includes('ATTENDED');
+            const hasMissing = statuses.includes('MISSING');
+
+            // At least one status type should be present
+            expect(hasUndefined || hasAttended || hasMissing).to.be.true;
+
             res.body.forEach(attendance => {
                 expect(attendance).to.have.property('id');
                 expect(attendance).to.have.property('memberDescription');
+                expect(attendance.memberDescription).to.have.property('id');
+                expect(attendance.memberDescription).to.have.property('firstName');
+                expect(attendance.memberDescription).to.have.property('lastName');
+                expect(attendance.memberDescription).to.have.property('email');
                 expect(attendance).to.have.property('attendanceStatus');
-                expect(['ATTENDED', 'MISSING', 'UNDEFINED']).to.include(attendance.attendanceStatus);
+                expect(['UNDEFINED', 'ATTENDED', 'MISSING']).to.include(attendance.attendanceStatus);
             });
+        });
+
+        it('should include members from other collectivities who attended', async function() {
+            if (!testActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .get(`/collectivities/col-1/activities/${testActivityId}/attendance`);
+
+            const externalMembers = res.body.filter(a =>
+                a.memberDescription.id.startsWith('C2-') ||
+                a.memberDescription.id.startsWith('C3-')
+            );
+
+            // External members should only have ATTENDED status (if they attended)
+            externalMembers.forEach(member => {
+                expect(member.attendanceStatus).to.equal('ATTENDED');
+            });
+        });
+
+        it('should have correct member details in attendance', async function() {
+            if (!testActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .get(`/collectivities/col-1/activities/${testActivityId}/attendance`);
+
+            // Find C1-M1 attendance
+            const c1m1Attendance = res.body.find(a => a.memberDescription.id === 'C1-M1');
+            if (c1m1Attendance) {
+                expect(c1m1Attendance.memberDescription.firstName).to.equal('Nom membre 1');
+                expect(c1m1Attendance.memberDescription.lastName).to.equal('Prénom membre 1');
+                expect(c1m1Attendance.memberDescription.email).to.equal('member.1@fed-agri.mg');
+            }
         });
 
         it('should return 404 for non-existent activity', async function() {
@@ -900,8 +1353,84 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
             expect(res.status).to.equal(404);
         });
+
+        it('should return 404 for non-existent collectivity', async function() {
+            const res = await chai.request(BASE_URL)
+                .get('/collectivities/NONEXISTENT/activities/some-activity/attendance');
+
+            expect(res.status).to.equal(404);
+        });
     });
 
+    // ============================================
+    // 12. ACTIVITIES + ATTENDANCE INTEGRATION TESTS
+    // ============================================
+    describe('Activities and Attendance Integration Tests', function() {
+
+        let integrationActivityId = null;
+
+        before(async function() {
+            // Create activity with limited occupations concerned
+            const res = await chai.request(BASE_URL)
+                .post('/collectivities/col-1/activities')
+                .send([{
+                    label: 'Integration Test Activity',
+                    activityType: 'OTHER',
+                    memberOccupationConcerned: ['PRESIDENT', 'SECRETARY'],
+                    executiveDate: '2026-08-15'
+                }]);
+
+            if (res.status === 201 || res.status === 200) {
+                integrationActivityId = res.body[0].id;
+            }
+        });
+
+        it('should initialize UNDEFINED only for concerned occupations', async function() {
+            if (!integrationActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .get(`/collectivities/col-1/activities/${integrationActivityId}/attendance`);
+
+            // Only PRESIDENT (C1-M1) and SECRETARY (C1-M3) should have UNDEFINED
+            const concernedMembers = res.body.filter(a =>
+                a.memberDescription.id === 'C1-M1' ||
+                a.memberDescription.id === 'C1-M3'
+            );
+
+            concernedMembers.forEach(member => {
+                expect(member.attendanceStatus).to.equal('UNDEFINED');
+            });
+        });
+
+        it('should confirm attendance for concerned members', async function() {
+            if (!integrationActivityId) {
+                this.skip();
+                return;
+            }
+
+            const res = await chai.request(BASE_URL)
+                .post(`/collectivities/col-1/activities/${integrationActivityId}/attendance`)
+                .send([
+                    { memberIdentifier: 'C1-M1', attendanceStatus: 'ATTENDED' },
+                    { memberIdentifier: 'C1-M3', attendanceStatus: 'MISSING' }
+                ]);
+
+            expect(res.status).to.equal(201);
+
+            // Verify the attendance was recorded
+            const getRes = await chai.request(BASE_URL)
+                .get(`/collectivities/col-1/activities/${integrationActivityId}/attendance`);
+
+            const c1m1 = getRes.body.find(a => a.memberDescription.id === 'C1-M1');
+            const c1m3 = getRes.body.find(a => a.memberDescription.id === 'C1-M3');
+
+            expect(c1m1.attendanceStatus).to.equal('ATTENDED');
+            expect(c1m3.attendanceStatus).to.equal('MISSING');
+        });
+    });
     // ============================================
     // 12. DATA INTEGRITY TESTS
     // ============================================
