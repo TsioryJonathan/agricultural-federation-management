@@ -1,10 +1,15 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
+import com.hei.agriculturalfederationmanagement.entity.Activity;
+import com.hei.agriculturalfederationmanagement.entity.ActivityAttendance;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
+import com.hei.agriculturalfederationmanagement.entity.dto.CreateActivityMemberAttendance;
+import com.hei.agriculturalfederationmanagement.entity.dto.CreateCollectivityActivity;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.service.CollectivityService;
+import com.hei.agriculturalfederationmanagement.service.ActivityService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +24,7 @@ import java.util.List;
 @RequestMapping("/collectivities")
 public class CollectivityController {
     private final CollectivityService service;
+    private final ActivityService activityService;
 
     @PostMapping
     public ResponseEntity<?> createCollectivities(@RequestBody(required = false) List<CreateCollectivity> createCollectivities){
@@ -134,6 +140,64 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/{id}/activities")
+    public List<CollectivityActivity> createActivities(@PathVariable String id,
+                                                   @RequestBody List<CreateCollectivityActivity> requests) {
+        List<Activity> activities = activityService.createActivities(id, requests);
+        return activities.stream()
+            .map(this::toCollectivityActivity)
+            .toList();
+    }
+
+    @GetMapping("/{id}/activities")
+    public List<CollectivityActivity> getActivities(@PathVariable String id) {
+        return activityService.getActivities(id).stream()
+            .map(this::toCollectivityActivity)
+            .toList();
+    }
+
+    @PostMapping("/{id}/activities/{activityId}/attendance")
+    public List<ActivityMemberAttendance> confirmAttendance(@PathVariable String activityId,
+                                                         @RequestBody List<CreateActivityMemberAttendance> requests) {
+        List<ActivityAttendance> attendance = activityService.confirmAttendance(activityId, requests);
+        return attendance.stream()
+            .map(this::toActivityMemberAttendance)
+            .toList();
+    }
+
+    @GetMapping("/{id}/activities/{activityId}/attendance")
+    public List<ActivityMemberAttendance> getAttendance(@PathVariable String activityId) {
+        return activityService.getAttendance(activityId).stream()
+            .map(this::toActivityMemberAttendance)
+            .toList();
+    }
+
+    private CollectivityActivity toCollectivityActivity(Activity activity) {
+        com.hei.agriculturalfederationmanagement.entity.dto.MonthlyRecurrenceRule dtoRecurrenceRule = null;
+        if (activity.getRecurrenceRule() != null) {
+            dtoRecurrenceRule = com.hei.agriculturalfederationmanagement.entity.dto.MonthlyRecurrenceRule.builder()
+                .weekOrdinal(activity.getRecurrenceRule().getWeekOrdinal())
+                .dayOfWeek(activity.getRecurrenceRule().getDayOfWeek())
+                .build();
+        }
+        return CollectivityActivity.builder()
+            .id(activity.getId())
+            .label(activity.getLabel())
+            .activityType(activity.getActivityType() != null ? activity.getActivityType().name() : null)
+            .memberOccupationConcerned(activity.getMemberOccupationConcerned())
+            .recurrenceRule(dtoRecurrenceRule)
+            .executiveDate(activity.getExecutiveDate())
+            .build();
+    }
+
+    private ActivityMemberAttendance toActivityMemberAttendance(ActivityAttendance attendance) {
+        return ActivityMemberAttendance.builder()
+            .id(attendance.getId())
+            .memberDescription(attendance.getMemberDescription())
+            .attendanceStatus(attendance.getAttendanceStatus())
+            .build();
     }
 
 }
