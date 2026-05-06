@@ -40,7 +40,7 @@ public class TransactionRepository {
             }
             return transaction;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save transaction " + e.getMessage());
+            throw new RuntimeException("Failed to save transaction: " + e.getMessage(), e);
         }
     }
 }

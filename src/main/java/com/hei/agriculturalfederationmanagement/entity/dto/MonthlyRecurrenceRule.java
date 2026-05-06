@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateStructure {
-    private String president;
-    private String vicePresident;
-    private String treasurer;
-    private String secretary;
+public class MonthlyRecurrenceRule {
+    private int weekOrdinal;
+    private String dayOfWeek;
 }

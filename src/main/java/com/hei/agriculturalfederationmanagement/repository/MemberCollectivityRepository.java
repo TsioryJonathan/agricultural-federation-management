@@ -31,7 +31,7 @@ public class MemberCollectivityRepository {
             stmt.setTimestamp(5, null);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save member_collectivity link", e);
+            throw new RuntimeException("Failed to save member_collectivity link: " + e.getMessage(), e);
         }
     }
 

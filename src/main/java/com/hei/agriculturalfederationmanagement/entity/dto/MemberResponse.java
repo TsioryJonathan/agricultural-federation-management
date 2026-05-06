@@ -1,6 +1,7 @@
 package com.hei.agriculturalfederationmanagement.entity.dto;
 
 import com.hei.agriculturalfederationmanagement.entity.enums.Gender;
+import com.hei.agriculturalfederationmanagement.entity.enums.CollectivityOccupation;
 import lombok.Builder;
 import lombok.Data;
 
@@ -18,8 +19,10 @@ public class MemberResponse {
     private Gender gender;
     private String address;
     private String profession;
-    private String phoneNumber;
+    private int phoneNumber;
     private String email;
+
+    private CollectivityOccupation occupation;
 
     private List<String> referees;
 }

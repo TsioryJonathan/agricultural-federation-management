@@ -19,7 +19,7 @@ public class Datasource {
         try{
             return DriverManager.getConnection(db_url);
         } catch (RuntimeException | SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to create database connection: " + e.getMessage(), e);
         }
     }
 }

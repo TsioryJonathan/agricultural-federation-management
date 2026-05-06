@@ -36,7 +36,7 @@ public class MembershipFeeRepository {
             }
             return membershipFees;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find membership fees", e);
+            throw new RuntimeException("Failed to find membership fees: " + e.getMessage(), e);
         }
     }
 
@@ -72,7 +72,7 @@ public class MembershipFeeRepository {
             }
             return membershipFee;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save membership fee" + e.getMessage());
+            throw new RuntimeException("Failed to save membership fee: " + e.getMessage(), e);
         }
     }
 
@@ -85,7 +85,7 @@ public class MembershipFeeRepository {
             rs.next();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check frequency existence", e);
+            throw new RuntimeException("Failed to check frequency existence: " + e.getMessage(), e);
         }
     }
 }

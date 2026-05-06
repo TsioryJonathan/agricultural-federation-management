@@ -27,7 +27,7 @@ public class RefereeRepository {
         try {
             connection.setAutoCommit(false);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to set auto-commit", e);
+            throw new RuntimeException("Failed to set auto-commit: " + e.getMessage(), e);
         }
 
         try(PreparedStatement pstmt = connection.prepareStatement(insertRefSql)){
@@ -46,9 +46,9 @@ public class RefereeRepository {
             try {
                 connection.rollback();
             } catch (SQLException ex) {
-                throw new RuntimeException("Failed to rollback", ex);
+                throw new RuntimeException("Failed to rollback: " + ex.getMessage(), ex);
             }
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to save referee member link: " + e.getMessage(), e);
 
         }
     }

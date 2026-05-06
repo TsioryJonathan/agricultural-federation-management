@@ -10,4 +10,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class CashAccountResponse extends FinancialAccountResponse {
+    private Double amount;
 }

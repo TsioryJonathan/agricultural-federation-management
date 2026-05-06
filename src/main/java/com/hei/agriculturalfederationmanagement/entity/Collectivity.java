@@ -9,12 +9,12 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class Collectivity {
     private String id;
-    private String number;
+    private Integer number;
     private String name;
     private String speciality;
     private Instant creationDatetime;

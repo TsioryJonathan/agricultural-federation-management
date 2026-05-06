@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateStructure {
-    private String president;
-    private String vicePresident;
-    private String treasurer;
-    private String secretary;
+public class MemberDescription {
+    private String id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String occupation;
 }

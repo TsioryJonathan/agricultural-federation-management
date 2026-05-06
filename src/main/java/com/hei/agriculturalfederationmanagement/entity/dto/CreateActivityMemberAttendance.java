@@ -1,5 +1,6 @@
 package com.hei.agriculturalfederationmanagement.entity.dto;
 
+import com.hei.agriculturalfederationmanagement.entity.enums.AttendanceStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,9 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateStructure {
-    private String president;
-    private String vicePresident;
-    private String treasurer;
-    private String secretary;
+public class CreateActivityMemberAttendance {
+    private String memberIdentifier;
+    private AttendanceStatus attendanceStatus;
 }

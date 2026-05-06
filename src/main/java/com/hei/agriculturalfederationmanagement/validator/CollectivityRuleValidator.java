@@ -42,7 +42,16 @@ public class CollectivityRuleValidator {
         if (validSponsors < 2) {
             throw new InsufficientSponsorCount(
                     dto.getFirstName() +
-                            " does not satisfy collectivity sponsor rule"
+                            " does not satisfy collectivity sponsor rule: at least 2 valid sponsors required"
+            );
+        }
+
+        if (inTargetCollectivity < inOtherCollectivities) {
+            throw new InsufficientSponsorCount(
+                    dto.getFirstName() +
+                            " does not satisfy collectivity sponsor rule: sponsors from target collectivity (" +
+                            inTargetCollectivity + ") must be >= sponsors from other collectivities (" +
+                            inOtherCollectivities + ")"
             );
         }
     }

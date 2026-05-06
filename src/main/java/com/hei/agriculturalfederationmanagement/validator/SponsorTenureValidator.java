@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class SponsorTenureValidator {
     public void validate(Member sponsor){
         if(!sponsor.isAValidSponsor()){
-            throw new SponsorTenureException(sponsor.getId() + "'s tenure in Federation is below 90 days");
+            throw new SponsorTenureException(sponsor.getId() + "'s tenure in Federation is below 180 days (6 months)");
         }
     }
 }

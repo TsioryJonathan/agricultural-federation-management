@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 public class CashAccountDetail {
     private String id;
     private String type;
-    private Double amount;
+    private int amount;
 
-    public CashAccountDetail(String id, Double amount) {
+    public CashAccountDetail(String id, int amount) {
         this.id = id;
         this.type = "CASH";
         this.amount = amount;

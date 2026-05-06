@@ -29,7 +29,7 @@ public class CotisationPlanRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find cotisations_plan", e);
+            throw new RuntimeException("Failed to find cotisations_plan: " + e.getMessage(), e);
         }
     }
 

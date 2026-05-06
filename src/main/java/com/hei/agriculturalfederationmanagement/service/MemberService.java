@@ -12,12 +12,12 @@ import com.hei.agriculturalfederationmanagement.repository.TransactionRepository
 import com.hei.agriculturalfederationmanagement.validator.CollectivityRuleValidator;
 import com.hei.agriculturalfederationmanagement.validator.MemberPaymentValidator;
 import com.hei.agriculturalfederationmanagement.validator.PaymentValidator;
-import com.hei.agriculturalfederationmanagement.validator.SponsorCountValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+
 import java.util.stream.IntStream;
 
 @Service
@@ -28,7 +28,6 @@ public class MemberService {
     private final MemberLinkService memberLinkService;
     private final PaymentValidator paymentValidator;
     private final CollectivityRuleValidator collectivityRuleValidator;
-    private final SponsorCountValidator sponsorCountValidator;
     private final MemberPaymentValidator memberPaymentValidator;
     private final CollectivityRepository collectivityRepository;
     private final AccountRepository accountRepository;
@@ -36,11 +35,8 @@ public class MemberService {
 
     public List<MemberResponse> createMembers(List<CreateMember> memberList) {
 
-        /* Validate payement */
+        /* Validate payment */
         memberList.forEach(paymentValidator::validate);
-
-        /* Validate Sponsor count */
-        memberList.forEach(sponsorCountValidator::validate);
 
         List<String> sponsorIds = memberList.stream()
                 .flatMap(m -> m.getReferees().stream())
@@ -75,7 +71,7 @@ public class MemberService {
                 .gender(dto.getGender())
                 .address(dto.getAddress())
                 .email(dto.getEmail())
-                .phoneNumber(dto.getPhoneNumber())
+                .phoneNumber(String.valueOf(dto.getPhoneNumber()))
                 .profession(dto.getProfession())
                 .build();
     }
@@ -95,7 +91,7 @@ public class MemberService {
                             .gender(m.getGender())
                             .address(m.getAddress())
                             .profession(m.getProfession())
-                            .phoneNumber(m.getPhoneNumber())
+                            .phoneNumber(Integer.parseInt(m.getPhoneNumber()))
                             .email(m.getEmail())
                             .referees(dto.getReferees())
                             .build();
@@ -112,14 +108,13 @@ public class MemberService {
 
         List<MemberPaymentResponse> responses = new ArrayList<>();
 
-
         for (CreateMemberPayment request : requests) {
 
             Collectivity collectivity =  collectivityRepository.findByMembershipFeeId(request.getMembershipFeeIdentifier());
             Account account = accountRepository.findById(request.getAccountCreditedIdentifier()).orElseThrow(()-> new NotFoundException("Account not found"));
 
             if (collectivity == null) {
-                throw new BadRequestException("Collectivity with that membership fee not found");
+                throw new BadRequestException("Collectivity with that membership fee not found: " + (collectivity == null ? "collectivity is null" : collectivity.getId()));
             }
 
             memberPaymentValidator.validatePaymentRequest(request, collectivity.getId());
@@ -173,6 +168,7 @@ public class MemberService {
             response.setId(String.valueOf(account.getId()));
             response.setAmount(balance);
             return response;
+
         } else if (account.getMobileMoneyAccount() != null) {
             MobileMoneyAccount ma = account.getMobileMoneyAccount();
             MobileBankingAccountResponse response = MobileBankingAccountResponse.builder()
@@ -183,6 +179,7 @@ public class MemberService {
             response.setId(String.valueOf(account.getId()));
             response.setAmount(balance);
             return response;
+
         } else if (account.getCashAccount() != null) {
             CashAccountResponse response = CashAccountResponse.builder().build();
             response.setId(String.valueOf(account.getId()));

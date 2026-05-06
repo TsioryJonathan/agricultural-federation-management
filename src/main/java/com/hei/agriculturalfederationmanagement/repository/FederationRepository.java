@@ -76,7 +76,7 @@ public class FederationRepository {
             return Optional.empty();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch federation", e);
+            throw new RuntimeException("Failed to fetch federation: " + e.getMessage(), e);
         }
     }
 

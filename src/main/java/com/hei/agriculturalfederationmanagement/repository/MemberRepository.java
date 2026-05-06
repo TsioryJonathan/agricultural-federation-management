@@ -85,7 +85,7 @@ public class MemberRepository {
             return new ArrayList<>(map.values());
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to find members by IDs: " + e.getMessage(), e);
         }
     }
 
@@ -101,7 +101,7 @@ public class MemberRepository {
             return rs.getInt(1) > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to check member existence: " + e.getMessage(), e);
         }
     }
 
@@ -118,7 +118,7 @@ public class MemberRepository {
         try {
             connection.setAutoCommit(false);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to set auto-commit", e);
+            throw new RuntimeException("Failed to set auto-commit: " + e.getMessage(), e);
         }
 
         List<Member> result = new ArrayList<>();
@@ -149,7 +149,7 @@ public class MemberRepository {
             return result;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to save referee links: " + e.getMessage(), e);
         }
     }
 
@@ -175,7 +175,7 @@ public class MemberRepository {
         Collectivity c = Collectivity.builder()
                 .id(rs.getString("c_id"))
                 .name(rs.getString("name"))
-                .number(rs.getString("number"))
+                .number(rs.getObject("number", Integer.class))
                 .speciality(rs.getString("speciality"))
                 .authorizationDate(
                         rs.getTimestamp("authorization_date") != null
@@ -213,7 +213,7 @@ public class MemberRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find member", e);
+            throw new RuntimeException("Failed to find member: " + e.getMessage(), e);
         }
     }
 
@@ -233,7 +233,7 @@ public class MemberRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find member's collectivity", e);
+            throw new RuntimeException("Failed to find member's collectivity: " + e.getMessage(), e);
         }
     }
 
