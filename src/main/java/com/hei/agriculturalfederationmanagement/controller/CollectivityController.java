@@ -148,8 +148,11 @@ public class CollectivityController {
     @GetMapping("/{id}/statistics")
     public ResponseEntity<?> getLocalStatistics(
             @PathVariable String id,
-            @RequestParam(required = true) String from,
-            @RequestParam(required = true) String to) {
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        if(from == null || to == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Either to or from mandatory query params not provided or malformed");
+        }
         try {
             Instant fromDate = Instant.parse(from + "T00:00:00Z");
             Instant toDate = Instant.parse(to + "T23:59:59Z");
@@ -171,6 +174,7 @@ public class CollectivityController {
     public ResponseEntity<?> getOverallStatistics(
             @RequestParam(required = true) String from,
             @RequestParam(required = true) String to) {
+
         try {
             Instant fromDate = Instant.parse(from + "T00:00:00Z");
             Instant toDate = Instant.parse(to + "T23:59:59Z");
