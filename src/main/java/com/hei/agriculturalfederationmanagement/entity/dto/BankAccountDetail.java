@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BankAccountDetail {
     private String id;
-    private String type = "BANK";
     private Double amount;
     private String holderName;
     private Bank bankName;

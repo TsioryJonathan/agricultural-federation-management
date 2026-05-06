@@ -116,17 +116,13 @@ public class CollectivityService {
                 .toList();
     }
 
-    public CollectivityFinancialAccountResponse getFinancialAccounts(String collectivityId, Instant at) {
+    public List<Object> getFinancialAccounts(String collectivityId, Instant at) {
         Collectivity collectivity = repository.findById(collectivityId);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);
         }
 
         Map<String, Account> accounts = repository.loadAccountsWithTransactions(collectivityId, at);
-
-        Double totalAmount = accounts.values().stream()
-                .mapToDouble(Account::getBalance)
-                .sum();
 
         List<Object> accountDetails = new ArrayList<>();
         for (Account account : accounts.values()) {
@@ -136,11 +132,7 @@ public class CollectivityService {
             }
         }
 
-        return CollectivityFinancialAccountResponse.builder()
-                .id(collectivityId)
-                .amount(totalAmount)
-                .accounts(accountDetails)
-                .build();
+        return accountDetails;
     }
 
     public List<MembershipFeeResponse> getMembershipFees(String collectivityId) {

@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MobileBankingAccountDetail {
     private String id;
-    private String type = "MOBILE_BANKING";
     private Double amount;
     private String holderName;
     private MobileBankingService mobileBankingService;
