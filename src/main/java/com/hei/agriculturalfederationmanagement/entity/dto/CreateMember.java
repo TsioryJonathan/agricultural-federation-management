@@ -21,7 +21,7 @@ public class CreateMember {
     private Gender gender;
     private String address;
     private String profession;
-    private String phoneNumber;
+    private int phoneNumber;
     private String email;
     private MemberOccupation occupation;
     private String collectivityIdentifier;
