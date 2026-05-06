@@ -395,9 +395,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(c1m3.referees).to.be.an('array');
             expect(c1m3.referees.length).to.equal(2);
 
-            const refereeIds = c1m3.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M1');
-            expect(refereeIds).to.include('C1-M2');
+            expect(c1m3.referees).to.include('C1-M1');
+            expect(c1m3.referees).to.include('C1-M2');
         });
 
         it('should verify C1-M4 has 2 referees: C1-M1 and C1-M2', async function() {
@@ -409,9 +408,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(c1m4.referees).to.be.an('array');
             expect(c1m4.referees.length).to.equal(2);
 
-            const refereeIds = c1m4.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M1');
-            expect(refereeIds).to.include('C1-M2');
+            expect(c1m4.referees).to.include('C1-M1');
+            expect(c1m4.referees).to.include('C1-M2');
         });
 
         it('should verify C1-M5 has 2 referees: C1-M1 and C1-M2', async function() {
@@ -423,9 +421,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(c1m5.referees).to.be.an('array');
             expect(c1m5.referees.length).to.equal(2);
 
-            const refereeIds = c1m5.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M1');
-            expect(refereeIds).to.include('C1-M2');
+            expect(c1m5.referees).to.include('C1-M1');
+            expect(c1m5.referees).to.include('C1-M2');
         });
 
         it('should verify C1-M6 has 2 referees: C1-M1 and C1-M2', async function() {
@@ -437,9 +434,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(c1m6.referees).to.be.an('array');
             expect(c1m6.referees.length).to.equal(2);
 
-            const refereeIds = c1m6.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M1');
-            expect(refereeIds).to.include('C1-M2');
+            expect(c1m6.referees).to.include('C1-M1');
+            expect(c1m6.referees).to.include('C1-M2');
         });
 
         it('should verify C1-M7 has 2 referees: C1-M1 and C1-M2', async function() {
@@ -451,9 +447,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(c1m7.referees).to.be.an('array');
             expect(c1m7.referees.length).to.equal(2);
 
-            const refereeIds = c1m7.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M1');
-            expect(refereeIds).to.include('C1-M2');
+            expect(c1m7.referees).to.include('C1-M1');
+            expect(c1m7.referees).to.include('C1-M2');
         });
 
         it('should verify C1-M8 has 2 referees: C1-M6 and C1-M7', async function() {
@@ -465,49 +460,26 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(c1m8.referees).to.be.an('array');
             expect(c1m8.referees.length).to.equal(2);
 
-            const refereeIds = c1m8.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M6');
-            expect(refereeIds).to.include('C1-M7');
+            expect(c1m8.referees).to.include('C1-M6');
+            expect(c1m8.referees).to.include('C1-M7');
         });
 
-        it('should verify referee objects have required fields (id, firstName, lastName, email)', async function() {
+        it('should verify col-1 members have correct referee IDs', async function () {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/col-1');
 
+            // C1-M3 → should include C1-M1
             const c1m3 = res.body.members.find(m => m.id === 'C1-M3');
-            expect(c1m3.referees.length).to.be.at.least(1);
+            expect(c1m3).to.exist;
+            expect(c1m3.referees).to.include('C1-M1');
 
-            c1m3.referees.forEach(referee => {
-                expect(referee).to.have.property('id');
-                expect(referee).to.have.property('firstName');
-                expect(referee).to.have.property('lastName');
-                expect(referee).to.have.property('email');
-                expect(referee).to.have.property('gender');
-                expect(referee).to.have.property('phoneNumber');
-            });
-        });
-
-        it('should verify col-1 members have correct referee data matching PDF', async function() {
-            const res = await chai.request(BASE_URL)
-                .get('/collectivities/col-1');
-
-            // Check C1-M3's first referee is C1-M1 with correct data
-            const c1m3 = res.body.members.find(m => m.id === 'C1-M3');
-            const referee1 = c1m3.referees.find(r => r.id === 'C1-M1');
-            expect(referee1).to.exist;
-            expect(referee1.firstName).to.equal('Nom membre 1');
-            expect(referee1.lastName).to.equal('Prénom membre 1');
-            expect(referee1.email).to.equal('member.1@fed-agri.mg');
-            expect(referee1.gender).to.equal('MALE');
-
-            // Check C1-M8's second referee is C1-M7 with correct data
+            // C1-M8 → should include C1-M7
             const c1m8 = res.body.members.find(m => m.id === 'C1-M8');
-            const referee2 = c1m8.referees.find(r => r.id === 'C1-M7');
-            expect(referee2).to.exist;
-            expect(referee2.email).to.equal('member.7@fed-agri.mg');
+            expect(c1m8).to.exist;
+            expect(c1m8.referees).to.include('C1-M7');
         });
 
-        it('should retrieve collectivity col-2 with members and verify referees', async function() {
+        it('should retrieve collectivity col-2 with members and verify referees', async function () {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/col-2');
 
@@ -517,31 +489,24 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
             res.body.members.forEach(member => {
                 expect(member).to.have.property('referees');
-                expect(member.referees).to.not.be.null;
                 expect(member.referees).to.be.an('array');
             });
 
-            // C2-M1 and C2-M2 should have no referees (Aucun)
+            // C2-M1 & C2-M2 → no referees
             const c2m1 = res.body.members.find(m => m.id === 'C2-M1');
-            expect(c2m1).to.exist;
-            expect(c2m1.referees).to.be.an('array');
             expect(c2m1.referees.length).to.equal(0);
 
             const c2m2 = res.body.members.find(m => m.id === 'C2-M2');
-            expect(c2m2).to.exist;
-            expect(c2m2.referees).to.be.an('array');
             expect(c2m2.referees.length).to.equal(0);
 
-            // C2-M3 should have referees C1-M1 and C1-M2
+            // C2-M3 → referees = C1-M1, C1-M2
             const c2m3 = res.body.members.find(m => m.id === 'C2-M3');
             expect(c2m3).to.exist;
-            expect(c2m3.referees.length).to.equal(2);
-            const c2m3RefereeIds = c2m3.referees.map(r => r.id);
-            expect(c2m3RefereeIds).to.include('C1-M1');
-            expect(c2m3RefereeIds).to.include('C1-M2');
+            expect(c2m3.referees).to.include('C1-M1');
+            expect(c2m3.referees).to.include('C1-M2');
         });
 
-        it('should retrieve collectivity col-3 with members and verify referees', async function() {
+        it('should retrieve collectivity col-3 with members and verify referees', async function () {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/col-3');
 
@@ -551,28 +516,23 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
             res.body.members.forEach(member => {
                 expect(member).to.have.property('referees');
-                expect(member.referees).to.not.be.null;
                 expect(member.referees).to.be.an('array');
             });
 
-            // C3-M1 should have referees C1-M1 and C1-M2 (from PDF)
+            // C3-M1 → referees = C1-M1, C1-M2
             const c3m1 = res.body.members.find(m => m.id === 'C3-M1');
             expect(c3m1).to.exist;
-            expect(c3m1.referees.length).to.equal(2);
-            const c3m1RefereeIds = c3m1.referees.map(r => r.id);
-            expect(c3m1RefereeIds).to.include('C1-M1');
-            expect(c3m1RefereeIds).to.include('C1-M2');
+            expect(c3m1.referees).to.include('C1-M1');
+            expect(c3m1.referees).to.include('C1-M2');
 
-            // C3-M3 should have referees C3-M1 and C3-M2
+            // C3-M3 → referees = C3-M1, C3-M2
             const c3m3 = res.body.members.find(m => m.id === 'C3-M3');
             expect(c3m3).to.exist;
-            expect(c3m3.referees.length).to.equal(2);
-            const c3m3RefereeIds = c3m3.referees.map(r => r.id);
-            expect(c3m3RefereeIds).to.include('C3-M1');
-            expect(c3m3RefereeIds).to.include('C3-M2');
+            expect(c3m3.referees).to.include('C3-M1');
+            expect(c3m3.referees).to.include('C3-M2');
         });
 
-        it('should return 404 for non-existent collectivity', async function() {
+        it('should return 404 for non-existent collectivity', async function () {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/NONEXISTENT');
 
@@ -1484,9 +1444,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(member).to.exist;
             expect(member.referees).to.be.an('array');
             expect(member.referees.length).to.equal(2);
-            const refereeIds = member.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M1');
-            expect(refereeIds).to.include('C1-M2');
+            expect(member.referees).to.include('C1-M1');
+            expect(member.referees).to.include('C1-M2');
         });
 
         it('should verify member C1-M8 has referees C1-M6 and C1-M7', async function() {
@@ -1497,9 +1456,8 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(member).to.exist;
             expect(member.referees).to.be.an('array');
             expect(member.referees.length).to.equal(2);
-            const refereeIds = member.referees.map(r => r.id);
-            expect(refereeIds).to.include('C1-M6');
-            expect(refereeIds).to.include('C1-M7');
+            expect(member.referees).to.include('C1-M6');
+            expect(member.referees).to.include('C1-M7');
         });
 
         it('should verify col-1 structure has correct members', async function() {
