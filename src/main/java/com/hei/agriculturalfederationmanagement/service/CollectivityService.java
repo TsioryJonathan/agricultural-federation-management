@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -277,11 +278,11 @@ public class CollectivityService {
                 .toList();
     }
 
-    public Collectivity getCollectivityById(String id) {
-        return repository.findByIdOptional(id).orElseThrow(()->new NotFoundException("Collectivity id=" + id + " not found"));
+    public CollectivityResponse getCollectivityById(String id) {
+        return buildResponse(repository.findByIdOptional(id).orElseThrow(()->new NotFoundException("Collectivity id=" + id + " not found")));
     }
 
-    public CollectivityFinancialAccountResponse getFinancialAccounts(String collectivityId, Instant at) {
+    public CollectivityFinancialAccountResponse getFinancialAccounts(String collectivityId, LocalDate at) {
         Collectivity collectivity = repository.findById(collectivityId);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);

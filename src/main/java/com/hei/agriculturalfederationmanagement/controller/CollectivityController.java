@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -40,7 +41,7 @@ public class CollectivityController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getCollectivity(@PathVariable String id){
         try{
-            Collectivity collectivity = service.getCollectivityById(id);
+            CollectivityResponse collectivity = service.getCollectivityById(id);
             return ResponseEntity.status(HttpStatus.OK).body(collectivity);
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -123,7 +124,7 @@ public class CollectivityController {
     @GetMapping("/{id}/financialAccounts")
     public ResponseEntity<?> getFinancialAccounts(
             @PathVariable String id,
-            @RequestParam(required = false) Instant at) {
+            @RequestParam(required = false) LocalDate at) {
         try {
             CollectivityFinancialAccountResponse accounts = service.getFinancialAccounts(id, at);
             return ResponseEntity.ok(accounts);

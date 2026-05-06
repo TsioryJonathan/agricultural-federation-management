@@ -6,7 +6,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -472,11 +474,11 @@ public class CollectivityRepository {
         return loadAccountsWithTransactions(collectivityId, null);
     }
 
-    public Map<String, Account> loadAccountsWithTransactionsAt(String collectivityId, Instant at) {
+    public Map<String, Account> loadAccountsWithTransactionsAt(String collectivityId, LocalDate at) {
         return loadAccountsWithTransactions(collectivityId, at);
     }
 
-    private Map<String, Account> loadAccountsWithTransactions(String collectivityId, Instant at) {
+    private Map<String, Account> loadAccountsWithTransactions(String collectivityId, LocalDate at) {
         String baseSql = """
         select
             a.id as account_id,
@@ -518,7 +520,7 @@ public class CollectivityRepository {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, collectivityId);
             if (at != null) {
-                stmt.setTimestamp(2, Timestamp.from(at));
+                stmt.setDate(2, Date.valueOf(at));
             }
             ResultSet rs = stmt.executeQuery();
 
