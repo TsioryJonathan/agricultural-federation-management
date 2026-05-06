@@ -1,6 +1,27 @@
 -- ============================================
 -- COMPLETE DATABASE SCHEMA AND DATA FROM PDF ONLY (FIXED)
 -- ============================================
+-- ============================================
+-- DATABASE INITIALIZATION SCRIPT
+-- Drops all tables and recreates with PDF data
+-- Run before tests
+-- ============================================
+
+-- Drop tables in correct order (respecting foreign keys)
+DROP TABLE IF EXISTS activity_attendance CASCADE;
+DROP TABLE IF EXISTS activity_member_occupation CASCADE;
+DROP TABLE IF EXISTS activity CASCADE;
+DROP TABLE IF EXISTS transaction CASCADE;
+DROP TABLE IF EXISTS cotisation_plan CASCADE;
+DROP TABLE IF EXISTS mobile_money_account CASCADE;
+DROP TABLE IF EXISTS bank_account CASCADE;
+DROP TABLE IF EXISTS cash_account CASCADE;
+DROP TABLE IF EXISTS account CASCADE;
+DROP TABLE IF EXISTS member_referee CASCADE;
+DROP TABLE IF EXISTS member_collectivity CASCADE;
+DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS collectivity CASCADE;
+DROP TABLE IF EXISTS federation CASCADE;
 
 -- Federation table
 CREATE TABLE IF NOT EXISTS federation (

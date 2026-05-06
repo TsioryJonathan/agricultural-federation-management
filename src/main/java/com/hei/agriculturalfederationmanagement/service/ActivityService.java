@@ -5,6 +5,7 @@ import com.hei.agriculturalfederationmanagement.entity.ActivityAttendance;
 import com.hei.agriculturalfederationmanagement.entity.Member;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.entity.enums.MemberOccupation;
+import com.hei.agriculturalfederationmanagement.exception.AttendanceAlreadyConfirmedException;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.mapper.Mapper;
@@ -120,8 +121,16 @@ public class ActivityService {
             attendanceEntities.add(attendance);
         }
 
+        List<ActivityAttendance> savedAttendances = new ArrayList<>();
+
         // Save attendance (will throw error if already confirmed)
-        List<ActivityAttendance> savedAttendances = activityRepository.saveAttendance(activityId, attendanceEntities);
+        try{
+            savedAttendances = activityRepository.saveAttendance(activityId, attendanceEntities);
+        }catch (RuntimeException e){
+            if(e.getMessage().contains("Attendance already confirmed for member")){
+                throw new AttendanceAlreadyConfirmedException(e.getMessage());
+            }
+        }
 
         return savedAttendances.stream()
                 .map(this::mapToAttendanceResponse)

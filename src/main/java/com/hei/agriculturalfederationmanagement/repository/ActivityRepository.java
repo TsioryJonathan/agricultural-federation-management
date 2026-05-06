@@ -69,7 +69,7 @@ public class ActivityRepository {
 
             return activity;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save activity", e);
+            throw new RuntimeException("Failed to save activity " + e.getMessage());
         }
     }
 
@@ -95,7 +95,7 @@ public class ActivityRepository {
             }
             return activities;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find activities for collectivity: " + collectivityId, e);
+            throw new RuntimeException("Failed to find activities for collectivity: " + collectivityId + e.getMessage());
         }
     }
 
@@ -118,7 +118,7 @@ public class ActivityRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find activity: " + activityId, e);
+            throw new RuntimeException("Failed to find activity: " + activityId + e.getMessage());
         }
     }
 
@@ -146,75 +146,10 @@ public class ActivityRepository {
             }
             return occupations;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find occupations for activity: " + activityId, e);
+            throw new RuntimeException("Failed to find occupations for activity: " + activityId + e.getMessage());
         }
     }
 
-    public List<ActivityAttendance> saveAttendance(String activityId, List<ActivityAttendance> attendances) {
-        List<ActivityAttendance> savedAttendances = new ArrayList<>();
-
-        String checkSql = """
-            SELECT attendance_status FROM activity_attendance 
-            WHERE id_activity = ? AND id_member = ?
-        """;
-
-        String insertSql = """
-            INSERT INTO activity_attendance (id, id_activity, id_member, attendance_status)
-            VALUES (?, ?, ?, ?)
-        """;
-
-        try {
-            connection.setAutoCommit(false);
-
-            for (ActivityAttendance attendance : attendances) {
-                // Check if attendance already confirmed (not UNDEFINED)
-                try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
-                    checkStmt.setString(1, activityId);
-                    checkStmt.setString(2, attendance.getMember().getId());
-                    ResultSet rs = checkStmt.executeQuery();
-
-                    if (rs.next()) {
-                        String currentStatus = rs.getString("attendance_status");
-                        if (!"UNDEFINED".equals(currentStatus)) {
-                            throw new RuntimeException(
-                                    "Attendance already confirmed for member: " + attendance.getMember().getId() +
-                                            " with status: " + currentStatus
-                            );
-                        }
-                    }
-                }
-
-                // Insert or update attendance
-                String id = "att-" + System.currentTimeMillis() + "-" + attendance.getMember().getId();
-                try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
-                    insertStmt.setString(1, id);
-                    insertStmt.setString(2, activityId);
-                    insertStmt.setString(3, attendance.getMember().getId());
-                    insertStmt.setString(4, attendance.getAttendanceStatus().name());
-                    insertStmt.executeUpdate();
-
-                    attendance.setId(id);
-                    savedAttendances.add(attendance);
-                }
-            }
-
-            connection.commit();
-            return savedAttendances;
-        } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackEx) {
-                throw new RuntimeException("Failed to rollback attendance save", rollbackEx);
-            }
-            throw new RuntimeException("Failed to save attendance", e);
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                System.err.println("Failed to reset auto-commit");
-            }
-        }
-    }
 
     public List<ActivityAttendance> getAttendance(String activityId, String collectivityId) {
         String sql = """
@@ -265,7 +200,7 @@ public class ActivityRepository {
             }
             return attendances;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get attendance for activity: " + activityId, e);
+            throw new RuntimeException("Failed to get attendance for activity: " + activityId + e.getMessage());
         }
     }
 
@@ -325,7 +260,103 @@ public class ActivityRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to initialize attendance", e);
+            throw new RuntimeException("Failed to initialize attendance " + e.getMessage());
+        }
+    }
+
+
+    public List<ActivityAttendance> saveAttendance(String activityId, List<ActivityAttendance> attendances) {
+        List<ActivityAttendance> savedAttendances = new ArrayList<>();
+
+        String checkSql = """
+            SELECT id, attendance_status FROM activity_attendance 
+            WHERE id_activity = ? AND id_member = ?
+        """;
+
+        String updateSql = """
+            UPDATE activity_attendance 
+            SET attendance_status = ? 
+            WHERE id_activity = ? AND id_member = ? AND attendance_status = 'UNDEFINED'
+            RETURNING id
+        """;
+
+        String insertSql = """
+            INSERT INTO activity_attendance (id, id_activity, id_member, attendance_status)
+            VALUES (?, ?, ?, ?)
+        """;
+
+        try {
+            connection.setAutoCommit(false);
+
+            for (ActivityAttendance attendance : attendances) {
+                // Check current status
+                try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+                    checkStmt.setString(1, activityId);
+                    checkStmt.setString(2, attendance.getMember().getId());
+                    ResultSet rs = checkStmt.executeQuery();
+
+                    if (rs.next()) {
+                        String currentStatus = rs.getString("attendance_status");
+                        String existingId = rs.getString("id");
+
+                        if ("UNDEFINED".equals(currentStatus)) {
+                            // Allow update from UNDEFINED to ATTENDED or MISSING
+                            try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                                updateStmt.setString(1, attendance.getAttendanceStatus().name());
+                                updateStmt.setString(2, activityId);
+                                updateStmt.setString(3, attendance.getMember().getId());
+                                ResultSet updateRs = updateStmt.executeQuery();
+                                if (updateRs.next()) {
+                                    attendance.setId(updateRs.getString("id"));
+                                    savedAttendances.add(attendance);
+                                }
+                            }
+                        } else {
+                            // Already confirmed (ATTENDED or MISSING) - cannot modify
+                            throw new RuntimeException(
+                                    "Attendance already confirmed for member: " + attendance.getMember().getId() +
+                                            " with status: " + currentStatus + ". Cannot modify once set."
+                            );
+                        }
+                    } else {
+                        // No existing record, insert new one
+                        String id = "att-" + System.currentTimeMillis() + "-" + attendance.getMember().getId();
+                        try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                            insertStmt.setString(1, id);
+                            insertStmt.setString(2, activityId);
+                            insertStmt.setString(3, attendance.getMember().getId());
+                            insertStmt.setString(4, attendance.getAttendanceStatus().name());
+                            insertStmt.executeUpdate();
+
+                            attendance.setId(id);
+                            savedAttendances.add(attendance);
+                        }
+                    }
+                }
+            }
+
+            connection.commit();
+            return savedAttendances;
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                throw new RuntimeException("Failed to rollback attendance save", rollbackEx);
+            }
+            throw new RuntimeException("Failed to save attendance: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                throw new RuntimeException("Failed to rollback attendance save", rollbackEx);
+            }
+            throw e;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Failed to reset auto-commit");
+            }
         }
     }
 }

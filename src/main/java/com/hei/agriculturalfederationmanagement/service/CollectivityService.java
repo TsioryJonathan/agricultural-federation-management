@@ -2,6 +2,7 @@ package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.*;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
+import com.hei.agriculturalfederationmanagement.entity.enums.ActivityStatus;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.mapper.Mapper;
@@ -184,6 +185,7 @@ public class CollectivityService {
                     .frequency(createFee.getFrequency())
                     .amount(createFee.getAmount())
                     .label(createFee.getLabel())
+                    .status(ActivityStatus.valueOf("ACTIVE"))
                     .build();
 
             CotisationPlan saved = cotisationPlanRepository.save(plan, collectivityId);

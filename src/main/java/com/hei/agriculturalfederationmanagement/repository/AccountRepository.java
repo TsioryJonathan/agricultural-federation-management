@@ -33,7 +33,7 @@ public class AccountRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find account", e);
+            throw new RuntimeException("Failed to find account " +  e.getMessage());
         }
     }
 
@@ -47,7 +47,7 @@ public class AccountRepository {
             rs.next();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check account existence", e);
+            throw new RuntimeException("Failed to check account existence " + e.getMessage());
         }
     }
 }

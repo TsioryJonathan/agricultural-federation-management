@@ -5,6 +5,7 @@ import com.hei.agriculturalfederationmanagement.entity.dto.CreateMemberPayment;
 import com.hei.agriculturalfederationmanagement.entity.dto.MemberPaymentResponse;
 import com.hei.agriculturalfederationmanagement.entity.dto.MemberResponse;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
+import com.hei.agriculturalfederationmanagement.exception.InsufficientSponsorCount;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.service.MemberService;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,7 @@ public class MemberController {
         try {
             List<MemberResponse> createdMembers = service.createMembers(members);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMembers);
-        } catch (BadRequestException ex) {
+        } catch (BadRequestException | InsufficientSponsorCount ex ) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         } catch (NotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());

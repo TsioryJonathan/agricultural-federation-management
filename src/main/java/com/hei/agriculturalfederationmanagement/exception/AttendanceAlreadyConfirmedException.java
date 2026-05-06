@@ -1,4 +1,8 @@
 package com.hei.agriculturalfederationmanagement.exception;
 
-public class AttendanceAlreadyConfirmedException {
+public class AttendanceAlreadyConfirmedException extends RuntimeException {
+    public AttendanceAlreadyConfirmedException(String message) {
+        super(message);
+    }
+
 }

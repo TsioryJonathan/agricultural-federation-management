@@ -139,7 +139,7 @@ public class StatisticsRepository {
 
             return statistics;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get local statistics for collectivity: " + collectivityId, e);
+            throw new RuntimeException("Failed to get local statistics for collectivity: " + collectivityId + e.getMessage());
         }
     }
 
@@ -289,7 +289,7 @@ public class StatisticsRepository {
 
             return statistics;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get overall statistics", e);
+            throw new RuntimeException("Failed to get overall statistics " + e.getMessage());
         }
     }
 }

@@ -48,7 +48,7 @@ public class MemberRepository {
             member.setId(id);
             return member;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save member", e);
+            throw new RuntimeException("Failed to save member " + e.getMessage());
         }
     }
 
@@ -78,7 +78,7 @@ public class MemberRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find member", e);
+            throw new RuntimeException("Failed to find member " + e.getMessage());
         }
     }
 
@@ -109,7 +109,7 @@ public class MemberRepository {
 
             return members;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find members", e);
+            throw new RuntimeException("Failed to find members " + e.getMessage());
         }
     }
 
@@ -151,7 +151,7 @@ public class MemberRepository {
             }
             member.setReferees(referees);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load referees for member: " + member.getId(), e);
+            throw new RuntimeException("Failed to load referees for member: " + member.getId() + e.getMessage());
         }
     }
 
@@ -163,7 +163,7 @@ public class MemberRepository {
             rs.next();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check member existence", e);
+            throw new RuntimeException("Failed to check member existence " + e.getMessage());
         }
     }
 
@@ -179,7 +179,7 @@ public class MemberRepository {
             stmt.setString(3, relationship != null ? relationship : "Parrainage");
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to add referee", e);
+            throw new RuntimeException("Failed to add referee " + e.getMessage());
         }
     }
 
@@ -195,7 +195,7 @@ public class MemberRepository {
             stmt.setString(3, occupation);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to add member to collectivity", e);
+            throw new RuntimeException("Failed to add member to collectivity " + e.getMessage());
         }
     }
 
@@ -215,7 +215,7 @@ public class MemberRepository {
             }
             return collectivityIds;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find collectivity ids for member", e);
+            throw new RuntimeException("Failed to find collectivity ids for member " + e.getMessage());
         }
     }
 
@@ -235,7 +235,7 @@ public class MemberRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find collectivity id for member", e);
+            throw new RuntimeException("Failed to find collectivity id for member " + e.getMessage());
         }
     }
 }

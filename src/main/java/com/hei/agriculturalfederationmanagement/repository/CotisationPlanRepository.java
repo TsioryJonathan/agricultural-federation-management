@@ -35,7 +35,7 @@ public class CotisationPlanRepository {
             cotisationPlan.setId(id);
             return cotisationPlan;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save cotisation plan", e);
+            throw new RuntimeException("Failed to save cotisation plan " + e.getMessage());
         }
     }
 
@@ -54,7 +54,7 @@ public class CotisationPlanRepository {
             }
             return plans;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find cotisation plans", e);
+            throw new RuntimeException("Failed to find cotisation plans " + e.getMessage());
         }
     }
 
@@ -72,7 +72,7 @@ public class CotisationPlanRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find cotisation plan", e);
+            throw new RuntimeException("Failed to find cotisation plan " + e.getMessage());
         }
     }
 

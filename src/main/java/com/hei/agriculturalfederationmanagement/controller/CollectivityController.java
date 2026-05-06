@@ -2,6 +2,7 @@ package com.hei.agriculturalfederationmanagement.controller;
 
 import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
+import com.hei.agriculturalfederationmanagement.exception.AttendanceAlreadyConfirmedException;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.service.ActivityService;
@@ -76,7 +77,10 @@ public class CollectivityController {
             }
             List<MembershipFeeResponse> membershipFees = service.createMembershipFees(id, createMembershipFees);
             return ResponseEntity.status(HttpStatus.CREATED).body(membershipFees);
-        } catch (NotFoundException e) {
+        }catch(BadRequestException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+        catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -227,7 +231,7 @@ public class CollectivityController {
             List<ActivityMemberAttendance> createdAttendances =
                     activityService.createAttendance(id, activityId, attendances);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdAttendances);
-        } catch (BadRequestException e) {
+        } catch (BadRequestException | AttendanceAlreadyConfirmedException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
