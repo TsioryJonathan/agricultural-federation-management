@@ -290,11 +290,6 @@ paths:
         Get collectivities global statistics between a date interval.
         Actually, statistics contain only overall percentage of members who are current with their dues (membership fees) and number of new members.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
         - in: query
           name: from
           schema:
