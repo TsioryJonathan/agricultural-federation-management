@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Repository
 @AllArgsConstructor
@@ -30,8 +31,8 @@ public class TransactionRepository {
                     transaction.getCotisationPlan().getId() : null);
             stmt.setString(5, transaction.getTransactionType().name());
             stmt.setDouble(6, transaction.getAmount());
-            stmt.setTimestamp(7, Timestamp.from(transaction.getTransactionDate() != null ?
-                    transaction.getTransactionDate() : Instant.now()));
+            stmt.setDate(7, Date.valueOf(transaction.getTransactionDate() != null ?
+                    transaction.getTransactionDate() : LocalDate.now()));
             stmt.setString(8, transaction.getPaymentMode() != null ?
                     transaction.getPaymentMode().name() : null);
             stmt.setString(9, transaction.getDescription());
