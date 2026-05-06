@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -36,7 +37,7 @@ public class CollectivityService {
             Collectivity collectivity = Collectivity.builder()
                     .speciality("Agriculture")
                     .federationApproval(request.isFederationApproval())
-                    .authorizationDate(Instant.now())
+                    .authorizationDate(LocalDate.now())
                     .location(request.getLocation())
                     .build();
 

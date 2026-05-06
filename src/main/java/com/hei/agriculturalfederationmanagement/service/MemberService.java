@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +52,9 @@ public class MemberService {
                     .gender(dto.getGender())
                     .address(dto.getAddress())
                     .profession(dto.getProfession())
-                    .phoneNumber(String.valueOf(dto.getPhoneNumber()))
+                    .phoneNumber(dto.getPhoneNumber())
                     .email(dto.getEmail())
-                    .enrolmentDate(Instant.now())
+                    .enrolmentDate(LocalDate.now())
                     .isSuperuser(false)
                     .referees(new ArrayList<>())
                     .build();
@@ -84,7 +85,7 @@ public class MemberService {
                         .findByCollectivityId(dto.getCollectivityIdentifier())
                         .stream()
                         .filter(plan -> plan.getStatus() == ActivityStatus.ACTIVE)
-                        .collect(Collectors.toList());
+                        .toList();
 
                 for (CotisationPlan plan : activePlans) {
                     createMemberPaymentTransaction(savedMember.getId(), dto.getCollectivityIdentifier(),
@@ -162,7 +163,7 @@ public class MemberService {
                 .member(Member.builder().id(memberId).build())
                 .transactionType(TransactionType.IN)
                 .amount(amount)
-                .transactionDate(Instant.now())
+                .transactionDate(LocalDate.now())
                 .paymentMode(paymentMode)
                 .description(description)
                 .account(account)
