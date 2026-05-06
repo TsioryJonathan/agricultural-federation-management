@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS member (
                                       gender VARCHAR(10) CHECK (gender IN ('MALE', 'FEMALE')),
                                       address VARCHAR,
                                       profession VARCHAR,
-                                      phone_number VARCHAR,
+                                      phone_number INTEGER,
                                       email VARCHAR UNIQUE NOT NULL,
                                       enrolment_date TIMESTAMP DEFAULT NOW(),
                                       is_superuser BOOLEAN DEFAULT FALSE
@@ -91,14 +91,12 @@ CREATE TABLE IF NOT EXISTS mobile_money_account (
 );
 
 -- Cotisation (Membership fee) plan
-CREATE TABLE IF NOT EXISTS cotisation_plan (
-                                               id VARCHAR PRIMARY KEY,
-                                               label VARCHAR,
-                                               id_collectivity VARCHAR REFERENCES collectivity(id),
-                                               status VARCHAR DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE')),
-                                               frequency VARCHAR CHECK (frequency IN ('WEEKLY', 'MONTHLY', 'ANNUALLY', 'PUNCTUALLY')),
-                                               eligible_from DATE,
-                                               amount DECIMAL(15,2) CHECK (amount >= 0)
+CREATE TABLE IF NOT EXISTS mobile_money_account (
+                                                    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                                    id_account VARCHAR UNIQUE REFERENCES account(id),
+                                                    holder_name VARCHAR NOT NULL,
+                                                    service_name VARCHAR CHECK (service_name IN ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY')),
+                                                    phone_number INTEGER NOT NULL
 );
 
 -- Transaction
