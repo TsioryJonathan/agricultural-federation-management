@@ -117,7 +117,6 @@ public class Mapper {
         if (account.getCashAccount() != null) {
             return CashAccountDetail.builder()
                     .id(account.getId())
-                    .type("CASH")
                     .amount(balance)
                     .build();
 
@@ -125,7 +124,6 @@ public class Mapper {
             BankAccount ba = account.getBankAccount();
             return BankAccountDetail.builder()
                     .id(account.getId())
-                    .type("BANK")
                     .amount(balance)
                     .holderName(ba.getHolderName())
                     .bankName(ba.getBankName())
@@ -139,7 +137,6 @@ public class Mapper {
             MobileMoneyAccount ma = account.getMobileMoneyAccount();
             return MobileBankingAccountDetail.builder()
                     .id(account.getId())
-                    .type("MOBILE_BANKING")
                     .amount(balance)
                     .holderName(ma.getHolderName())
                     .mobileBankingService(ma.getServiceName())

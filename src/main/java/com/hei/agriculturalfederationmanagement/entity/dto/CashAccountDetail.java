@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CashAccountDetail {
     private String id;
-    private String type = "CASH";
     private Double amount;
 }

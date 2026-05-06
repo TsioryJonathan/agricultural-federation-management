@@ -124,10 +124,6 @@ public class CollectivityService {
 
         Map<String, Account> accounts = repository.loadAccountsWithTransactions(collectivityId, at);
 
-        Double totalAmount = accounts.values().stream()
-                .mapToDouble(Account::getBalance)
-                .sum();
-
         List<Object> accountDetails = new ArrayList<>();
         for (Account account : accounts.values()) {
             Object detail = mapper.toAccountDetail(account);
