@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class CollectivityMapper {
+public class Mapper {
 
     public CollectivityResponse toResponse(Collectivity collectivity) {
         if (collectivity == null) return null;
@@ -102,7 +102,7 @@ public class CollectivityMapper {
                     .amount(balance)
                     .holderName(ma.getHolderName())
                     .mobileBankingService(ma.getServiceName())
-                    .mobileNumber(ma.getPhoneNumber() != null ? Integer.parseInt(ma.getPhoneNumber()) : null)
+                    .mobileNumber(ma.getPhoneNumber() != null ? ma.getPhoneNumber() : null)
                     .build();
         }
 
@@ -143,7 +143,7 @@ public class CollectivityMapper {
                     .amount(balance)
                     .holderName(ma.getHolderName())
                     .mobileBankingService(ma.getServiceName())
-                    .mobileNumber(ma.getPhoneNumber() != null ? Integer.parseInt(ma.getPhoneNumber()) : null)
+                    .mobileNumber(ma.getPhoneNumber() != null ? ma.getPhoneNumber() : null)
                     .build();
         }
 

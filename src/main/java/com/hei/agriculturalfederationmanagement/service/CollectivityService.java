@@ -4,7 +4,7 @@ import com.hei.agriculturalfederationmanagement.entity.*;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
-import com.hei.agriculturalfederationmanagement.mapper.CollectivityMapper;
+import com.hei.agriculturalfederationmanagement.mapper.Mapper;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
 import com.hei.agriculturalfederationmanagement.repository.CotisationPlanRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityValidator;
@@ -20,7 +20,7 @@ import java.util.*;
 public class CollectivityService {
     private final CollectivityRepository repository;
     private final CotisationPlanRepository cotisationPlanRepository;
-    private final CollectivityMapper mapper;
+    private final Mapper mapper;
     private final CollectivityValidator validator;
 
     public List<CollectivityResponse> createCollectivities(List<CreateCollectivity> createCollectivities) {

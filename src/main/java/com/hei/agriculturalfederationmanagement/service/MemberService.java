@@ -7,18 +7,16 @@ import com.hei.agriculturalfederationmanagement.entity.enums.PaymentMode;
 import com.hei.agriculturalfederationmanagement.entity.enums.TransactionType;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
-import com.hei.agriculturalfederationmanagement.mapper.CollectivityMapper;
+import com.hei.agriculturalfederationmanagement.mapper.Mapper;
 import com.hei.agriculturalfederationmanagement.repository.*;
 import com.hei.agriculturalfederationmanagement.validator.MemberValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -28,7 +26,7 @@ public class MemberService {
     private final CotisationPlanRepository cotisationPlanRepository;
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
-    private final CollectivityMapper mapper;
+    private final Mapper mapper;
     private final MemberValidator validator;
 
     public List<MemberResponse> createMembers(List<CreateMember> createMembers) {
