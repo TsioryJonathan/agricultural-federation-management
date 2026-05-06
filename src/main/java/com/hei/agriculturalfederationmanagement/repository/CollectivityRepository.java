@@ -362,7 +362,7 @@ public class CollectivityRepository {
                                     .id(rs.getString("mobile_account_id"))
                                     .holderName(rs.getString("mobile_holder_name"))
                                     .serviceName(MobileBankingService.valueOf(rs.getString("service_name")))
-                                    .phoneNumber(rs.getString("phone_number"))
+                                    .phoneNumber(rs.getInt("phone_number"))
                                     .build());
                         }
                         return newAccount;

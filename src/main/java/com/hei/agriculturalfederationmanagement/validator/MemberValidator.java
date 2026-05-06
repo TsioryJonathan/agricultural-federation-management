@@ -36,7 +36,7 @@ public class MemberValidator {
         if (dto.getProfession() == null || dto.getProfession().trim().isEmpty()) {
             throw new BadRequestException("Profession is required");
         }
-        if (dto.getPhoneNumber() == 0) {
+        if (dto.getPhoneNumber() == null) {
             throw new BadRequestException("Phone number is required");
         }
         if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {

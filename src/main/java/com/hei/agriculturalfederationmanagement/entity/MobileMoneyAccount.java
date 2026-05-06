@@ -15,5 +15,5 @@ public class MobileMoneyAccount {
     private Account account;
     private String holderName;
     private MobileBankingService serviceName;
-    private String phoneNumber;
+    private Integer phoneNumber;
 }

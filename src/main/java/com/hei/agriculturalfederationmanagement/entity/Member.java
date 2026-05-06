@@ -22,7 +22,7 @@ public class Member {
     private Gender gender;
     private String address;
     private String profession;
-    private int phoneNumber;
+    private Integer phoneNumber;
     private String email;
     private LocalDate enrolmentDate;
     private List<Member> referees;
