@@ -199,7 +199,7 @@ public class CollectivityRepository {
         }
     }
 
-    private void loadRefereesForMembers(List<Member> members) {
+    public void loadRefereesForMembers(List<Member> members) {
         if (members == null || members.isEmpty()) return;
 
         Map<String, Member> memberMap = members.stream()
@@ -390,26 +390,26 @@ public class CollectivityRepository {
 
         return accountMap;
     }
-
     public List<Transaction> findTransactionsByCollectivityIdAndDateRange(
             String collectivityId, Instant from, Instant to) {
 
         String sql = """
-            SELECT t.id, t.amount, t.transaction_date, t.payment_mode,
-                   t.id_account, t.id_member,
-                   m.first_name, m.last_name, m.birth_date, m.enrolment_date,
-                   m.address, m.email, m.phone_number, m.profession, m.gender
-            FROM transaction t
-            JOIN member m ON t.id_member = m.id
-            WHERE t.id_collectivity = ?
-            AND t.transaction_type = 'IN'
-            AND t.transaction_date >= ?
-            AND t.transaction_date < ?
-            ORDER BY t.transaction_date DESC
-        """;
+        SELECT t.id, t.amount, t.transaction_date, t.payment_mode,
+               t.id_account, t.id_member,
+               m.first_name, m.last_name, m.birth_date, m.enrolment_date,
+               m.address, m.email, m.phone_number, m.profession, m.gender
+        FROM transaction t
+        JOIN member m ON t.id_member = m.id
+        WHERE t.id_collectivity = ?
+        AND t.transaction_type = 'IN'
+        AND t.transaction_date >= ?
+        AND t.transaction_date < ?
+        ORDER BY t.transaction_date DESC
+    """;
 
         List<Transaction> transactions = new ArrayList<>();
         Map<String, Account> accountMap = loadAccountsWithTransactions(collectivityId, null);
+        Map<String, Member> memberCache = new HashMap<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, collectivityId);
@@ -418,31 +418,51 @@ public class CollectivityRepository {
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                Transaction transaction = Transaction.builder()
-                        .id(rs.getString("id"))
-                        .amount(rs.getDouble("amount"))
-                        .transactionDate(rs.getDate("transaction_date").toLocalDate())
-                        .paymentMode(PaymentMode.valueOf(rs.getString("payment_mode")))
-                        .account(accountMap.get(rs.getString("id_account")))
-                        .member(Member.builder()
-                                .id(rs.getString("id_member"))
+                String memberId = rs.getString("id_member");
+
+                // Use cache to avoid creating duplicate member objects
+                Member member = memberCache.computeIfAbsent(memberId, id -> {
+                    try {
+                        return Member.builder()
+                                .id(id)
                                 .firstName(rs.getString("first_name"))
                                 .lastName(rs.getString("last_name"))
                                 .birthDate(rs.getDate("birth_date") != null ?
                                         rs.getDate("birth_date").toLocalDate() : null)
-                                .enrolmentDate(rs.getDate("enrolment_date").toLocalDate() != null ?
+                                .enrolmentDate(rs.getDate("enrolment_date") != null ?
                                         rs.getDate("enrolment_date").toLocalDate() : null)
                                 .address(rs.getString("address"))
                                 .email(rs.getString("email"))
                                 .phoneNumber(rs.getInt("phone_number"))
                                 .profession(rs.getString("profession"))
                                 .gender(Gender.valueOf(rs.getString("gender")))
-                                .build())
+                                .referees(new ArrayList<>())
+                                .build();
+                    } catch (SQLException e) {
+                        throw new RuntimeException("Failed to map member", e);
+                    }
+                });
+
+                Transaction transaction = Transaction.builder()
+                        .id(rs.getString("id"))
+                        .amount(rs.getDouble("amount"))
+                        .transactionDate(rs.getDate("transaction_date").toLocalDate() != null ?
+                                rs.getDate("transaction_date").toLocalDate() : null)
+                        .paymentMode(PaymentMode.valueOf(rs.getString("payment_mode")))
+                        .account(accountMap.get(rs.getString("id_account")))
+                        .member(member)
                         .build();
                 transactions.add(transaction);
             }
+
+            // Load referees for all unique members found in transactions
+            if (!memberCache.isEmpty()) {
+                List<Member> uniqueMembers = new ArrayList<>(memberCache.values());
+                loadRefereesForMembers(uniqueMembers);
+            }
+
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find transactions " + e.getMessage());
+            throw new RuntimeException("Failed to find transactions", e);
         }
 
         return transactions;

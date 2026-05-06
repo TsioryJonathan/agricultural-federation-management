@@ -8,5 +8,4 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class CashAccountResponse extends FinancialAccountResponse {
-    private String type = "CASH";
 }

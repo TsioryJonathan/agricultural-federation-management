@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class MobileBankingAccountResponse extends FinancialAccountResponse {
-    private String type = "MOBILE_BANKING";
     private String holderName;
     private MobileBankingService mobileBankingService;
     private Integer mobileNumber;

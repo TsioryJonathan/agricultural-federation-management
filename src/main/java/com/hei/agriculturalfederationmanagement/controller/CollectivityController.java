@@ -45,7 +45,7 @@ public class CollectivityController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getCollectivity(@PathVariable String id) {
         try {
-            Collectivity collectivity = service.getCollectivityById(id);
+            CollectivityResponse collectivity = service.getCollectivityById(id);
             return ResponseEntity.status(HttpStatus.OK).body(collectivity);
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class BankAccountResponse extends FinancialAccountResponse {
-    private String type = "BANK";
     private String holderName;
     private Bank bankName;
     private Integer bankCode;

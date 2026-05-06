@@ -48,7 +48,7 @@ public class Mapper {
                 .profession(member.getProfession())
                 .phoneNumber(member.getPhoneNumber())
                 .email(member.getEmail())
-                .referees(toMemberResponseList(member.getReferees()))
+                .referees((member.getReferees().stream().map(Member::getId).toList()))
                 .build();
     }
 

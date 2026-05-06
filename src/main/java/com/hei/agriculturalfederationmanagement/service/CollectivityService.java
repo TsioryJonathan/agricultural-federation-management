@@ -90,12 +90,12 @@ public class CollectivityService {
         return mapper.toResponse(updated);
     }
 
-    public Collectivity getCollectivityById(String id) {
+    public CollectivityResponse getCollectivityById(String id) {
         Collectivity collectivity = repository.findById(id);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + id);
         }
-        return collectivity;
+        return mapper.toResponse(collectivity);
     }
 
     public List<CollectivityTransactionResponse> getCollectivityTransactions(
