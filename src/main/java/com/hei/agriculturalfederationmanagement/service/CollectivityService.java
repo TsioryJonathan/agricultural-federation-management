@@ -116,7 +116,7 @@ public class CollectivityService {
                 .toList();
     }
 
-    public CollectivityFinancialAccountResponse getFinancialAccounts(String collectivityId, Instant at) {
+    public List<Object> getFinancialAccounts(String collectivityId, Instant at) {
         Collectivity collectivity = repository.findById(collectivityId);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);
@@ -136,11 +136,7 @@ public class CollectivityService {
             }
         }
 
-        return CollectivityFinancialAccountResponse.builder()
-                .id(collectivityId)
-                .amount(totalAmount)
-                .accounts(accountDetails)
-                .build();
+        return accountDetails;
     }
 
     public List<MembershipFeeResponse> getMembershipFees(String collectivityId) {

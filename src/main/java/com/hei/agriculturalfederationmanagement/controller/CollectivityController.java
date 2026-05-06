@@ -135,7 +135,7 @@ public class CollectivityController {
             @RequestParam(required = false) String at) {
         try {
             Instant atDate = at != null ? Instant.parse(at + "T23:59:59Z") : null;
-            CollectivityFinancialAccountResponse accounts = service.getFinancialAccounts(id, atDate);
+            List<Object> accounts = service.getFinancialAccounts(id, atDate);
             return ResponseEntity.ok(accounts);
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
