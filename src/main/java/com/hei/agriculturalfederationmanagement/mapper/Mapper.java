@@ -229,6 +229,7 @@ public class Mapper {
                 .email(member.getEmail())
                 .phoneNumber(member.getPhoneNumber())
                 .gender(member.getGender() != null ? member.getGender().name() : null)
+                .referees(member.getReferees() == null ? List.of() : member.getReferees().stream().map(Member::getId).toList())
                 .build();
     }
 }

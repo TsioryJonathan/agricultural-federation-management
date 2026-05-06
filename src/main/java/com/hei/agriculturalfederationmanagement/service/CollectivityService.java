@@ -64,12 +64,6 @@ public class CollectivityService {
     }
 
     public CollectivityResponse assignIdentity(String id, CollectivityInformation request) {
-        if (request.getNumber() == null || request.getNumber().trim().isEmpty()) {
-            throw new BadRequestException("Number is required");
-        }
-        if (request.getName() == null || request.getName().trim().isEmpty()) {
-            throw new BadRequestException("Name is required");
-        }
 
         Collectivity collectivity = repository.findById(id);
         if (collectivity == null) {

@@ -142,19 +142,90 @@ public class CollectivityRepository {
             throw new RuntimeException("Failed to find collectivity: " + e.getMessage());
         }
     }
+    private void loadRefereesForMembersWithCache(List<Member> members, Map<String, Member> globalCache) {
+        if (members == null || members.isEmpty()) return;
+
+        Set<String> idsToLoad = new HashSet<>();
+        for (Member m : members) {
+            if (m.getReferees().isEmpty()) {
+                idsToLoad.add(m.getId());
+            }
+        }
+
+        if (idsToLoad.isEmpty()) return;
+
+        String placeholders = idsToLoad.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = String.format("""
+        SELECT mr.id_candidate, mr.id_referee,
+               m.first_name, m.last_name, m.email, m.phone_number, m.gender
+        FROM member_referee mr
+        JOIN member m ON mr.id_referee = m.id
+        WHERE mr.id_candidate IN (%s)
+    """, placeholders);
+
+        Set<String> newRefereeIds = new HashSet<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            int idx = 1;
+            for (String id : idsToLoad) {
+                stmt.setString(idx++, id);
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String candidateId = rs.getString("id_candidate");
+                String refereeId = rs.getString("id_referee");
+
+                Member referee = globalCache.computeIfAbsent(refereeId, id -> {
+                    try {
+                        Member m = Member.builder()
+                                .id(id)
+                                .firstName(rs.getString("first_name"))
+                                .lastName(rs.getString("last_name"))
+                                .email(rs.getString("email"))
+                                .phoneNumber(rs.getString("phone_number"))
+                                .gender(Gender.valueOf(rs.getString("gender")))
+                                .referees(new ArrayList<>())
+                                .build();
+                        newRefereeIds.add(id);
+                        return m;
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                Member candidate = globalCache.get(candidateId);
+                if (candidate != null && !candidate.getReferees().contains(referee)) {
+                    candidate.getReferees().add(referee);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load referees " + e.getMessage());
+        }
+
+        if (!newRefereeIds.isEmpty()) {
+            List<Member> newMembers = newRefereeIds.stream()
+                    .map(globalCache::get)
+                    .filter(Objects::nonNull)
+                    .toList();
+            loadRefereesForMembersWithCache(newMembers, globalCache);
+        }
+    }
 
     private void fetchMembersAndStructure(Collectivity collectivity) {
         String sql = """
-            SELECT m.id, m.first_name, m.last_name, m.birth_date, m.enrolment_date,
-                   m.address, m.email, m.phone_number, m.profession, m.gender,
-                   mc.occupation
-            FROM member_collectivity mc
-            JOIN member m ON mc.id_member = m.id
-            WHERE mc.id_collectivity = ? AND mc.end_date IS NULL
-        """;
+        SELECT m.id, m.first_name, m.last_name, m.birth_date, m.enrolment_date,
+               m.address, m.email, m.phone_number, m.profession, m.gender,
+               mc.occupation
+        FROM member_collectivity mc
+        JOIN member m ON mc.id_member = m.id
+        WHERE mc.id_collectivity = ? AND mc.end_date IS NULL
+    """;
 
         List<Member> members = new ArrayList<>();
         Structure structure = Structure.builder().build();
+
+        Map<String, Member> globalMemberCache = new HashMap<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, collectivity.getId());
@@ -163,21 +234,27 @@ public class CollectivityRepository {
             while (rs.next()) {
                 String memberId = rs.getString("id");
 
-                Member member = Member.builder()
-                        .id(memberId)
-                        .firstName(rs.getString("first_name"))
-                        .lastName(rs.getString("last_name"))
-                        .birthDate(rs.getDate("birth_date") != null ?
-                                rs.getDate("birth_date").toLocalDate() : null)
-                        .enrolmentDate(rs.getDate("enrolment_date").toLocalDate() != null ?
-                                rs.getDate("enrolment_date").toLocalDate() : null)
-                        .address(rs.getString("address"))
-                        .email(rs.getString("email"))
-                        .phoneNumber(rs.getString("phone_number"))
-                        .profession(rs.getString("profession"))
-                        .gender(Gender.valueOf(rs.getString("gender")))
-                        .referees(new ArrayList<>())
-                        .build();
+                Member member = globalMemberCache.computeIfAbsent(memberId, id -> {
+                    try {
+                        return Member.builder()
+                                .id(id)
+                                .firstName(rs.getString("first_name"))
+                                .lastName(rs.getString("last_name"))
+                                .birthDate(rs.getDate("birth_date") != null ?
+                                        rs.getDate("birth_date").toLocalDate() : null)
+                                .enrolmentDate(rs.getDate("enrolment_date") != null ?
+                                        rs.getDate("enrolment_date").toLocalDate() : null)
+                                .address(rs.getString("address"))
+                                .email(rs.getString("email"))
+                                .phoneNumber(rs.getString("phone_number"))
+                                .profession(rs.getString("profession"))
+                                .gender(Gender.valueOf(rs.getString("gender")))
+                                .referees(new ArrayList<>())
+                                .build();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
                 members.add(member);
 
@@ -190,7 +267,8 @@ public class CollectivityRepository {
                 }
             }
 
-            loadRefereesForMembers(members);
+            loadRefereesForMembersWithCache(members, globalMemberCache);
+
             collectivity.setMembers(members);
             collectivity.setStructure(structure);
 
@@ -224,8 +302,13 @@ public class CollectivityRepository {
 
         Map<String, Member> memberMap = members.stream()
                 .collect(Collectors.toMap(Member::getId, m -> m));
-
+        for (Member m : memberMap.values()) {
+            if (m.getReferees() == null) {
+                m.setReferees(new ArrayList<>());
+            }
+        }
         List<String> memberIds = members.stream().map(Member::getId).toList();
+        if (memberIds.isEmpty()) return;
         String placeholders = memberIds.stream().map(id -> "?").collect(Collectors.joining(","));
 
         String sql = String.format("""
