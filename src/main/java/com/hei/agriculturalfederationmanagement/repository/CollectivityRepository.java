@@ -38,7 +38,7 @@ public class CollectivityRepository {
 
             String collectivityId;
             try (PreparedStatement stmt = connection.prepareStatement(insertCollectivitySql)) {
-                stmt.setString(1, collectivity.getNumber());
+                stmt.setObject(1, collectivity.getNumber(), java.sql.Types.INTEGER);
                 stmt.setString(2, collectivity.getName());
                 stmt.setString(3, collectivity.getSpeciality());
                 stmt.setBoolean(4, collectivity.isFederationApproval());
@@ -78,9 +78,9 @@ public class CollectivityRepository {
             try {
                 connection.rollback();
             } catch (SQLException rollbackEx) {
-                throw new RuntimeException("Failed to rollback transaction", rollbackEx);
+                throw new RuntimeException("Failed to rollback transaction: " + rollbackEx.getMessage(), rollbackEx);
             }
-            throw new RuntimeException("Failed to save collectivity with members", e);
+            throw new RuntimeException("Failed to save collectivity with members: " + e.getMessage(), e);
         } finally {
             try {
                 connection.setAutoCommit(true);
@@ -118,7 +118,7 @@ public class CollectivityRepository {
             }
             return false;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check member seniority", e);
+            throw new RuntimeException("Failed to check member seniority: " + e.getMessage(), e);
         }
     }
 
@@ -137,7 +137,7 @@ public class CollectivityRepository {
             if (rs.next()) {
                 Collectivity collectivity = Collectivity.builder()
                         .id(rs.getString("id"))
-                        .number(rs.getString("number"))
+                        .number(rs.getObject("number", Integer.class))
                         .name(rs.getString("name"))
                         .speciality(rs.getString("speciality"))
                         .creationDatetime(rs.getTimestamp("creation_datetime").toInstant())
@@ -153,7 +153,7 @@ public class CollectivityRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find collectivity " + e.getMessage());
+            throw new RuntimeException("Failed to find collectivity: " + e.getMessage(), e);
         }
     }
 
@@ -172,7 +172,7 @@ public class CollectivityRepository {
             if (rs.next()) {
                 Collectivity collectivity = Collectivity.builder()
                         .id(rs.getString("id"))
-                        .number(rs.getString("number"))
+                        .number(rs.getObject("number", Integer.class))
                         .name(rs.getString("name"))
                         .speciality(rs.getString("speciality"))
                         .creationDatetime(rs.getTimestamp("creation_datetime").toInstant())
@@ -188,7 +188,7 @@ public class CollectivityRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find collectivity", e);
+            throw new RuntimeException("Failed to save collectivity with members: " + e.getMessage(), e);
         }
     }
 
@@ -230,7 +230,7 @@ public class CollectivityRepository {
                                 .referees(new ArrayList<>())
                                 .build();
                     } catch (SQLException e) {
-                        throw new RuntimeException("Failed to map member", e);
+                        throw new RuntimeException("Failed to map member: " + e.getMessage(), e);
                     }
                 });
 
@@ -251,7 +251,7 @@ public class CollectivityRepository {
             collectivity.setStructure(structure);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch members and structure", e);
+            throw new RuntimeException("Failed to fetch members and structure: " + e.getMessage(), e);
         }
     }
 
@@ -312,7 +312,7 @@ public class CollectivityRepository {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load referees for members", e);
+            throw new RuntimeException("Failed to load referees for members: " + e.getMessage(), e);
         }
     }
 
@@ -349,7 +349,7 @@ public class CollectivityRepository {
             rs.next();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check number existence", e);
+            throw new RuntimeException("Failed to check number existence: " + e.getMessage(), e);
         }
     }
 
@@ -362,7 +362,7 @@ public class CollectivityRepository {
             rs.next();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check name existence", e);
+            throw new RuntimeException("Failed to check name existence: " + e.getMessage(), e);
         }
     }
 
@@ -374,7 +374,7 @@ public class CollectivityRepository {
             stmt.setString(3, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to assign identity", e);
+            throw new RuntimeException("Failed to assign identity: " + e.getMessage(), e);
         }
     }
 
@@ -450,7 +450,7 @@ public class CollectivityRepository {
                                 .referees(new ArrayList<>())
                                 .build();
                     } catch (SQLException e) {
-                        throw new RuntimeException("Failed to map member", e);
+                        throw new RuntimeException("Failed to map member: " + e.getMessage(), e);
                     }
                 });
 
@@ -466,7 +466,7 @@ public class CollectivityRepository {
             return transactions;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find transactions", e);
+            throw new RuntimeException("Failed to find collectivity: " + e.getMessage(), e);
         }
     }
 
@@ -566,7 +566,7 @@ public class CollectivityRepository {
 
                         return newAccount;
                     } catch (SQLException e) {
-                        throw new RuntimeException("Failed to build account", e);
+                        throw new RuntimeException("Failed to build account: " + e.getMessage(), e);
                     }
                 });
 
@@ -589,7 +589,7 @@ public class CollectivityRepository {
             return accountMap;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load accounts with transactions", e);
+            throw new RuntimeException("Failed to load accounts with transactions: " + e.getMessage(), e);
         }
     }
 
@@ -618,7 +618,7 @@ public class CollectivityRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find account", e);
+            throw new RuntimeException("Failed to find account: " + e.getMessage(), e);
         }
     }
 
@@ -703,7 +703,38 @@ public class CollectivityRepository {
             account.setTransactions(transactions);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load transactions for account", e);
+            throw new RuntimeException("Failed to load transactions for account: " + e.getMessage(), e);
+        }
+    }
+
+    public List<Collectivity> findAll() {
+        String sql = """
+            select id, number, name, speciality, creation_datetime,
+                   federation_approval, authorization_date, location
+            from collectivity
+        """;
+
+        List<Collectivity> collectivities = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Collectivity collectivity = Collectivity.builder()
+                        .id(rs.getString("id"))
+                        .number(rs.getObject("number", Integer.class))
+                        .name(rs.getString("name"))
+                        .speciality(rs.getString("speciality"))
+                        .creationDatetime(rs.getTimestamp("creation_datetime").toInstant())
+                        .federationApproval(rs.getBoolean("federation_approval"))
+                        .authorizationDate(rs.getTimestamp("authorization_date") != null ?
+                                rs.getTimestamp("authorization_date").toInstant() : null)
+                        .location(rs.getString("location"))
+                        .build();
+                fetchMembersAndStructure(collectivity);
+                collectivities.add(collectivity);
+            }
+            return collectivities;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find all collectivities: " + e.getMessage(), e);
         }
     }
 
@@ -723,7 +754,7 @@ public class CollectivityRepository {
             if (rs.next()) {
                 Collectivity collectivity = Collectivity.builder()
                         .id(rs.getString("id"))
-                        .number(rs.getString("number"))
+                        .number(rs.getObject("number", Integer.class))
                         .name(rs.getString("name"))
                         .speciality(rs.getString("speciality"))
                         .creationDatetime(rs.getTimestamp("creation_datetime").toInstant())
@@ -739,7 +770,7 @@ public class CollectivityRepository {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find collectivity by membership fee id: " + membershipFeeId, e);
+            throw new RuntimeException("Failed to find collectivity by membership fee id: " + membershipFeeId + " - " + e.getMessage(), e);
         }
     }
 }

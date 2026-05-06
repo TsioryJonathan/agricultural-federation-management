@@ -2,8 +2,10 @@ package com.hei.agriculturalfederationmanagement.service;
 
 import com.hei.agriculturalfederationmanagement.entity.*;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
+import com.hei.agriculturalfederationmanagement.entity.enums.AttendanceStatus;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
+import com.hei.agriculturalfederationmanagement.repository.ActivityRepository;
 import com.hei.agriculturalfederationmanagement.repository.CollectivityRepository;
 import com.hei.agriculturalfederationmanagement.repository.MembershipFeeRepository;
 import com.hei.agriculturalfederationmanagement.validator.CollectivityValidator;
@@ -23,6 +25,7 @@ public class CollectivityService {
     private final CollectivityRepository repository;
     private final MembershipFeeRepository membershipFeeRepository;
     private final CollectivityValidator validator;
+    private final ActivityRepository activityRepository;
 
     public List<CollectivityResponse> createCollectivities(List<CreateCollectivity> createCollectivities) throws BadRequestException {
         List<Collectivity> collectivitiesToSave = new ArrayList<>();
@@ -44,10 +47,10 @@ public class CollectivityService {
 
             collectivitiesToSave.add(collectivity);
             memberIdsList.add(request.getMembers());
-            presidentIds.add(request.getStructure().getPresidentId());
-            vicePresidentIds.add(request.getStructure().getVicePresidentId());
-            treasurerIds.add(request.getStructure().getTreasurerId());
-            secretaryIds.add(request.getStructure().getSecretaryId());
+            presidentIds.add(request.getStructure().getPresident());
+            vicePresidentIds.add(request.getStructure().getVicePresident());
+            treasurerIds.add(request.getStructure().getTreasurer());
+            secretaryIds.add(request.getStructure().getSecretary());
         }
 
         List<Collectivity> savedCollectivities = repository.saveAll(
@@ -66,11 +69,11 @@ public class CollectivityService {
 
 
     public CollectivityResponse assignIdentity(String id, CollectivityInformation request) throws BadRequestException {
-        if (request.getNumber() == null || request.getNumber().trim().isEmpty()) {
-            throw new BadRequestException("Number is required");
+        if (request.getNumber() == null) {
+            throw new BadRequestException("Collectivity number is required");
         }
         if (request.getName() == null || request.getName().trim().isEmpty()) {
-            throw new BadRequestException("Name is required");
+            throw new BadRequestException("Collectivity name is required");
         }
 
         Collectivity collectivity = repository.findById(id);
@@ -79,19 +82,19 @@ public class CollectivityService {
         }
 
         if (collectivity.getName() != null && !collectivity.getName().isBlank()
-                && collectivity.getNumber() != null && !collectivity.getNumber().isBlank()) {
+                && collectivity.getNumber() != null) {
 
             throw new BadRequestException("Collectivity identity already assigned and cannot be modified");
         }
 
-        if (repository.existsByNumber(request.getNumber())) {
+        if (repository.existsByNumber(String.valueOf(request.getNumber()))) {
             throw new BadRequestException("Collectivity number already exists: " + request.getNumber());
         }
         if (repository.existsByName(request.getName())) {
             throw new BadRequestException("Collectivity name already exists: " + request.getName());
         }
 
-        repository.assignIdentity(id, request.getNumber(), request.getName());
+        repository.assignIdentity(id, String.valueOf(request.getNumber()), request.getName());
 
         Collectivity updated = repository.findById(id);
         return buildResponse(updated);
@@ -121,17 +124,17 @@ public class CollectivityService {
 
 
         return transactions.stream()
-                .map(t -> toTransactionResponse(t,t.getTransactionDate()))
+                .map(t -> toTransactionResponse(t))
                 .toList();
     }
 
-    private CollectivityTransactionResponse toTransactionResponse(Transaction transaction,Instant at) {
+    private CollectivityTransactionResponse toTransactionResponse(Transaction transaction) {
         return CollectivityTransactionResponse.builder()
                 .id(String.valueOf(transaction.getId()))
                 .creationDate(transaction.getTransactionDate())
                 .amount(transaction.getAmount())
                 .paymentMode(transaction.getPaymentMode())
-                .accountCredited(toFinancialAccountResponse(transaction.getAccount(),at))
+                .accountCredited(toFinancialAccountResponse(transaction.getAccount(),transaction.getTransactionDate()))
                 .memberDebited(toMemberResponse(transaction.getMember()))
                 .build();
     }
@@ -186,7 +189,7 @@ public class CollectivityService {
                 .gender(member.getGender())
                 .address(member.getAddress())
                 .profession(member.getProfession())
-                .phoneNumber(member.getPhoneNumber())
+                .phoneNumber(Integer.parseInt(member.getPhoneNumber()))
                 .email(member.getEmail())
                 .referees(member.getRefereesId())
                 .build();
@@ -314,7 +317,7 @@ public class CollectivityService {
         if (account.getCashAccount() != null) {
             return CashAccountDetail.builder()
                     .id(String.valueOf(account.getId()))
-                    .amount(balance)
+                    .amount(balance.intValue())
                     .type("CASH")
                     .build();
         } else if (account.getBankAccount() != null) {
@@ -343,5 +346,106 @@ public class CollectivityService {
         }
 
         return null;
+    }
+
+    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, LocalDate from, LocalDate to) {
+        Collectivity collectivity = repository.findById(collectivityId);
+        if (collectivity == null) {
+            throw new NotFoundException("Collectivity not found with id: " + collectivityId);
+        }
+
+        List<Member> members = collectivity.getMembers();
+        List<CollectivityLocalStatistics> statistics = new ArrayList<>();
+
+        for (Member member : members) {
+            MemberDescription memberDesc = MemberDescription.builder()
+                .id(member.getId())
+                .firstName(member.getFirstName())
+                .lastName(member.getLastName())
+                .email(member.getEmail())
+                .occupation(member.getProfession())
+                .build();
+
+            CollectivityLocalStatistics stats = CollectivityLocalStatistics.builder()
+                .memberDescription(memberDesc)
+                .earnedAmount(0)
+                .unpaidAmount(0)
+                .build();
+            statistics.add(stats);
+        }
+
+        for (CollectivityLocalStatistics stats : statistics) {
+            Double assiduity = calculateAssiduity(stats.getMemberDescription().getId(), collectivityId, from, to);
+            stats.setAssiduityPercentage(assiduity);
+        }
+
+        return statistics;
+    }
+
+    public List<CollectivityOverallStatistics> getOverallStatistics(LocalDate from, LocalDate to) {
+        List<Collectivity> collectivities = repository.findAll();
+        List<CollectivityOverallStatistics> statistics = new ArrayList<>();
+
+        for (Collectivity collectivity : collectivities) {
+            CollectivityInformation info = CollectivityInformation.builder()
+                .id(collectivity.getId())
+                .number(collectivity.getNumber())
+                .name(collectivity.getName())
+                .location(collectivity.getLocation())
+                .build();
+
+            Double overallAssiduity = calculateOverallAssiduity(collectivity.getId(), from, to);
+
+            CollectivityOverallStatistics stats = CollectivityOverallStatistics.builder()
+                .collectivityInformation(info)
+                .newMembersNumber(0)
+                .overallMemberCurrentDuePercentage(0.0)
+                .overallMemberAssiduityPercentage(overallAssiduity)
+                .build();
+            statistics.add(stats);
+        }
+
+        return statistics;
+    }
+
+    private Double calculateAssiduity(String memberId, String collectivityId, LocalDate from, LocalDate to) {
+        List<Activity> requiredActivities = activityRepository.findByCollectivityId(collectivityId).stream()
+            .filter(a -> isMemberRequired(a, memberId))
+            .filter(a -> isInDateRange(a, from, to))
+            .toList();
+
+        if (requiredActivities.isEmpty()) return 0.0;
+
+        long totalRequired = requiredActivities.size();
+        long attended = requiredActivities.stream()
+            .mapToLong(a -> activityRepository.findAttendanceByActivityId(a.getId()).stream()
+                .filter(att -> att.getMemberId().equals(memberId))
+                .filter(att -> att.getAttendanceStatus() == AttendanceStatus.ATTENDED)
+                .count())
+            .sum();
+
+        return (attended * 100.0) / totalRequired;
+    }
+
+    private Double calculateOverallAssiduity(String collectivityId, LocalDate from, LocalDate to) {
+        List<CollectivityLocalStatistics> localStats = getLocalStatistics(collectivityId, from, to);
+        if (localStats.isEmpty()) return 0.0;
+
+        return localStats.stream()
+            .mapToDouble(CollectivityLocalStatistics::getAssiduityPercentage)
+            .average()
+            .orElse(0.0);
+    }
+
+    private boolean isMemberRequired(Activity activity, String memberId) {
+        if (activity.getMemberOccupationConcerned() == null || activity.getMemberOccupationConcerned().isEmpty()) {
+            return true;
+        }
+        return true;
+    }
+
+    private boolean isInDateRange(Activity activity, LocalDate from, LocalDate to) {
+        if (activity.getExecutiveDate() == null) return false;
+        return !activity.getExecutiveDate().isBefore(from) && !activity.getExecutiveDate().isAfter(to);
     }
 }

@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class CollectivityInformation {
-    private String number;
+    private String id;
+    private Integer number;
     private String name;
+    private String location;
 }
