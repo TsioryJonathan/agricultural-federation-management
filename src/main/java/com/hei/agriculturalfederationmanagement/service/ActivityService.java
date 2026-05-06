@@ -110,12 +110,12 @@ public class ActivityService {
         List<ActivityAttendance> attendanceEntities = new ArrayList<>();
         for (CreateActivityMemberAttendance dto : attendances) {
             // Verify member exists
-            memberRepository.findById(dto.getMemberIdentifier())
+           Member activityAttendanceMember =  memberRepository.findById(dto.getMemberIdentifier())
                     .orElseThrow(() -> new NotFoundException("Member not found with id: " + dto.getMemberIdentifier()));
 
             ActivityAttendance attendance = ActivityAttendance.builder()
                     .activityId(activityId)
-                    .member(Member.builder().id(dto.getMemberIdentifier()).build())
+                    .member(activityAttendanceMember)
                     .attendanceStatus(dto.getAttendanceStatus())
                     .build();
             attendanceEntities.add(attendance);
@@ -133,7 +133,7 @@ public class ActivityService {
         }
 
         return savedAttendances.stream()
-                .map(this::mapToAttendanceResponse)
+                .map(savedAttendance -> mapToAttendanceResponse(collectivityId,savedAttendance))
                 .collect(Collectors.toList());
     }
 
@@ -152,7 +152,7 @@ public class ActivityService {
         List<ActivityAttendance> attendances = activityRepository.getAttendance(activityId, collectivityId);
 
         return attendances.stream()
-                .map(this::mapToAttendanceResponse)
+                .map(attendance -> mapToAttendanceResponse(collectivityId,attendance))
                 .collect(Collectors.toList());
     }
 
@@ -181,13 +181,14 @@ public class ActivityService {
                 .build();
     }
 
-    private ActivityMemberAttendance mapToAttendanceResponse(ActivityAttendance attendance) {
+    private ActivityMemberAttendance mapToAttendanceResponse(String collectivityId, ActivityAttendance attendance) {
         Member member = attendance.getMember();
         MemberDescription memberDescription = MemberDescription.builder()
                 .id(member.getId())
                 .firstName(member.getFirstName())
                 .lastName(member.getLastName())
                 .email(member.getEmail())
+                .occupation(memberRepository.findOccupationByMemberIdAndCollectivityId(member.getId(),collectivityId))
                 .build();
 
         return ActivityMemberAttendance.builder()

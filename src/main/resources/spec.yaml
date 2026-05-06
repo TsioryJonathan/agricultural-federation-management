@@ -374,6 +374,17 @@ paths:
       description: |
         Note that a member attendance status (MISSING or ATTENDED) can not be updated once set.
         Only, UNDEFINED status can be then updated.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: activityId
+          schema:
+            type: string
+          required: true
       requestBody:
         content:
           application/json:
@@ -400,8 +411,19 @@ paths:
         Note that return attendance must include UNDEFINED, ATTENDED or MISSING members. 
         UNDEFINED and MISSING status are only set for members of the collectivity, that are concerned by their occupation set for the activity.
         For other members outside collectivity, they can only set ATTENDED status. Same for members inside collectivity, that are not concerned to be required to be present.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: activityId
+          schema:
+            type: string
+          required: true
       responses:
-        201:
+        200:
           description: List of activity member attendance including other members
           content:
             application/json:

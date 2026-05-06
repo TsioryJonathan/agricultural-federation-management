@@ -238,4 +238,58 @@ public class MemberRepository {
             throw new RuntimeException("Failed to find collectivity id for member " + e.getMessage());
         }
     }
+
+    /**
+     * Get the occupation of a member in a specific collectivity
+     */
+    public String findOccupationByMemberIdAndCollectivityId(String memberId, String collectivityId) {
+        String sql = """
+            SELECT occupation 
+            FROM member_collectivity 
+            WHERE id_member = ? 
+            AND id_collectivity = ? 
+            AND end_date IS NULL
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            stmt.setString(2, collectivityId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("occupation");
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find occupation for member: " + memberId +
+                    " in collectivity: " + collectivityId, e);
+        }
+    }
+
+    /**
+     * Get the occupation of a member in a specific collectivity (returns Optional)
+     */
+    public Optional<String> findOccupationByMemberIdAndCollectivityIdOptional(String memberId, String collectivityId) {
+        String sql = """
+            SELECT occupation 
+            FROM member_collectivity 
+            WHERE id_member = ? 
+            AND id_collectivity = ? 
+            AND end_date IS NULL
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            stmt.setString(2, collectivityId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return Optional.of(rs.getString("occupation"));
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find occupation for member: " + memberId +
+                    " in collectivity: " + collectivityId, e);
+        }
+    }
 }
