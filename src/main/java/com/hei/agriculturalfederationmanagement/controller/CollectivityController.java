@@ -5,6 +5,7 @@ import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.service.CollectivityService;
+import com.hei.agriculturalfederationmanagement.service.StatisticsService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.List;
 @RequestMapping("/collectivities")
 public class CollectivityController {
     private final CollectivityService service;
+    private final StatisticsService statisticsService;
 
     @PostMapping
     public ResponseEntity<?> createCollectivities(@RequestBody(required = false) List<CreateCollectivity> createCollectivities) {
@@ -133,6 +135,47 @@ public class CollectivityController {
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/statistics")
+    public ResponseEntity<?> getLocalStatistics(
+            @PathVariable String id,
+            @RequestParam(required = true) String from,
+            @RequestParam(required = true) String to) {
+        try {
+            Instant fromDate = Instant.parse(from + "T00:00:00Z");
+            Instant toDate = Instant.parse(to + "T23:59:59Z");
+
+            List<CollectivityLocalStatistics> statistics =
+                    statisticsService.getLocalStatistics(id, fromDate, toDate);
+            return ResponseEntity.status(HttpStatus.OK).body(statistics);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getOverallStatistics(
+            @RequestParam(required = true) String from,
+            @RequestParam(required = true) String to) {
+        try {
+            Instant fromDate = Instant.parse(from + "T00:00:00Z");
+            Instant toDate = Instant.parse(to + "T23:59:59Z");
+
+            List<CollectivityOverallStatistics> statistics =
+                    statisticsService.getOverallStatistics(fromDate, toDate);
+            return ResponseEntity.status(HttpStatus.OK).body(statistics);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
         }
