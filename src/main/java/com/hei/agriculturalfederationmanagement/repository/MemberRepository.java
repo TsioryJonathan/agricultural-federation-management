@@ -169,14 +169,14 @@ public class MemberRepository {
 
     public void addReferee(String candidateId, String refereeId, String relationship) {
         String sql = """
-            INSERT INTO member_referee (id_candidate, id_referee, relationship) 
+            INSERT INTO member_referee (id_candidate, id_referee, relationship)
             VALUES (?, ?, ?)
             ON CONFLICT (id_candidate, id_referee) DO NOTHING
         """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, candidateId);
             stmt.setString(2, refereeId);
-            stmt.setString(3, relationship != null ? relationship : "Parrainage");
+            stmt.setString(3, relationship != null ? relationship : "AMI");
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to add referee " + e.getMessage());

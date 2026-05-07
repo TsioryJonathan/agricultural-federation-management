@@ -63,7 +63,7 @@ public class MemberService {
             // Add referees
             if (dto.getReferees() != null) {
                 for (String refereeId : dto.getReferees()) {
-                    memberRepository.addReferee(savedMember.getId(), refereeId, "Parrainage");
+                    memberRepository.addReferee(savedMember.getId(), refereeId, "AMI");
                 }
             }
 

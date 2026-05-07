@@ -221,26 +221,26 @@ INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_d
 
 -- Referees
 INSERT INTO member_referee (id_candidate, id_referee, relationship) VALUES
-                                                                        ('C1-M3', 'C1-M1', 'Parrainage'), ('C1-M3', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M4', 'C1-M1', 'Parrainage'), ('C1-M4', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M5', 'C1-M1', 'Parrainage'), ('C1-M5', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M6', 'C1-M1', 'Parrainage'), ('C1-M6', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M7', 'C1-M1', 'Parrainage'), ('C1-M7', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M8', 'C1-M6', 'Parrainage'), ('C1-M8', 'C1-M7', 'Parrainage'),
-                                                                        ('C2-M3', 'C1-M1', 'Parrainage'), ('C2-M3', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M4', 'C1-M1', 'Parrainage'), ('C2-M4', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M5', 'C1-M1', 'Parrainage'), ('C2-M5', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M6', 'C1-M1', 'Parrainage'), ('C2-M6', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M7', 'C1-M1', 'Parrainage'), ('C2-M7', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M8', 'C1-M6', 'Parrainage'), ('C2-M8', 'C1-M7', 'Parrainage'),
-                                                                        ('C3-M1', 'C1-M1', 'Parrainage'), ('C3-M1', 'C1-M2', 'Parrainage'),
-                                                                        ('C3-M2', 'C1-M1', 'Parrainage'), ('C3-M2', 'C1-M2', 'Parrainage'),
-                                                                        ('C3-M3', 'C3-M1', 'Parrainage'), ('C3-M3', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M4', 'C3-M1', 'Parrainage'), ('C3-M4', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M5', 'C3-M1', 'Parrainage'), ('C3-M5', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M6', 'C3-M1', 'Parrainage'), ('C3-M6', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M7', 'C3-M1', 'Parrainage'), ('C3-M7', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M8', 'C3-M1', 'Parrainage'), ('C3-M8', 'C3-M2', 'Parrainage');
+                                                                        ('C1-M3', 'C1-M1', 'AMI'), ('C1-M3', 'C1-M2', 'AMI'),
+                                                                        ('C1-M4', 'C1-M1', 'AMI'), ('C1-M4', 'C1-M2', 'AMI'),
+                                                                        ('C1-M5', 'C1-M1', 'AMI'), ('C1-M5', 'C1-M2', 'AMI'),
+                                                                        ('C1-M6', 'C1-M1', 'AMI'), ('C1-M6', 'C1-M2', 'AMI'),
+                                                                        ('C1-M7', 'C1-M1', 'AMI'), ('C1-M7', 'C1-M2', 'AMI'),
+                                                                        ('C1-M8', 'C1-M6', 'AMI'), ('C1-M8', 'C1-M7', 'AMI'),
+                                                                        ('C2-M3', 'C1-M1', 'AMI'), ('C2-M3', 'C1-M2', 'AMI'),
+                                                                        ('C2-M4', 'C1-M1', 'AMI'), ('C2-M4', 'C1-M2', 'AMI'),
+                                                                        ('C2-M5', 'C1-M1', 'AMI'), ('C2-M5', 'C1-M2', 'AMI'),
+                                                                        ('C2-M6', 'C1-M1', 'AMI'), ('C2-M6', 'C1-M2', 'AMI'),
+                                                                        ('C2-M7', 'C1-M1', 'AMI'), ('C2-M7', 'C1-M2', 'AMI'),
+                                                                        ('C2-M8', 'C1-M6', 'AMI'), ('C2-M8', 'C1-M7', 'AMI'),
+                                                                        ('C3-M1', 'C1-M1', 'AMI'), ('C3-M1', 'C1-M2', 'AMI'),
+                                                                        ('C3-M2', 'C1-M1', 'AMI'), ('C3-M2', 'C1-M2', 'AMI'),
+                                                                        ('C3-M3', 'C3-M1', 'AMI'), ('C3-M3', 'C3-M2', 'AMI'),
+                                                                        ('C3-M4', 'C3-M1', 'AMI'), ('C3-M4', 'C3-M2', 'AMI'),
+                                                                        ('C3-M5', 'C3-M1', 'AMI'), ('C3-M5', 'C3-M2', 'AMI'),
+                                                                        ('C3-M6', 'C3-M1', 'AMI'), ('C3-M6', 'C3-M2', 'AMI'),
+                                                                        ('C3-M7', 'C3-M1', 'AMI'), ('C3-M7', 'C3-M2', 'AMI'),
+                                                                        ('C3-M8', 'C3-M1', 'AMI'), ('C3-M8', 'C3-M2', 'AMI');
 
 -- ============================================
 -- COMPTES FINANCIERS
@@ -351,10 +351,10 @@ INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_d
                                                                                          ('C1-M12', 'col-1', 'JUNIOR', '2026-06-01');
 
 INSERT INTO member_referee (id_candidate, id_referee, relationship) VALUES
-                                                                        ('C1-M9', 'C1-M1', 'Parrainage'), ('C1-M9', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M10', 'C1-M1', 'Parrainage'), ('C1-M10', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M11', 'C1-M1', 'Parrainage'), ('C1-M11', 'C1-M2', 'Parrainage'),
-                                                                        ('C1-M12', 'C1-M1', 'Parrainage'), ('C1-M12', 'C1-M2', 'Parrainage');
+                                                                        ('C1-M9', 'C1-M1', 'AMI'), ('C1-M9', 'C1-M2', 'AMI'),
+                                                                        ('C1-M10', 'C1-M1', 'AMI'), ('C1-M10', 'C1-M2', 'AMI'),
+                                                                        ('C1-M11', 'C1-M1', 'AMI'), ('C1-M11', 'C1-M2', 'AMI'),
+                                                                        ('C1-M12', 'C1-M1', 'AMI'), ('C1-M12', 'C1-M2', 'AMI');
 
 -- Col-2
 INSERT INTO member (id, first_name, last_name, birth_date, gender, address, profession, phone_number, email, enrolment_date) VALUES
@@ -368,9 +368,9 @@ INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_d
                                                                                          ('C2-M11', 'col-2', 'JUNIOR', '2026-03-01');
 
 INSERT INTO member_referee (id_candidate, id_referee, relationship) VALUES
-                                                                        ('C2-M9', 'C1-M1', 'Parrainage'), ('C2-M9', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M10', 'C1-M1', 'Parrainage'), ('C2-M10', 'C1-M2', 'Parrainage'),
-                                                                        ('C2-M11', 'C1-M1', 'Parrainage'), ('C2-M11', 'C1-M2', 'Parrainage');
+                                                                        ('C2-M9', 'C1-M1', 'AMI'), ('C2-M9', 'C1-M2', 'AMI'),
+                                                                        ('C2-M10', 'C1-M1', 'AMI'), ('C2-M10', 'C1-M2', 'AMI'),
+                                                                        ('C2-M11', 'C1-M1', 'AMI'), ('C2-M11', 'C1-M2', 'AMI');
 
 -- Col-3
 INSERT INTO member (id, first_name, last_name, birth_date, gender, address, profession, phone_number, email, enrolment_date) VALUES
@@ -390,9 +390,9 @@ INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_d
                                                                                          ('C3-M14', 'col-3', 'JUNIOR', '2026-03-01');
 
 INSERT INTO member_referee (id_candidate, id_referee, relationship) VALUES
-                                                                        ('C3-M9', 'C3-M1', 'Parrainage'), ('C3-M9', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M10', 'C3-M1', 'Parrainage'), ('C3-M10', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M11', 'C3-M1', 'Parrainage'), ('C3-M11', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M12', 'C3-M1', 'Parrainage'), ('C3-M12', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M13', 'C3-M1', 'Parrainage'), ('C3-M13', 'C3-M2', 'Parrainage'),
-                                                                        ('C3-M14', 'C3-M1', 'Parrainage'), ('C3-M14', 'C3-M2', 'Parrainage');
+                                                                        ('C3-M9', 'C3-M1', 'AMI'), ('C3-M9', 'C3-M2', 'AMI'),
+                                                                        ('C3-M10', 'C3-M1', 'AMI'), ('C3-M10', 'C3-M2', 'AMI'),
+                                                                        ('C3-M11', 'C3-M1', 'AMI'), ('C3-M11', 'C3-M2', 'AMI'),
+                                                                        ('C3-M12', 'C3-M1', 'AMI'), ('C3-M12', 'C3-M2', 'AMI'),
+                                                                        ('C3-M13', 'C3-M1', 'AMI'), ('C3-M13', 'C3-M2', 'AMI'),
+                                                                        ('C3-M14', 'C3-M1', 'AMI'), ('C3-M14', 'C3-M2', 'AMI');
