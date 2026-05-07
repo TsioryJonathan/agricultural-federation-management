@@ -33,7 +33,7 @@ public class MemberRepository {
         """;
 
         try (PreparedStatement stmt = connection.prepareStatement(insertSql)) {
-            String id = member.getId() != null ? member.getId() : "M" + System.currentTimeMillis();
+            String id = member.getId() != null ? member.getId() : "CX-M" + System.currentTimeMillis();
             stmt.setString(1, id);
             stmt.setString(2, member.getFirstName());
             stmt.setString(3, member.getLastName());
