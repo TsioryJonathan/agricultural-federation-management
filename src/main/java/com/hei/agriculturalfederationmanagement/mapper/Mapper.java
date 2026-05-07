@@ -12,19 +12,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class Mapper {
-
-    public CollectivityResponse toResponse(Collectivity collectivity) {
-        if (collectivity == null) return null;
-
-        return CollectivityResponse.builder()
-                .id(collectivity.getId())
-                .number(collectivity.getNumber())
-                .name(collectivity.getName())
-                .location(collectivity.getLocation())
-                .structure(toStructureResponse(collectivity.getStructure()))
-                .members(toMemberResponseList(collectivity.getMembers()))
-                .build();
-    }
+    
     public MemberResponse toMemberResponse(Member member, Map<String, String> occupations) {
         String occupation = occupations != null ? occupations.get(member.getId()) : null;
 
@@ -54,7 +42,7 @@ public class Mapper {
 
         return CollectivityResponse.builder()
                 .id(collectivity.getId())
-                .number(collectivity.getNumber())
+                .number(Integer.parseInt(collectivity.getNumber()))
                 .name(collectivity.getName())
                 .location(collectivity.getLocation())
                 .structure(CollectivityStructureResponse.builder()

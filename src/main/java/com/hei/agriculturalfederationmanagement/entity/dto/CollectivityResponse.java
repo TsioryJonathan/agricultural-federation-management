@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CollectivityResponse {
     private String id;
-    private String number;
+    private Integer number;
     private String name;
     private String location;
     private CollectivityStructureResponse structure;
