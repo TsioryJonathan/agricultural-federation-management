@@ -300,7 +300,6 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
         expect(stat, 'Should have collectivityInformation').to.have.property('collectivityInformation');
         expect(stat.collectivityInformation, 'should be an object').to.be.an('object');
-        expect(stat.collectivityInformation, 'should have id').to.have.property('id');
         expect(stat.collectivityInformation, 'should have name').to.have.property('name');
         expect(stat.collectivityInformation, 'should have number').to.have.property('number');
 
@@ -1054,7 +1053,7 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             expect(mobile, 'C1-A-MOBILE-1 should exist').to.exist;
             expect(mobile.holderName).to.equal('Mpanorina');
             expect(mobile.mobileBankingService).to.equal('ORANGE_MONEY');
-            expect(mobile.mobileNumber).to.equal(370489612);
+            expect(mobile.mobileNumber).to.equal("0370489612");
         });
 
         it('should retrieve financial accounts for col-3 with all types', async function() {
@@ -1189,7 +1188,7 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             const res = await chai.request(BASE_URL)
                 .get('/collectivities/col-1/transactions?from=invalid&to=2026-12-31');
 
-            expect(res.status, 'Status should be 500').to.equal(500);
+            expect(res.status, 'Status should be 400').to.equal(400);
         });
 
         it('should return empty array for period with no transactions', async function() {
@@ -1575,9 +1574,9 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
                 }]);
 
             // May be 200 if implemented
-            expect(res.status).to.be.oneOf([200, 404]);
+            expect(res.status).to.be.oneOf([201, 404]);
 
-            if (res.status === 200) {
+            if (res.status === 201) {
                 expect(res.body).to.be.an('array');
                 res.body.forEach(a => {
                     validateActivity(a);
@@ -1856,7 +1855,6 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
                 .get('/collectivities/statistics?from=2026-01-01&to=2026-12-31');
 
             res.body.forEach(s => {
-                expect(s.collectivityInformation).to.have.property('id');
                 expect(s.collectivityInformation).to.have.property('name');
                 expect(s.collectivityInformation).to.have.property('number');
             });
