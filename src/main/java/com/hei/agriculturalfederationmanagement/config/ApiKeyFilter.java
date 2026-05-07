@@ -1,4 +1,4 @@
-package com.hei.agriculturalfederationmanagement.config;
+/*package com.hei.agriculturalfederationmanagement.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.servlet.FilterChain;
@@ -37,4 +37,4 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-}
+}*/
