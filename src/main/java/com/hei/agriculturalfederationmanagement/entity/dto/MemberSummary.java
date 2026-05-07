@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -18,5 +19,5 @@ public class MemberSummary {
     private String email;
     private String phoneNumber;
     private String gender;
-    private List<String> referees;
+    private List<MemberSummary> referees = new ArrayList<>();
 }
