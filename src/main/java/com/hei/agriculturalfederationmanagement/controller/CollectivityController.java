@@ -173,11 +173,9 @@ public class CollectivityController {
             @RequestParam(required = true) String to) {
 
         try {
-            Instant fromDate = Instant.parse(from + "T00:00:00Z");
-            Instant toDate = Instant.parse(to + "T23:59:59Z");
 
             List<CollectivityOverallStatistics> statistics =
-                    statisticsService.getOverallStatistics(fromDate, toDate);
+                    statisticsService.getOverallStatistics(from, to);
             return ResponseEntity.status(HttpStatus.OK).body(statistics);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

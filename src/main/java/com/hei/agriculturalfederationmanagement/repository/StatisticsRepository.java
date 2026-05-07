@@ -142,7 +142,7 @@ public class StatisticsRepository {
      * - Number of new members in period
      * - Overall assiduity percentage per collectivity
      */
-    public List<CollectivityOverallStatistics> getOverallStatistics(Instant from, Instant to) {
+    public List<CollectivityOverallStatistics> getOverallStatistics(LocalDate from, LocalDate to) {
         String sql = """
             WITH collectivity_list AS (
                 SELECT id, number, name
@@ -255,13 +255,13 @@ public class StatisticsRepository {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             int paramIndex = 1;
-            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
-            stmt.setTimestamp(paramIndex++, Timestamp.from(from));
-            stmt.setTimestamp(paramIndex++, Timestamp.from(to));
-            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(from, ZoneId.systemDefault())));
-            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
-            stmt.setTimestamp(paramIndex++, Timestamp.from(from));
-            stmt.setTimestamp(paramIndex++, Timestamp.from(to));
+            stmt.setDate(paramIndex++, Date.valueOf(to));
+            stmt.setDate(paramIndex++, Date.valueOf(from));
+            stmt.setDate(paramIndex++, Date.valueOf(to));
+            stmt.setDate(paramIndex++, Date.valueOf(from));
+            stmt.setDate(paramIndex++, Date.valueOf(to));
+            stmt.setDate(paramIndex++, Date.valueOf(from));
+            stmt.setDate(paramIndex++, Date.valueOf(to));
 
             ResultSet rs = stmt.executeQuery();
 

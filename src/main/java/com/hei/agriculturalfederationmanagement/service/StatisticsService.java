@@ -59,15 +59,25 @@ public class StatisticsService {
      * Get overall statistics for all collectivities
      * Includes: current due percentage, new members, and overall assiduity percentage
      */
-    public List<CollectivityOverallStatistics> getOverallStatistics(Instant from, Instant to) {
+    public List<CollectivityOverallStatistics> getOverallStatistics(String from, String to) {
         if (from == null || to == null) {
             throw new BadRequestException("Both 'from' and 'to' dates are required");
         }
 
-        if (from.isAfter(to)) {
+        LocalDate fromDate = LocalDate.parse(from);
+        LocalDate toDate = LocalDate.parse(to);
+
+        try {
+            fromDate = LocalDate.parse(from);
+            toDate = LocalDate.parse(to);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Invalid date format. Expected format: yyyy-MM-dd");
+        }
+
+        if (fromDate.isAfter(toDate)) {
             throw new BadRequestException("'from' date must be before or equal to 'to' date");
         }
 
-        return statisticsRepository.getOverallStatistics(from, to);
+        return statisticsRepository.getOverallStatistics(fromDate, toDate);
     }
 }
