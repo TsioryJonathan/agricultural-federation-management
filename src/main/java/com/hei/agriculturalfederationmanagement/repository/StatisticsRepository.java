@@ -266,16 +266,16 @@ public class StatisticsRepository {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             int i = 1;
-            stmt.setDate(i++, Date.valueOf(to));     // 1: active_cotisations eligible_from <= to
-            stmt.setDate(i++, Date.valueOf(to));     // 2: member_payments <= to (ALL payments up to "to" date)
-            stmt.setDate(i++, Date.valueOf(to));     // 3: WEEKLY ::date
-            stmt.setDate(i++, Date.valueOf(to));     // 4: MONTHLY year ::date
-            stmt.setDate(i++, Date.valueOf(to));     // 5: MONTHLY month ::date
-            stmt.setDate(i++, Date.valueOf(to));     // 6: ANNUALLY ::date
-            stmt.setDate(i++, Date.valueOf(from));   // 7: PUNCTUALLY from ::date
-            stmt.setDate(i++, Date.valueOf(to));     // 8: PUNCTUALLY to ::date
-            stmt.setDate(i++, Date.valueOf(from));   // 9: enrolment_date >= from
-            stmt.setDate(i++, Date.valueOf(to));     // 10: enrolment_date <= to
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(from));
+            stmt.setDate(i++, Date.valueOf(to));
+            stmt.setDate(i++, Date.valueOf(from));
+            stmt.setDate(i++, Date.valueOf(to));
 
             ResultSet rs = stmt.executeQuery();
 
