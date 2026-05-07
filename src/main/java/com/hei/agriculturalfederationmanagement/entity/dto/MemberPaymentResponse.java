@@ -1,0 +1,22 @@
+package com.hei.agriculturalfederationmanagement.entity.dto;
+
+import com.hei.agriculturalfederationmanagement.entity.enums.PaymentMode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+import java.time.LocalDate;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class MemberPaymentResponse {
+    private String id;
+    private Integer amount;
+    private PaymentMode paymentMode;
+    private FinancialAccountResponse accountCredited;
+    private LocalDate creationDate;
+}

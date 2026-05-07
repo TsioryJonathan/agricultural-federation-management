@@ -1,12 +1,12 @@
-package com.hei.agriculturalfederationmanagement.entity;
+package com.hei.agriculturalfederationmanagement.entity.dto;
 
 import com.hei.agriculturalfederationmanagement.entity.enums.Gender;
+import com.hei.agriculturalfederationmanagement.entity.enums.MemberOccupation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,8 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Member {
-    private String id;
+public class CreateMember {
     private String firstName;
     private String lastName;
     private LocalDate birthDate;
@@ -24,7 +23,9 @@ public class Member {
     private String profession;
     private String phoneNumber;
     private String email;
-    private LocalDate enrolmentDate;
-    private List<Member> referees;
-    private boolean isSuperuser;
+    private MemberOccupation occupation;
+    private String collectivityIdentifier;
+    private List<String> referees;
+    private boolean registrationFeePaid;
+    private boolean membershipDuesPaid;
 }

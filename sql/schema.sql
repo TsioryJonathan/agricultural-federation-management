@@ -1,332 +1,351 @@
--- ============================================================
--- TYPES (ENUMS)
--- ============================================================
+-- ============================================
+-- COMPLETE DATABASE SCHEMA AND DATA FROM PDF ONLY (FIXED)
+-- ============================================
+-- ============================================
+-- DATABASE INITIALIZATION SCRIPT
+-- Drops all tables and recreates with PDF data
+-- Run before tests
+-- ============================================
 
-CREATE TYPE "collectivity_post_name"  AS ENUM ('PRESIDENT', 'DEPUTY_PRESIDENT', 'TREASURER', 'SECRETARY', 'CONFIRMED', 'JUNIOR');
-CREATE TYPE "federation_post_name"    AS ENUM ('PRESIDENT', 'DEPUTY_PRESIDENT', 'TREASURER', 'SECRETARY');
-CREATE TYPE "gender"                  AS ENUM ('MALE', 'FEMALE');
-CREATE TYPE "payment_mode"            AS ENUM ('CASH', 'BANK_TRANSFER', 'MOBILE_MONEY');
-CREATE TYPE "cotisation_frequency"    AS ENUM ('MONTHLY', 'ANNUAL', 'PUNCTUAL');
-CREATE TYPE "bank_name_enum"          AS ENUM ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM');
-CREATE TYPE "mobile_money_service"    AS ENUM ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY');
-CREATE TYPE "activity_type"           AS ENUM ('MONTHLY_GA', 'JUNIOR_TRAINING', 'EXCEPTIONAL');
-CREATE TYPE "collectivity_status"     AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+-- Drop tables in correct order (respecting foreign keys)
+DROP TABLE IF EXISTS activity_attendance CASCADE;
+DROP TABLE IF EXISTS activity_member_occupation CASCADE;
+DROP TABLE IF EXISTS activity CASCADE;
+DROP TABLE IF EXISTS transaction CASCADE;
+DROP TABLE IF EXISTS cotisation_plan CASCADE;
+DROP TABLE IF EXISTS mobile_money_account CASCADE;
+DROP TABLE IF EXISTS bank_account CASCADE;
+DROP TABLE IF EXISTS cash_account CASCADE;
+DROP TABLE IF EXISTS account CASCADE;
+DROP TABLE IF EXISTS member_referee CASCADE;
+DROP TABLE IF EXISTS member_collectivity CASCADE;
+DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS collectivity CASCADE;
+DROP TABLE IF EXISTS federation CASCADE;
 
--- ============================================================
--- TABLES DE BASE
--- ============================================================
-
-CREATE TABLE "public"."city" (
-    "id"   serial      NOT NULL,
-    "name" varchar     NOT NULL,
-    PRIMARY KEY ("id")
+-- Federation table
+CREATE TABLE IF NOT EXISTS federation (
+                                          id VARCHAR PRIMARY KEY DEFAULT 'fed-1',
+                                          name VARCHAR NOT NULL DEFAULT 'Fédération Agricole de Madagascar',
+                                          creation_date DATE DEFAULT CURRENT_DATE
 );
 
-CREATE TABLE "public"."federation" (
-    "id"                    serial         NOT NULL,
-    -- % des cotisations périodiques reversé à la fédération (Section C)
-    "cotisation_percentage" numeric(5,2)   NOT NULL DEFAULT 10.00,
-    PRIMARY KEY ("id")
+-- Member table
+CREATE TABLE IF NOT EXISTS member (
+                                      id VARCHAR PRIMARY KEY,
+                                      first_name VARCHAR NOT NULL,
+                                      last_name VARCHAR NOT NULL,
+                                      birth_date DATE NOT NULL,
+                                      gender VARCHAR(10) CHECK (gender IN ('MALE', 'FEMALE')),
+                                      address VARCHAR,
+                                      profession VARCHAR,
+                                      phone_number VARCHAR,
+                                      email VARCHAR UNIQUE NOT NULL,
+                                      enrolment_date DATE DEFAULT CURRENT_DATE,
+                                      is_superuser BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE "public"."member" (
-    "id"              serial      NOT NULL,
-    "first_name"      varchar     NOT NULL,
-    "last_name"       varchar     NOT NULL,
-    "birth_date"      date        NOT NULL,
-    "enrolment_date"  timestamp   NOT NULL,
-    "address"         text        NOT NULL,
-    "email"           varchar     NOT NULL UNIQUE,
-    "phone"           varchar     NOT NULL UNIQUE,
-    "job"             varchar     NOT NULL,
-    "gender"          gender      NOT NULL,
-    PRIMARY KEY ("id")
+-- Member referee relationship
+CREATE TABLE IF NOT EXISTS member_referee (
+                                              id_candidate VARCHAR REFERENCES member(id),
+                                              id_referee VARCHAR REFERENCES member(id),
+                                              relationship VARCHAR,
+                                              PRIMARY KEY (id_candidate, id_referee)
 );
 
-CREATE TABLE "public"."collectivity" (
-    "id"                 serial                NOT NULL,
-    "number"             varchar               NOT NULL UNIQUE,
-    "name"               varchar               NOT NULL UNIQUE,
-    "speciality"         varchar               NOT NULL,
-    "creation_datetime"  timestamp             NOT NULL,
-    "status"             collectivity_status   NOT NULL DEFAULT 'PENDING',
-    "authorization_date" timestamp,                        -- Section A : date d'autorisation
-    "id_federation"      int                   NOT NULL,
-    "id_city"            int                   NOT NULL,
-    PRIMARY KEY ("id")
+-- Collectivity table
+CREATE TABLE IF NOT EXISTS collectivity (
+                                            id VARCHAR PRIMARY KEY,
+                                            number VARCHAR UNIQUE,
+                                            name VARCHAR UNIQUE,
+                                            speciality VARCHAR NOT NULL,
+                                            creation_date DATE DEFAULT CURRENT_DATE,
+                                            federation_approval BOOLEAN NOT NULL,
+                                            authorization_date DATE,
+                                            location VARCHAR NOT NULL,
+                                            id_federation VARCHAR REFERENCES federation(id)
 );
 
--- ============================================================
--- SECTION A/B  –  Adhésion et postes
--- member_collectivity : historique des postes + appartenance à une collectivité
--- ============================================================
-
-CREATE TABLE "public"."member_collectivity" (
-    "id"              serial                    NOT NULL,
-    "id_member"       int                       NOT NULL,
-    "id_collectivity" int                       NOT NULL,
-    "post_name"       collectivity_post_name    NOT NULL,
-    "start_date"      timestamp                 NOT NULL,
-    "end_date"        timestamp,                           -- NULL = actif ; renseigné = mandat terminé ou démission
-    PRIMARY KEY ("id")
+-- Member collectivity association
+CREATE TABLE IF NOT EXISTS member_collectivity (
+                                                   id_member VARCHAR REFERENCES member(id),
+                                                   id_collectivity VARCHAR REFERENCES collectivity(id),
+                                                   occupation VARCHAR CHECK (
+                                                       occupation IN ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT')
+                                                       ),
+                                                   start_date DATE DEFAULT CURRENT_DATE,
+                                                   end_date DATE,
+                                                   PRIMARY KEY (id_member, id_collectivity, start_date)
 );
 
--- ============================================================
--- SECTION B-2 – Parrainage multiple (nouvelles conditions d'admission)
--- ============================================================
-
-CREATE TABLE "public"."sponsorship" (
-    "id"              serial      NOT NULL,
-    "id_candidate"    int         NOT NULL,   -- membre en cours d'admission
-    "id_sponsor"      int         NOT NULL,   -- membre confirmé parrain
-    "id_collectivity" int         NOT NULL,   -- collectivité visée par le candidat
-    "relationship"    varchar     NOT NULL,   -- famille, ami, collègue, etc.
-    "created_at"      timestamp   NOT NULL DEFAULT NOW(),
-    PRIMARY KEY ("id"),
-    UNIQUE ("id_candidate", "id_sponsor")
+-- Account table
+CREATE TABLE IF NOT EXISTS account (
+                                       id VARCHAR PRIMARY KEY,
+                                       id_collectivity VARCHAR REFERENCES collectivity(id),
+                                       id_federation VARCHAR REFERENCES federation(id),
+                                       CHECK (id_collectivity IS NOT NULL OR id_federation IS NOT NULL)
 );
 
--- ============================================================
--- SECTION A  –  Mandat de la fédération (2 ans)
--- ============================================================
-
-CREATE TABLE "public"."mandate_federation" (
-    "id"           serial                  NOT NULL,
-    "id_member"    int                     NOT NULL,
-    "id_federation" int                    NOT NULL,
-    "post_name"    federation_post_name    NOT NULL,
-    "start_date"   timestamp               NOT NULL,
-    "end_date"     timestamp,
-    PRIMARY KEY ("id")
+-- Cash account
+CREATE TABLE IF NOT EXISTS cash_account (
+                                            id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                            id_account VARCHAR UNIQUE REFERENCES account(id)
 );
 
--- ============================================================
--- SECTION C  –  Plans de cotisation & paiements
--- ============================================================
-
--- Plan de cotisation défini par la collectivité (ex : cotisation annuelle 200 000 Ar)
-CREATE TABLE "public"."cotisation_plan" (
-    "id"              serial                NOT NULL,
-    "id_collectivity" int                   NOT NULL,
-    "label"           varchar               NOT NULL,
-    "frequency"       cotisation_frequency  NOT NULL,
-    "amount"          numeric(15,2)         NOT NULL,
-    "year"            int,                              -- année d'applicabilité
-    "is_active"       boolean               NOT NULL DEFAULT true,
-    PRIMARY KEY ("id")
+-- Bank account
+CREATE TABLE IF NOT EXISTS bank_account (
+                                            id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                            id_account VARCHAR UNIQUE REFERENCES account(id),
+                                            holder_name VARCHAR NOT NULL,
+                                            bank_name VARCHAR CHECK (
+                                                bank_name IN ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BANQUE', 'BAOBAB', 'SIPEM')
+                                                ),
+                                            bank_code VARCHAR(5),
+                                            branch_code VARCHAR(5),
+                                            account_number VARCHAR(11),
+                                            rib_key VARCHAR(2)
 );
 
--- Encaissement : trace de chaque paiement effectué par un membre (Section C)
-CREATE TABLE "public"."payment" (
-    "id"                  serial          NOT NULL,
-    "id_member"           int             NOT NULL,
-    "id_collectivity"     int             NOT NULL,
-    "id_cotisation_plan"  int,                        -- NULL = frais d'adhésion ou ponctuel libre
-    "id_account"          int             NOT NULL,   -- compte qui reçoit le paiement (Section D)
-    "amount"              numeric(15,2)   NOT NULL,
-    "payment_date"        timestamp       NOT NULL,
-    "payment_mode"        payment_mode    NOT NULL,
-    "recorded_by"         int             NOT NULL,   -- id du trésorier qui saisit
-    PRIMARY KEY ("id")
+-- Mobile money account
+CREATE TABLE IF NOT EXISTS mobile_money_account (
+                                                    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                                    id_account VARCHAR UNIQUE REFERENCES account(id),
+                                                    holder_name VARCHAR NOT NULL,
+                                                    service_name VARCHAR CHECK (
+                                                        service_name IN ('ORANGE_MONEY', 'MVOLA', 'AIRTEL_MONEY')
+                                                        ),
+                                                    phone_number VARCHAR NOT NULL
 );
 
--- ============================================================
--- SECTION D  –  Comptes (caisse, bancaire, mobile money)
--- ============================================================
-
--- Table mère : un compte appartient soit à une collectivité, soit à la fédération
-CREATE TABLE "public"."account" (
-    "id"              serial          NOT NULL,
-    "id_collectivity" int,
-    "id_federation"   int,
-    PRIMARY KEY ("id"),
-
-    -- Exactly one owner (collectivity OR federation)
-    CONSTRAINT "chk_account_owner" CHECK (
-        ("id_collectivity" IS NOT NULL AND "id_federation" IS NULL) OR
-        ("id_collectivity" IS NULL AND "id_federation" IS NOT NULL)
-    )
+-- Cotisation plan
+CREATE TABLE IF NOT EXISTS cotisation_plan (
+                                               id VARCHAR PRIMARY KEY,
+                                               label VARCHAR NOT NULL,
+                                               id_collectivity VARCHAR REFERENCES collectivity(id),
+                                               status VARCHAR DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE')),
+                                               frequency VARCHAR CHECK (frequency IN ('WEEKLY', 'MONTHLY', 'ANNUALLY', 'PUNCTUALLY')),
+                                               eligible_from DATE,
+                                               amount DECIMAL(15,2)
 );
 
-CREATE TABLE "public"."cash_account" (
-    "id"          serial NOT NULL,
-    "id_account"  int    NOT NULL UNIQUE,
-
-    PRIMARY KEY ("id"),
-
-    CONSTRAINT "fk_cash_account"
-        FOREIGN KEY ("id_account")
-        REFERENCES "public"."account" ("id")
-        ON DELETE CASCADE
+-- Transaction
+CREATE TABLE IF NOT EXISTS transaction (
+                                           id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                           id_collectivity VARCHAR REFERENCES collectivity(id),
+                                           id_member VARCHAR REFERENCES member(id),
+                                           id_cotisation_plan VARCHAR REFERENCES cotisation_plan(id),
+                                           transaction_type VARCHAR CHECK (transaction_type IN ('IN', 'OUT')),
+                                           amount DECIMAL(15,2),
+                                           transaction_date DATE DEFAULT CURRENT_DATE,
+                                           payment_mode VARCHAR CHECK (
+                                               payment_mode IN ('CASH', 'MOBILE_BANKING', 'BANK_TRANSFER')
+                                               ),
+                                           description VARCHAR,
+                                           id_account VARCHAR REFERENCES account(id)
 );
 
-CREATE TYPE movement_type AS ENUM ('IN', 'OUT');
-
-CREATE TABLE "public"."account_movement" (
-    "id"          serial          NOT NULL,
-    "id_account"  int             NOT NULL,
-    "type"        movement_type   NOT NULL,
-    "amount"      numeric(15,2)   NOT NULL CHECK (amount > 0),
-    "created_at"  timestamp       NOT NULL DEFAULT now(),
-
-    PRIMARY KEY ("id"),
-
-    CONSTRAINT "fk_movement_account"
-        FOREIGN KEY ("id_account")
-        REFERENCES "public"."account" ("id")
-        ON DELETE CASCADE
+-- Activity table
+CREATE TABLE IF NOT EXISTS activity (
+                                        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                        id_collectivity VARCHAR REFERENCES collectivity(id),
+                                        label VARCHAR NOT NULL,
+                                        activity_type VARCHAR CHECK (activity_type IN ('MEETING', 'TRAINING', 'OTHER')),
+                                        executive_date DATE,
+                                        week_ordinal INTEGER CHECK (week_ordinal BETWEEN 1 AND 5),
+                                        day_of_week VARCHAR CHECK (
+                                            day_of_week IN ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
+                                            ),
+                                        creation_date DATE DEFAULT CURRENT_DATE
 );
 
-
--- Détails d'un compte bancaire (RIB décomposé)
-CREATE TABLE "public"."bank_account" (
-    "id"             serial           NOT NULL,
-    "id_account"     int              NOT NULL UNIQUE,
-    "holder_name"    varchar          NOT NULL,
-    "bank_name"      bank_name_enum   NOT NULL,
-    "bank_code"      char(5)          NOT NULL,
-    "branch_code"    char(5)          NOT NULL,
-    "account_number" char(11)         NOT NULL,
-    "rib_key"        char(2)          NOT NULL,
-
-    PRIMARY KEY ("id"),
-
-    CONSTRAINT "fk_bank_account"
-        FOREIGN KEY ("id_account")
-        REFERENCES "public"."account" ("id")
-        ON DELETE CASCADE
+-- Activity member occupation
+CREATE TABLE IF NOT EXISTS activity_member_occupation (
+                                                          id_activity VARCHAR REFERENCES activity(id),
+                                                          occupation VARCHAR CHECK (
+                                                              occupation IN ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT')
+                                                              ),
+                                                          PRIMARY KEY (id_activity, occupation)
 );
 
--- Détails d'un compte mobile money
-CREATE TABLE "public"."mobile_money_account" (
-    "id"           serial               NOT NULL,
-    "id_account"   int                  NOT NULL UNIQUE,
-    "holder_name"  varchar              NOT NULL,
-    "service_name" mobile_money_service NOT NULL,
-    "phone_number" varchar              NOT NULL UNIQUE,
-
-    PRIMARY KEY ("id"),
-
-    CONSTRAINT "fk_mobile_account"
-        FOREIGN KEY ("id_account")
-        REFERENCES "public"."account" ("id")
-        ON DELETE CASCADE
+-- Activity attendance
+CREATE TABLE IF NOT EXISTS activity_attendance (
+                                                   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
+                                                   id_activity VARCHAR REFERENCES activity(id),
+                                                   id_member VARCHAR REFERENCES member(id),
+                                                   attendance_status VARCHAR DEFAULT 'UNDEFINED' CHECK (
+                                                       attendance_status IN ('UNDEFINED', 'ATTENDED', 'MISSING')
+                                                       ),
+                                                   UNIQUE (id_activity, id_member)
 );
 
+-- ============================================
+-- INSERT DATA FROM PDF ONLY
+-- ============================================
 
-CREATE UNIQUE INDEX uq_cash_account_unique
-ON cash_account (
-    (SELECT id_collectivity FROM account WHERE account.id = cash_account.id_account),
-    (SELECT id_federation FROM account WHERE account.id = cash_account.id_account)
-);
+-- Federation
+INSERT INTO federation (id, name) VALUES ('fed-1', 'Fédération Agricole de Madagascar');
 
--- ============================================================
--- SECTION E  –  Activités
--- ============================================================
+-- Collectivities (Tableau 1, Page 1)
+INSERT INTO collectivity (id, number, name, speciality, creation_date, federation_approval, authorization_date, location, id_federation) VALUES
+                                                                                                                                             ('col-1', '1', 'Mpanorina', 'Riziculture', '2026-01-01', TRUE, '2026-01-01', 'Ambatondrazaka', 'fed-1'),
+                                                                                                                                             ('col-2', '2', 'Dobo voalahany', 'Pisciculture', '2026-01-01', TRUE, '2026-01-01', 'Ambatondrazaka', 'fed-1'),
+                                                                                                                                             ('col-3', '3', 'Tantely mamy', 'Apiculture', '2026-01-01', TRUE, '2026-01-01', 'Brickaville', 'fed-1');
 
-CREATE TABLE "public"."activity" (
-    "id"               serial          NOT NULL,
-    "title"            varchar         NOT NULL,
-    "description"      text,
-    "activity_date"    timestamp       NOT NULL,
-    "activity_type"    activity_type   NOT NULL,
-    -- true = obligatoire pour tous les membres concernés
-    "is_mandatory_all" boolean         NOT NULL DEFAULT false,
-    "id_collectivity"  int,   -- NULL si activité fédération
-    "id_federation"    int,   -- NULL si activité collectivité
-    PRIMARY KEY ("id"),
-    CONSTRAINT "chk_activity_owner" CHECK (
-        ("id_collectivity" IS NOT NULL AND "id_federation" IS NULL) OR
-        ("id_collectivity" IS NULL  AND "id_federation"   IS NOT NULL)
-    )
-);
+-- Members for Collectivity 1 (Tableau 2, Page 2)
+INSERT INTO member (id, first_name, last_name, birth_date, gender, address, profession, phone_number, email, enrolment_date) VALUES
+                                                                                                                                 ('C1-M1', 'Nom membre 1', 'Prénom membre 1', '1980-02-01', 'MALE', 'Lot II V M Ambato.', 'Riziculteur', '0341234567', 'member.1@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C1-M2', 'Nom membre 2', 'Prénom membre 2', '1982-03-05', 'MALE', 'Lot II F Ambato.', 'Agriculteur', '0321234567', 'member.2@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C1-M3', 'Nom membre 3', 'Prénom membre 3', '1992-03-10', 'MALE', 'Lot II J Ambato.', 'Collecteur', '0331234567', 'member.3@fed-agrimg', '2025-01-01'),
+                                                                                                                                 ('C1-M4', 'Nom membre 4', 'Prénom membre 4', '1988-05-22', 'FEMALE', 'Lot A K 50 Ambato.', 'Distributeur', '0381234567', 'member.4@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C1-M5', 'Nom membre 5', 'Prénom membre 5', '1999-08-21', 'MALE', 'Lot UV 80 Ambato.', 'Riziculteur', '0373434567', 'member.5@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C1-M6', 'Nom membre 6', 'Prénom membre 6', '1998-08-22', 'FEMALE', 'Lot UV 6 Ambato.', 'Riziculteur', '0372234567', 'member.6@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C1-M7', 'Nom membre 7', 'Prénom membre 7', '1998-01-31', 'MALE', 'Lot UV 7 Ambato.', 'Riziculteur', '0374234567', 'member.7@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C1-M8', 'Nom membre 8', 'Prénom membre 6', '1975-08-20', 'MALE', 'Lot UV 8 Ambato.', 'Riziculteur', '0370234567', 'member.8@fed-agri.mg', '2025-01-01');
 
--- Pour les activités exceptionnelles : postes spécifiquement obligés d'assister
-CREATE TABLE "public"."activity_mandatory_role" (
-    "id"          serial                    NOT NULL,
-    "id_activity" int                       NOT NULL,
-    "post_name"   collectivity_post_name    NOT NULL,
-    PRIMARY KEY ("id"),
-    UNIQUE ("id_activity", "post_name")
-);
+-- Members for Collectivity 2 (Tableau Page 3) - Different emails from C1
+INSERT INTO member (id, first_name, last_name, birth_date, gender, address, profession, phone_number, email, enrolment_date) VALUES
+                                                                                                                                 ('C2-M1', 'Nom membre 1', 'Prénom membre 1', '1980-02-01', 'MALE', 'Lot II V M Ambato.', 'Riziculteur', '0341234567', 'c2.member.1@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M2', 'Nom membre 2', 'Prénom membre 2', '1982-03-05', 'MALE', 'Lot II F Ambato.', 'Agriculteur', '0321234567', 'c2.member.2@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M3', 'Nom membre 3', 'Prénom membre 3', '1992-03-10', 'MALE', 'Lot II J Ambato.', 'Collecteur', '0331234567', 'c2.member.3@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M4', 'Nom membre 4', 'Prénom membre 4', '1988-05-22', 'FEMALE', 'Lot A K 50 Ambato.', 'Distributeur', '0381234567', 'c2.member.4@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M5', 'Nom membre 5', 'Prénom membre 5', '1999-08-21', 'MALE', 'Lot UV 80 Ambato.', 'Riziculteur', '0373434567', 'c2.member.5@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M6', 'Nom membre 6', 'Prénom membre 6', '1998-08-22', 'FEMALE', 'Lot UV 6 Ambato.', 'Riziculteur', '0372234567', 'c2.member.6@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M7', 'Nom membre 7', 'Prénom membre 7', '1998-01-31', 'MALE', 'Lot UV 7 Ambato.', 'Riziculteur', '0374234567', 'c2.member.7@fed-agri.mg', '2025-01-01'),
+                                                                                                                                 ('C2-M8', 'Nom membre 8', 'Prénom membre 6', '1975-08-20', 'MALE', 'Lot UV 8 Ambato.', 'Riziculteur', '0370234567', 'c2.member.8@fed-agri.mg', '2025-01-01');
 
--- ============================================================
--- SECTION F  –  Feuille de présence
--- ============================================================
+-- Members for Collectivity 3 (Tableau Page 4)
+INSERT INTO member (id, first_name, last_name, birth_date, gender, address, profession, phone_number, email, enrolment_date) VALUES
+                                                                                                                                 ('C3-M1', 'Nom membre 9', 'Prénom membre 9', '1988-01-02', 'MALE', 'Lot 33 J Antsirabe', 'Apiculteur', '034034567', 'member.9@fed-agri.mg', '2025-06-01'),
+                                                                                                                                 ('C3-M2', 'Nom membre 10', 'Prénom membre 10', '1982-03-05', 'MALE', 'Lot 2 J Antsirabe', 'Agriculteur', '0338634567', 'member.10@fed-agri.mg', '2025-06-01'),
+                                                                                                                                 ('C3-M3', 'Nom membre 11', 'Prénom membre 11', '1992-03-12', 'MALE', 'Lot 8 KM Antsirabe', 'Collecteur', '0338234567', 'member.11@fed-agrimg', '2025-06-01'),
+                                                                                                                                 ('C3-M4', 'Nom membre 12', 'Prénom membre 12', '1988-05-10', 'FEMALE', 'Lot A K 50 Antsirabe', 'Distributeur', '0382334567', 'member.12@fed-agri.mg', '2025-06-01'),
+                                                                                                                                 ('C3-M5', 'Nom membre 13', 'Prénom membre 13', '1999-08-11', 'MALE', 'Lot UV 80 Antsirabe.', 'Apiculteur', '0373365567', 'member.13@fed-agri.mg', '2025-06-01'),
+                                                                                                                                 ('C3-M6', 'Nom membre 14', 'Prénom membre 14', '1998-08-09', 'FEMALE', 'Lot UV 6 Antsirabe.', 'Apiculteur', '0378234567', 'member.14@fed-agri.mg', '2025-06-01'),
+                                                                                                                                 ('C3-M7', 'Nom membre 15', 'Prénom membre 15', '1998-01-13', 'MALE', 'Lot UV 7 Antsirabe', 'Apiculteur', '0374914567', 'member.15@fed-agri.mg', '2025-06-01'),
+                                                                                                                                 ('C3-M8', 'Nom membre 16', 'Prénom membre 16', '1975-08-02', 'MALE', 'Lot UV 8 Antsirabe', 'Apiculteur', '0370634567', 'member.16@fed-agri.mg', '2025-06-01');
 
-CREATE TABLE "public"."attendance" (
-    "id"                    serial    NOT NULL,
-    "id_activity"           int       NOT NULL,
-    "id_member"             int       NOT NULL,
-    "is_present"            boolean   NOT NULL DEFAULT false,
-    "is_excused"            boolean   NOT NULL DEFAULT false,
-    "excuse_reason"         text,
-    -- Collectivité d'appartenance du membre au moment de la présence
-    -- (permet de distinguer les invités d'autres collectivités – Section F)
-    "id_member_collectivity" int      NOT NULL,
-    PRIMARY KEY ("id"),
-    UNIQUE ("id_activity", "id_member")
-);
+-- Member collectivity associations for Collectivity 1 (Tableau 2, Page 2)
+INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_date) VALUES
+                                                                                         ('C1-M1', 'col-1', 'PRESIDENT', '2026-01-01'),
+                                                                                         ('C1-M2', 'col-1', 'VICE_PRESIDENT', '2026-01-01'),
+                                                                                         ('C1-M3', 'col-1', 'SECRETARY', '2026-01-01'),
+                                                                                         ('C1-M4', 'col-1', 'TREASURER', '2026-01-01'),
+                                                                                         ('C1-M5', 'col-1', 'SENIOR', '2026-01-01'),
+                                                                                         ('C1-M6', 'col-1', 'SENIOR', '2026-01-01'),
+                                                                                         ('C1-M7', 'col-1', 'SENIOR', '2026-01-01'),
+                                                                                         ('C1-M8', 'col-1', 'SENIOR', '2026-01-01');
 
--- ============================================================
--- CONTRAINTES DE CLÉ ÉTRANGÈRE
--- ============================================================
+-- Member collectivity associations for Collectivity 2 (Tableau Page 3)
+INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_date) VALUES
+                                                                                         ('C2-M1', 'col-2', 'SENIOR', '2026-01-01'),
+                                                                                         ('C2-M2', 'col-2', 'SENIOR', '2026-01-01'),
+                                                                                         ('C2-M3', 'col-2', 'SENIOR', '2026-01-01'),
+                                                                                         ('C2-M4', 'col-2', 'SENIOR', '2026-01-01'),
+                                                                                         ('C2-M5', 'col-2', 'PRESIDENT', '2026-01-01'),
+                                                                                         ('C2-M6', 'col-2', 'VICE_PRESIDENT', '2026-01-01'),
+                                                                                         ('C2-M7', 'col-2', 'SECRETARY', '2026-01-01'),
+                                                                                         ('C2-M8', 'col-2', 'TREASURER', '2026-01-01');
 
-ALTER TABLE "public"."collectivity"
-    ADD CONSTRAINT "fk_collectivity_federation"    FOREIGN KEY ("id_federation")   REFERENCES "public"."federation"("id"),
-    ADD CONSTRAINT "fk_collectivity_city"          FOREIGN KEY ("id_city")          REFERENCES "public"."city"("id");
+-- Member collectivity associations for Collectivity 3 (Tableau Page 4)
+INSERT INTO member_collectivity (id_member, id_collectivity, occupation, start_date) VALUES
+                                                                                         ('C3-M1', 'col-3', 'PRESIDENT', '2026-01-01'),
+                                                                                         ('C3-M2', 'col-3', 'VICE_PRESIDENT', '2026-01-01'),
+                                                                                         ('C3-M3', 'col-3', 'SECRETARY', '2026-01-01'),
+                                                                                         ('C3-M4', 'col-3', 'TREASURER', '2026-01-01'),
+                                                                                         ('C3-M5', 'col-3', 'SENIOR', '2026-01-01'),
+                                                                                         ('C3-M6', 'col-3', 'SENIOR', '2026-01-01'),
+                                                                                         ('C3-M7', 'col-3', 'SENIOR', '2026-01-01'),
+                                                                                         ('C3-M8', 'col-3', 'SENIOR', '2026-01-01');
 
-ALTER TABLE "public"."member_collectivity"
-    ADD CONSTRAINT "fk_mc_member"                  FOREIGN KEY ("id_member")        REFERENCES "public"."member"("id"),
-    ADD CONSTRAINT "fk_mc_collectivity"            FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id");
+-- Referees (from ID des membres référents column in PDF)
+INSERT INTO member_referee (id_candidate, id_referee, relationship) VALUES
+-- Collectivity 1 referees (Page 2)
+('C1-M3', 'C1-M1', 'AMI'),
+('C1-M3', 'C1-M2', 'AMI'),
+('C1-M4', 'C1-M1', 'AMI'),
+('C1-M4', 'C1-M2', 'AMI'),
+('C1-M5', 'C1-M1', 'AMI'),
+('C1-M5', 'C1-M2', 'AMI'),
+('C1-M6', 'C1-M1', 'AMI'),
+('C1-M6', 'C1-M2', 'AMI'),
+('C1-M7', 'C1-M1', 'AMI'),
+('C1-M7', 'C1-M2', 'AMI'),
+('C1-M8', 'C1-M6', 'AMI'),
+('C1-M8', 'C1-M7', 'AMI'),
+-- Collectivity 2 referees (Page 3)
+('C2-M3', 'C1-M1', 'AMI'),
+('C2-M3', 'C1-M2', 'AMI'),
+('C2-M4', 'C1-M1', 'AMI'),
+('C2-M4', 'C1-M2', 'AMI'),
+('C2-M5', 'C1-M1', 'AMI'),
+('C2-M5', 'C1-M2', 'AMI'),
+('C2-M6', 'C1-M1', 'AMI'),
+('C2-M6', 'C1-M2', 'AMI'),
+('C2-M7', 'C1-M1', 'AMI'),
+('C2-M7', 'C1-M2', 'AMI'),
+('C2-M8', 'C1-M6', 'AMI'),
+('C2-M8', 'C1-M7', 'AMI'),
+-- Collectivity 3 referees (Page 4)
+('C3-M1', 'C1-M1', 'AMI'),
+('C3-M1', 'C1-M2', 'AMI'),
+('C3-M2', 'C1-M1', 'AMI'),
+('C3-M2', 'C1-M2', 'AMI'),
+('C3-M3', 'C3-M1', 'AMI'),
+('C3-M3', 'C3-M2', 'AMI'),
+('C3-M4', 'C3-M1', 'AMI'),
+('C3-M4', 'C3-M2', 'AMI'),
+('C3-M5', 'C3-M1', 'AMI'),
+('C3-M5', 'C3-M2', 'AMI'),
+('C3-M6', 'C3-M1', 'AMI'),
+('C3-M6', 'C3-M2', 'AMI'),
+('C3-M7', 'C3-M1', 'AMI'),
+('C3-M7', 'C3-M2', 'AMI'),
+('C3-M8', 'C3-M1', 'AMI'),
+('C3-M8', 'C3-M2', 'AMI');
 
-ALTER TABLE "public"."mandate_federation"
-    ADD CONSTRAINT "fk_mf_member"                  FOREIGN KEY ("id_member")        REFERENCES "public"."member"("id"),
-    ADD CONSTRAINT "fk_mf_federation"              FOREIGN KEY ("id_federation")    REFERENCES "public"."federation"("id");
+-- Accounts (Tableau Page 6)
+INSERT INTO account (id, id_collectivity) VALUES
+                                              ('C1-A-CASH', 'col-1'),
+                                              ('C1-A-MOBILE-1', 'col-1'),
+                                              ('C2-A-CASH', 'col-2'),
+                                              ('C2-A-MOBILE-1', 'col-2'),
+                                              ('C3-A-CASH', 'col-3');
 
-ALTER TABLE "public"."sponsorship"
-    ADD CONSTRAINT "fk_sp_candidate"               FOREIGN KEY ("id_candidate")     REFERENCES "public"."member"("id"),
-    ADD CONSTRAINT "fk_sp_sponsor"                 FOREIGN KEY ("id_sponsor")       REFERENCES "public"."member"("id"),
-    ADD CONSTRAINT "fk_sp_collectivity"            FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id");
+-- Cash accounts (Tableau Page 6)
+INSERT INTO cash_account (id_account) VALUES
+                                          ('C1-A-CASH'),
+                                          ('C2-A-CASH'),
+                                          ('C3-A-CASH');
 
-ALTER TABLE "public"."cotisation_plan"
-    ADD CONSTRAINT "fk_cp_collectivity"            FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id");
+-- Mobile money accounts (Tableau Page 6)
+INSERT INTO mobile_money_account (id_account, holder_name, service_name, phone_number) VALUES
+                                                                                           ('C1-A-MOBILE-1', 'Mpanorina', 'ORANGE_MONEY', '0370489612'),
+                                                                                           ('C2-A-MOBILE-1', 'Dobo voalohany', 'ORANGE_MONEY', '0320489612');
 
-ALTER TABLE "public"."payment"
-    ADD CONSTRAINT "fk_pay_member"                 FOREIGN KEY ("id_member")        REFERENCES "public"."member"("id"),
-    ADD CONSTRAINT "fk_pay_collectivity"           FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id"),
-    ADD CONSTRAINT "fk_pay_cotisation_plan"        FOREIGN KEY ("id_cotisation_plan") REFERENCES "public"."cotisation_plan"("id"),
-    ADD CONSTRAINT "fk_pay_account"                FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id"),
-    ADD CONSTRAINT "fk_pay_recorded_by"            FOREIGN KEY ("recorded_by")      REFERENCES "public"."member"("id");
+-- Cotisation plans (Tableau 5, 6, 7 Page 5)
+INSERT INTO cotisation_plan (id, label, id_collectivity, status, frequency, eligible_from, amount) VALUES
+                                                                                                       ('cot-1', 'Cotisation annuelle', 'col-1', 'ACTIVE', 'ANNUALLY', '2026-01-01', 100000),
+                                                                                                       ('cot-2', 'Cotisation annuelle', 'col-2', 'ACTIVE', 'ANNUALLY', '2026-01-01', 100000),
+                                                                                                       ('cot-3', 'Cotisation annuelle', 'col-3', 'ACTIVE', 'ANNUALLY', '2026-01-01', 50000);
 
-ALTER TABLE "public"."account"
-    ADD CONSTRAINT "fk_acc_collectivity"           FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id"),
-    ADD CONSTRAINT "fk_acc_federation"             FOREIGN KEY ("id_federation")    REFERENCES "public"."federation"("id");
+-- Transactions/Payments for Collectivity 1 (Tableau 8 Page 7, Tableau 9 Page 8)
+INSERT INTO transaction (id, id_collectivity, id_member, transaction_type, amount, transaction_date, payment_mode, id_account) VALUES
+                                                                                                                                   ('trx-1-1', 'col-1', 'C1-M1', 'IN', 100000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-2', 'col-1', 'C1-M2', 'IN', 100000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-3', 'col-1', 'C1-M3', 'IN', 100000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-4', 'col-1', 'C1-M4', 'IN', 100000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-5', 'col-1', 'C1-M5', 'IN', 100000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-6', 'col-1', 'C1-M6', 'IN', 100000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-7', 'col-1', 'C1-M7', 'IN', 60000, '2026-01-01', 'CASH', 'C1-A-CASH'),
+                                                                                                                                   ('trx-1-8', 'col-1', 'C1-M8', 'IN', 90000, '2026-01-01', 'CASH', 'C1-A-CASH');
 
-ALTER TABLE "public"."bank_account"
-    ADD CONSTRAINT "fk_ba_account"                 FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id");
-
-ALTER TABLE "public"."mobile_money_account"
-    ADD CONSTRAINT "fk_mma_account"               FOREIGN KEY ("id_account")       REFERENCES "public"."account"("id");
-
-ALTER TABLE "public"."activity"
-    ADD CONSTRAINT "fk_act_collectivity"           FOREIGN KEY ("id_collectivity")  REFERENCES "public"."collectivity"("id"),
-    ADD CONSTRAINT "fk_act_federation"             FOREIGN KEY ("id_federation")    REFERENCES "public"."federation"("id");
-
-ALTER TABLE "public"."activity_mandatory_role"
-    ADD CONSTRAINT "fk_amr_activity"              FOREIGN KEY ("id_activity")      REFERENCES "public"."activity"("id");
-
-ALTER TABLE "public"."attendance"
-    ADD CONSTRAINT "fk_att_activity"              FOREIGN KEY ("id_activity")           REFERENCES "public"."activity"("id"),
-    ADD CONSTRAINT "fk_att_member"                FOREIGN KEY ("id_member")             REFERENCES "public"."member"("id"),
-    ADD CONSTRAINT "fk_att_member_collectivity"   FOREIGN KEY ("id_member_collectivity") REFERENCES "public"."member_collectivity"("id");
-
-
-CREATE UNIQUE INDEX uq_unique_active_post_per_collectivity
-ON member_collectivity (id_collectivity, post_name)
-WHERE end_date IS NULL
-AND post_name IN ('PRESIDENT', 'DEPUTY_PRESIDENT', 'TREASURER', 'SECRETARY');
-
-ALTER TABLE member_collectivity
-ADD CONSTRAINT chk_mandate_duration
-CHECK (end_date IS NULL OR end_date <= start_date + INTERVAL '1 year');
+-- Transactions/Payments for Collectivity 2 (Tableau 10 Page 9, Tableau 11 Page 10)
+INSERT INTO transaction (id, id_collectivity, id_member, transaction_type, amount, transaction_date, payment_mode, id_account) VALUES
+                                                                                                                                   ('trx-2-1', 'col-2', 'C2-M1', 'IN', 60000, '2026-01-01', 'CASH', 'C2-A-CASH'),
+                                                                                                                                   ('trx-2-2', 'col-2', 'C2-M2', 'IN', 90000, '2026-01-01', 'CASH', 'C2-A-CASH'),
+                                                                                                                                   ('trx-2-3', 'col-2', 'C2-M3', 'IN', 100000, '2026-01-01', 'CASH', 'C2-A-CASH'),
+                                                                                                                                   ('trx-2-4', 'col-2', 'C2-M4', 'IN', 100000, '2026-01-01', 'CASH', 'C2-A-CASH'),
+                                                                                                                                   ('trx-2-5', 'col-2', 'C2-M5', 'IN', 100000, '2026-01-01', 'CASH', 'C2-A-CASH'),
+                                                                                                                                   ('trx-2-6', 'col-2', 'C2-M6', 'IN', 100000, '2026-01-01', 'CASH', 'C2-A-CASH'),
+                                                                                                                                   ('trx-2-7', 'col-2', 'C2-M7', 'IN', 40000, '2026-01-01', 'MOBILE_BANKING', 'C2-A-MOBILE-1'),
+                                                                                                                                   ('trx-2-8', 'col-2', 'C2-M8', 'IN', 60000, '2026-01-01', 'MOBILE_BANKING', 'C2-A-MOBILE-1');

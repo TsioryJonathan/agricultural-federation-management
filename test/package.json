@@ -1,0 +1,15 @@
+{
+"name": "agricultural-federation-tests",
+"version": "1.0.0",
+"description": "Complete test suite for Agricultural Federation API",
+"main": "test.js",
+"scripts": {
+"test": "mocha test.js --timeout 10000 --reporter spec",
+"test:local": "SERVER_URL=http://localhost:8080 mocha test.js --timeout 10000 --reporter spec"
+},
+"dependencies": {
+"chai": "^4.3.7",
+"chai-http": "^4.3.0",
+"mocha": "^10.2.0"
+}
+}

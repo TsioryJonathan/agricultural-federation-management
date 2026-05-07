@@ -1,0 +1,298 @@
+### 1. Get Federation
+GET http://localhost:8080/federation
+Content-Type: application/json
+
+###
+
+### 2. Create Members Batch 1 (collectivity 1 already exists in seed - use its members as sponsors)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+[
+  {
+    "firstName": "Lucie",
+    "lastName": "Ramasindrazana",
+    "birthDate": "1995-11-30",
+    "gender": "FEMALE",
+    "address": "Lot VI A 89, Antananarivo",
+    "profession": "Technicienne Agricole",
+    "phoneNumber": "+261334455566",
+    "email": "lucie.ramasindrazana@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Philippe",
+    "lastName": "Rakotozon",
+    "birthDate": "1983-02-14",
+    "gender": "MALE",
+    "address": "Lot VIII E 12, Antananarivo",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261347788899",
+    "email": "philippe.rakotozon@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Claire",
+    "lastName": "Ralantoanina",
+    "birthDate": "1991-08-08",
+    "gender": "FEMALE",
+    "address": "Lot X F 34, Antananarivo",
+    "profession": "Formatrice",
+    "phoneNumber": "+261329900011",
+    "email": "claire.ralantoanina@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Alain",
+    "lastName": "Ramanantsoa",
+    "birthDate": "1986-12-20",
+    "gender": "MALE",
+    "address": "Lot XII G 56, Antananarivo",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261331122233",
+    "email": "alain.ramanantsoa@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Florence",
+    "lastName": "Rabesial",
+    "birthDate": "1989-04-05",
+    "gender": "FEMALE",
+    "address": "Lot XIV H 78, Antananarivo",
+    "profession": "Commercante",
+    "phoneNumber": "+261344455566",
+    "email": "florence.rabesial@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 1,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  }
+]
+
+###
+
+### 3. Create Members for Collectivity 2 (Fianarantsoa - superusers as sponsors)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+[
+  {
+    "firstName": "Lucas",
+    "lastName": "Ramanitra",
+    "birthDate": "1988-03-18",
+    "gender": "MALE",
+    "address": "Lot 1, Fianarantsoa",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261400011122",
+    "email": "lucas.ramanitra@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Anna",
+    "lastName": "Rasoa",
+    "birthDate": "1990-07-22",
+    "gender": "FEMALE",
+    "address": "Lot 2, Fianarantsoa",
+    "profession": "Commercante",
+    "phoneNumber": "+261400011133",
+    "email": "anna.rasoa@gmail.com",
+    "occupation": "PRESIDENT",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Michel",
+    "lastName": "Randriamats",
+    "birthDate": "1985-11-05",
+    "gender": "MALE",
+    "address": "Lot 3, Fianarantsoa",
+    "profession": "Eleveur",
+    "phoneNumber": "+261400011144",
+    "email": "michel.randriamats@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Julie",
+    "lastName": "Rakoto",
+    "birthDate": "1992-01-15",
+    "gender": "FEMALE",
+    "address": "Lot 4, Fianarantsoa",
+    "profession": "Agricultrice",
+    "phoneNumber": "+261400011155",
+    "email": "julie.rakoto@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Paul",
+    "lastName": "Ramanats",
+    "birthDate": "1987-04-28",
+    "gender": "MALE",
+    "address": "Lot 5, Fianarantsoa",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261400011166",
+    "email": "paul.ramanats@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Sara",
+    "lastName": "Randriamanant",
+    "birthDate": "1991-08-30",
+    "gender": "FEMALE",
+    "address": "Lot 6, Fianarantsoa",
+    "profession": "Technicienne",
+    "phoneNumber": "+261400011177",
+    "email": "sara.randriamanant@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Bruno",
+    "lastName": "Ratsial",
+    "birthDate": "1986-12-10",
+    "gender": "MALE",
+    "address": "Lot 7, Fianarantsoa",
+    "profession": "Commercant",
+    "phoneNumber": "+261400011188",
+    "email": "bruno.ratsial@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Camille",
+    "lastName": "Rakotoniaina",
+    "birthDate": "1993-02-20",
+    "gender": "FEMALE",
+    "address": "Lot 8, Fianarantsoa",
+    "profession": "Formatrice",
+    "phoneNumber": "+261400011199",
+    "email": "camille.rakotoniaina@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "David",
+    "lastName": "Ramanatsona",
+    "birthDate": "1989-06-08",
+    "gender": "MALE",
+    "address": "Lot 9, Fianarantsoa",
+    "profession": "Agriculteur",
+    "phoneNumber": "+261400011200",
+    "email": "david.ramanatsona@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  },
+  {
+    "firstName": "Emma",
+    "lastName": "Rasoloarisoa",
+    "birthDate": "1994-10-12",
+    "gender": "FEMALE",
+    "address": "Lot 10, Fianarantsoa",
+    "profession": "Commercante",
+    "phoneNumber": "+261400011211",
+    "email": "emma.rasoloarisoa@gmail.com",
+    "occupation": "SENIOR",
+    "collectivityIdentifier": 2,
+    "referees": [1, 2],
+    "registrationFeePaid": true,
+    "membershipDuesPaid": true
+  }
+]
+
+###
+
+### 4. Create Collectivity Fianarantsoa (adjust IDs based on actual member IDs from step 3)
+POST http://localhost:8080/collectivities
+Content-Type: application/json
+
+
+  {
+    "location": "Fianarantsoa",
+    "federationApproval": true,
+    "members": [1,2,3,4,5,6,7,8,9,10],
+    "structure": {
+      "presidentId": 8,
+      "vicePresidentId": 13,
+      "treasurerId": 9,
+      "secretaryId": 10
+    }
+  }
+
+
+### 5. Update collectivity name
+PUT http://localhost:8080/collectivities/1/informations
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "number": "21"
+}
+
+### 6. Retrieve collectivities membershipFees
+GET http://localhost:8080/collectivities/1/membershipFees
+
+### 7. Create membershipFees
+POST http://localhost:8080/collectivities/1/membershipFees
+Content-Type: application/json
+
+
+[
+  {
+    "eligibleFrom": "2026-06-22",
+    "frequency": "ANNUALLY",
+    "amount": 500000,
+    "label": "Annualy Cotisation"
+  }
+]
+
+### 8. Get financial accounts (current balance)
+GET http://localhost:8080/collectivities/1/financialAccounts
+
+### 9. Get financial accounts at specific date
+GET http://localhost:8080/collectivities/1/financialAccounts?at=2024-04-23T10:00:00Z

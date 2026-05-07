@@ -1,6 +1,7 @@
 package com.hei.agriculturalfederationmanagement.entity.enums;
 
-public enum Gender {
-    MALE,
-    FEMALE
+public enum ActivityType {
+    MEETING,
+    TRAINING,
+    OTHER
 }
