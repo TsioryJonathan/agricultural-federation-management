@@ -17,6 +17,6 @@ public class BankAccountDetail {
     private Bank bankName;
     private Integer bankCode;
     private Integer bankBranchCode;
-    private Integer bankAccountNumber;
+    private Long bankAccountNumber;
     private Integer bankAccountKey;
 }

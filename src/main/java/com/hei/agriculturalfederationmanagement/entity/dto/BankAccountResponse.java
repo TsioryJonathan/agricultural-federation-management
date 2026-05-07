@@ -14,13 +14,13 @@ public class BankAccountResponse extends FinancialAccountResponse {
     private Bank bankName;
     private Integer bankCode;
     private Integer bankBranchCode;
-    private Integer bankAccountNumber;
+    private Long bankAccountNumber;
     private Integer bankAccountKey;
 
     @Builder
     public BankAccountResponse(String id, Double amount, String holderName, Bank bankName,
                                Integer bankCode, Integer bankBranchCode,
-                               Integer bankAccountNumber, Integer bankAccountKey) {
+                               Long bankAccountNumber, Integer bankAccountKey) {
         super(id, amount);
         this.holderName = holderName;
         this.bankName = bankName;

@@ -138,7 +138,7 @@ public class Mapper {
                     .bankName(ba.getBankName())
                     .bankCode(ba.getBankCode() != null ? Integer.parseInt(ba.getBankCode()) : null)
                     .bankBranchCode(ba.getBranchCode() != null ? Integer.parseInt(ba.getBranchCode()) : null)
-                    .bankAccountNumber(ba.getAccountNumber() != null ? Integer.parseInt(ba.getAccountNumber()) : null)
+                    .bankAccountNumber(ba.getAccountNumber() != null ? Long.parseLong(ba.getAccountNumber()) : null)
                     .bankAccountKey(ba.getRibKey() != null ? Integer.parseInt(ba.getRibKey()) : null)
                     .build();
 
@@ -176,7 +176,7 @@ public class Mapper {
                     .bankName(ba.getBankName())
                     .bankCode(ba.getBankCode() != null ? Integer.parseInt(ba.getBankCode()) : null)
                     .bankBranchCode(ba.getBranchCode() != null ? Integer.parseInt(ba.getBranchCode()) : null)
-                    .bankAccountNumber(ba.getAccountNumber() != null ? Integer.parseInt(ba.getAccountNumber()) : null)
+                    .bankAccountNumber(ba.getAccountNumber() != null ? Long.parseLong(ba.getAccountNumber()) : null)
                     .bankAccountKey(ba.getRibKey() != null ? Integer.parseInt(ba.getRibKey()) : null)
                     .build();
 
