@@ -25,124 +25,117 @@ public class StatisticsRepository {
      * - Unpaid amount per member (based on active cotisations)
      * - Assiduity percentage per member (based on activity attendance)
      */
-    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, Instant from, Instant to) {
+    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, LocalDate from, LocalDate to) {
         String sql = """
-            WITH active_cotisations AS (
-                SELECT id, amount, frequency, eligible_from
-                FROM cotisation_plan
-                WHERE id_collectivity = ?
-                AND status = 'ACTIVE'
-            ),
-            member_payments AS (
-                SELECT 
-                    t.id_member,
-                    COALESCE(SUM(t.amount), 0) as earned_amount
-                FROM transaction t
-                WHERE t.id_collectivity = ?
-                AND t.transaction_type = 'IN'
-                AND t.transaction_date >= ?
-                AND t.transaction_date <= ?
-                GROUP BY t.id_member
-            ),
-            collectivity_members AS (
-                SELECT 
-                    m.id,
-                    m.first_name,
-                    m.last_name,
-                    m.email,
-                    mc.occupation
-                FROM member m
-                JOIN member_collectivity mc ON m.id = mc.id_member
-                WHERE mc.id_collectivity = ?
-                AND mc.end_date IS NULL
-            ),
-            total_active_cotisation AS (
-                SELECT COALESCE(SUM(amount), 0) as total_amount
-                FROM active_cotisations
-                WHERE eligible_from <= ?::date
-            ),
-            member_activities AS (
-                SELECT 
-                    a.id AS activity_id,
-                    aa.id_member,
-                    aa.attendance_status
-                FROM activity a
-                JOIN activity_attendance aa ON a.id = aa.id_activity
-                WHERE a.id_collectivity = ?
-                AND a.executive_date >= ?::date
-                AND a.executive_date <= ?::date
-            ),
-            member_attendance_stats AS (
-                SELECT 
-                    ma.id_member,
-                    COUNT(ma.activity_id) as total_activities,
-                    COUNT(CASE WHEN ma.attendance_status = 'ATTENDED' THEN 1 END) as attended_activities
-                FROM member_activities ma
-                GROUP BY ma.id_member
-            )
-            SELECT 
-                cm.id,
-                cm.first_name,
-                cm.last_name,
-                cm.email,
-                cm.occupation,
-                COALESCE(mp.earned_amount, 0) as earned_amount,
-                CASE 
-                    WHEN tac.total_amount - COALESCE(mp.earned_amount, 0) < 0 THEN 0
-                    ELSE tac.total_amount - COALESCE(mp.earned_amount, 0)
-                END as unpaid_amount,
-                CASE 
-                    WHEN mas.total_activities IS NULL OR mas.total_activities = 0 THEN 0.0
-                    ELSE ROUND((mas.attended_activities::decimal / mas.total_activities::decimal) * 100, 2)
-                END as assiduity_percentage
-            FROM collectivity_members cm
-            CROSS JOIN total_active_cotisation tac
-            LEFT JOIN member_payments mp ON cm.id = mp.id_member
-            LEFT JOIN member_attendance_stats mas ON cm.id = mas.id_member
-            ORDER BY cm.id
-        """;
+        WITH active_cotisations AS (
+            SELECT id, amount, frequency, eligible_from
+            FROM cotisation_plan
+            WHERE id_collectivity = ?
+            AND status = 'ACTIVE'
+            AND eligible_from <= ?::date
+        ),
+        member_payments AS (
+            SELECT t.id_member, COALESCE(SUM(t.amount), 0) as earned_amount
+            FROM transaction t
+            WHERE t.id_collectivity = ?
+            AND t.transaction_type = 'IN'
+            AND t.transaction_date >= ?::date
+            AND t.transaction_date <= ?::date
+            GROUP BY t.id_member
+        ),
+        collectivity_members AS (
+            SELECT m.id, m.first_name, m.last_name, m.email, mc.occupation
+            FROM member m
+            JOIN member_collectivity mc ON m.id = mc.id_member
+            WHERE mc.id_collectivity = ? AND mc.end_date IS NULL
+        ),
+        total_active_cotisation AS (
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN frequency = 'WEEKLY' THEN
+                        amount * GREATEST(FLOOR((?::date - eligible_from) / 7.0) + 1, 0)
+                    WHEN frequency = 'MONTHLY' THEN
+                        amount * GREATEST(
+                            (DATE_PART('year', ?::date) - DATE_PART('year', eligible_from)) * 12
+                            + DATE_PART('month', ?::date) - DATE_PART('month', eligible_from) + 1, 0)
+                    WHEN frequency = 'ANNUALLY' THEN
+                        amount * GREATEST(DATE_PART('year', ?::date) - DATE_PART('year', eligible_from) + 1, 0)
+                    WHEN frequency = 'PUNCTUALLY' THEN
+                        CASE WHEN eligible_from BETWEEN ?::date AND ?::date THEN amount ELSE 0 END
+                    ELSE 0
+                END
+            ), 0) AS total_amount
+            FROM active_cotisations
+        ),
+        member_activities AS (
+            SELECT a.id AS activity_id, aa.id_member, aa.attendance_status
+            FROM activity a
+            JOIN activity_attendance aa ON a.id = aa.id_activity
+            WHERE a.id_collectivity = ? AND a.executive_date >= ?::date AND a.executive_date <= ?::date
+        ),
+        member_attendance_stats AS (
+            SELECT ma.id_member,
+                COUNT(ma.activity_id) as total_activities,
+                COUNT(CASE WHEN ma.attendance_status = 'ATTENDED' THEN 1 END) as attended_activities
+            FROM member_activities ma
+            GROUP BY ma.id_member
+        )
+        SELECT cm.id, cm.first_name, cm.last_name, cm.email, cm.occupation,
+            COALESCE(mp.earned_amount, 0) as earned_amount,
+            GREATEST(tac.total_amount - COALESCE(mp.earned_amount, 0), 0) as unpaid_amount,
+            CASE WHEN mas.total_activities IS NULL OR mas.total_activities = 0 THEN 0.0
+                ELSE ROUND((mas.attended_activities::decimal / mas.total_activities::decimal) * 100, 2)
+            END as assiduity_percentage
+        FROM collectivity_members cm
+        CROSS JOIN total_active_cotisation tac
+        LEFT JOIN member_payments mp ON cm.id = mp.id_member
+        LEFT JOIN member_attendance_stats mas ON cm.id = mas.id_member
+        ORDER BY cm.id
+    """;
 
         List<CollectivityLocalStatistics> statistics = new ArrayList<>();
+        LocalDate fromDate = from;
+        LocalDate toDate = to;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            int paramIndex = 1;
-            stmt.setString(paramIndex++, collectivityId);
-            stmt.setString(paramIndex++, collectivityId);
-            stmt.setTimestamp(paramIndex++, Timestamp.from(from));
-            stmt.setTimestamp(paramIndex++, Timestamp.from(to));
-            stmt.setString(paramIndex++, collectivityId);
-            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
-            stmt.setString(paramIndex++, collectivityId);
-            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(from, ZoneId.systemDefault())));
-            stmt.setDate(paramIndex++, Date.valueOf(LocalDate.ofInstant(to, ZoneId.systemDefault())));
+            int i = 1;
+            stmt.setString(i++, collectivityId);        // 1
+            stmt.setString(i++, toDate.toString());     // 2: ::date
+            stmt.setString(i++, collectivityId);        // 3
+            stmt.setString(i++, fromDate.toString());   // 4: ::date
+            stmt.setString(i++, toDate.toString());     // 5: ::date
+            stmt.setString(i++, collectivityId);        // 6
+            stmt.setString(i++, toDate.toString());     // 7: WEEKLY ::date
+            stmt.setString(i++, toDate.toString());     // 8: MONTHLY year ::date
+            stmt.setString(i++, toDate.toString());     // 9: MONTHLY month ::date
+            stmt.setString(i++, toDate.toString());     // 10: ANNUALLY ::date
+            stmt.setString(i++, fromDate.toString());   // 11: PUNCTUALLY from ::date
+            stmt.setString(i++, toDate.toString());     // 12: PUNCTUALLY to ::date
+            stmt.setString(i++, collectivityId);        // 13
+            stmt.setString(i++, fromDate.toString());   // 14: ::date
+            stmt.setString(i++, toDate.toString());     // 15: ::date
 
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                MemberDescription memberDescription = MemberDescription.builder()
-                        .id(rs.getString("id"))
-                        .firstName(rs.getString("first_name"))
-                        .lastName(rs.getString("last_name"))
-                        .email(rs.getString("email"))
-                        .occupation(rs.getString("occupation"))
-                        .build();
-
-                CollectivityLocalStatistics stat = CollectivityLocalStatistics.builder()
-                        .memberDescription(memberDescription)
+                statistics.add(CollectivityLocalStatistics.builder()
+                        .memberDescription(MemberDescription.builder()
+                                .id(rs.getString("id"))
+                                .firstName(rs.getString("first_name"))
+                                .lastName(rs.getString("last_name"))
+                                .email(rs.getString("email"))
+                                .occupation(rs.getString("occupation"))
+                                .build())
                         .earnedAmount(rs.getDouble("earned_amount"))
                         .unpaidAmount(rs.getDouble("unpaid_amount"))
                         .assiduityPercentage(rs.getDouble("assiduity_percentage"))
-                        .build();
-
-                statistics.add(stat);
+                        .build());
             }
-
             return statistics;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get local statistics for collectivity: " + collectivityId + e.getMessage());
+            throw new RuntimeException("Failed to get local statistics: " + collectivityId, e);
         }
     }
-
     /**
      * Get overall statistics for all collectivities:
      * - Percentage of members current with their dues

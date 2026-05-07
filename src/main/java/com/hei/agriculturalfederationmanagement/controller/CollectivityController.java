@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -113,11 +114,10 @@ public class CollectivityController {
             @RequestParam(required = true) String from,
             @RequestParam(required = true) String to) {
         try {
-            Instant fromDate = Instant.parse(from + "T00:00:00Z");
-            Instant toDate = Instant.parse(to + "T23:59:59Z");
+
 
             List<CollectivityTransactionResponse> transactions =
-                    service.getCollectivityTransactions(id, fromDate, toDate);
+                    service.getCollectivityTransactions(id, from, to);
             return ResponseEntity.status(HttpStatus.OK).body(transactions);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -154,8 +154,9 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Either to or from mandatory query params not provided or malformed");
         }
         try {
-            Instant fromDate = Instant.parse(from + "T00:00:00Z");
-            Instant toDate = Instant.parse(to + "T23:59:59Z");
+
+            LocalDate fromDate = LocalDate.parse(from);
+            LocalDate toDate = LocalDate.parse(to);
 
             List<CollectivityLocalStatistics> statistics =
                     statisticsService.getLocalStatistics(id, fromDate, toDate);

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.*;
 import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -499,7 +500,7 @@ public class CollectivityRepository {
         return accountMap;
     }
     public List<Transaction> findTransactionsByCollectivityIdAndDateRange(
-            String collectivityId, Instant from, Instant to) {
+            String collectivityId, LocalDate from, LocalDate to) {
 
         String sql = """
         SELECT t.id, t.amount, t.transaction_date, t.payment_mode,
@@ -521,8 +522,8 @@ public class CollectivityRepository {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, collectivityId);
-            stmt.setTimestamp(2, Timestamp.from(from));
-            stmt.setTimestamp(3, Timestamp.from(to));
+            stmt.setDate(2, Date.valueOf(from));
+            stmt.setDate(3, Date.valueOf(to));
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {

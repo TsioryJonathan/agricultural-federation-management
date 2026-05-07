@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @Service
@@ -115,19 +116,35 @@ public class CollectivityService {
         return mapper.toResponse(collectivity, occupations);
     }
 
+    // Service method
     public List<CollectivityTransactionResponse> getCollectivityTransactions(
-            String id, Instant from, Instant to) {
+            String id, String from, String to) {
+
         Collectivity collectivity = repository.findById(id);
+
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + id);
         }
 
-        if (from.isAfter(to)) {
+        LocalDate fromDate;
+        LocalDate toDate;
+
+        try {
+            fromDate = LocalDate.parse(from);
+            toDate = LocalDate.parse(to);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Invalid date format. Expected format: yyyy-MM-dd");
+        }
+
+        if (fromDate.isAfter(toDate)) {
             throw new BadRequestException("'from' date must be before or equal to 'to' date");
         }
 
-        List<Transaction> transactions = repository.findTransactionsByCollectivityIdAndDateRange(id, from, to);
-        Map<String, String> occupations = repository.findMemberOccupations(id);
+        List<Transaction> transactions =
+                repository.findTransactionsByCollectivityIdAndDateRange(id, fromDate, toDate);
+
+        Map<String, String> occupations =
+                repository.findMemberOccupations(id);
 
         return transactions.stream()
                 .map(tx -> mapper.toTransactionResponse(tx, occupations))

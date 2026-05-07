@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,7 +23,7 @@ public class StatisticsService {
      * Get local statistics for a specific collectivity
      * Includes: earned amount, unpaid amount, and assiduity percentage per member
      */
-    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, Instant from, Instant to) {
+    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, LocalDate from, LocalDate to) {
         if (collectivityId == null || collectivityId.trim().isEmpty()) {
             throw new BadRequestException("Collectivity ID is required");
         }
