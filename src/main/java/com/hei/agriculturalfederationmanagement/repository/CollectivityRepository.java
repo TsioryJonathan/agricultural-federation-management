@@ -570,4 +570,20 @@ public class CollectivityRepository {
 
         return transactions;
     }
+    public double getTotalPaidByMember(String memberId, String collectivityId) {
+        String sql = """
+            SELECT COALESCE(SUM(amount), 0) as total
+            FROM transaction
+            WHERE id_member = ? AND id_collectivity = ? AND transaction_type = 'IN'
+        """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            stmt.setString(2, collectivityId);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return rs.getDouble("total");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

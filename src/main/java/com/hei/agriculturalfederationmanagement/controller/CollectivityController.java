@@ -1,12 +1,12 @@
 package com.hei.agriculturalfederationmanagement.controller;
 
-import com.hei.agriculturalfederationmanagement.entity.Collectivity;
 import com.hei.agriculturalfederationmanagement.entity.dto.*;
 import com.hei.agriculturalfederationmanagement.exception.AttendanceAlreadyConfirmedException;
 import com.hei.agriculturalfederationmanagement.exception.BadRequestException;
 import com.hei.agriculturalfederationmanagement.exception.NotFoundException;
 import com.hei.agriculturalfederationmanagement.service.ActivityService;
 import com.hei.agriculturalfederationmanagement.service.CollectivityService;
+import com.hei.agriculturalfederationmanagement.service.CotisationStatusService;
 import com.hei.agriculturalfederationmanagement.service.StatisticsService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +23,7 @@ public class CollectivityController {
     private final CollectivityService service;
     private final StatisticsService statisticsService;
     private final ActivityService activityService;
+    private final CotisationStatusService cotisationStatusService;
 
     @PostMapping
     public ResponseEntity<?> createCollectivities(@RequestBody(required = false) List<CreateCollectivity> createCollectivities) {
@@ -258,6 +259,16 @@ public class CollectivityController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/members/cotisation-status")
+    public ResponseEntity<?> getCotisationStatus(@PathVariable String id) {
+        try {
+            List<MemberCotisationStatus> statuses = cotisationStatusService.getMembersCotisationStatus(id);
+            return ResponseEntity.ok(statuses);
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
         }
     }
 }
