@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -23,7 +24,7 @@ public class StatisticsService {
      * Get local statistics for a specific collectivity
      * Includes: earned amount, unpaid amount, and assiduity percentage per member
      */
-    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, LocalDate from, LocalDate to) {
+    public List<CollectivityLocalStatistics> getLocalStatistics(String collectivityId, String from, String to) {
         if (collectivityId == null || collectivityId.trim().isEmpty()) {
             throw new BadRequestException("Collectivity ID is required");
         }
@@ -32,7 +33,17 @@ public class StatisticsService {
             throw new BadRequestException("Both 'from' and 'to' dates are required");
         }
 
-        if (from.isAfter(to)) {
+        LocalDate fromDate = LocalDate.parse(from);
+        LocalDate toDate = LocalDate.parse(to);
+
+        try {
+            fromDate = LocalDate.parse(from);
+            toDate = LocalDate.parse(to);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Invalid date format. Expected format: yyyy-MM-dd");
+        }
+
+        if (fromDate.isAfter(toDate)) {
             throw new BadRequestException("'from' date must be before or equal to 'to' date");
         }
 
@@ -41,7 +52,7 @@ public class StatisticsService {
             throw new NotFoundException("Collectivity not found with id: " + collectivityId);
         }
 
-        return statisticsRepository.getLocalStatistics(collectivityId, from, to);
+        return statisticsRepository.getLocalStatistics(collectivityId, fromDate, toDate);
     }
 
     /**

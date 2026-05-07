@@ -155,11 +155,10 @@ public class CollectivityController {
         }
         try {
 
-            LocalDate fromDate = LocalDate.parse(from);
-            LocalDate toDate = LocalDate.parse(to);
+
 
             List<CollectivityLocalStatistics> statistics =
-                    statisticsService.getLocalStatistics(id, fromDate, toDate);
+                    statisticsService.getLocalStatistics(id, from, to);
             return ResponseEntity.status(HttpStatus.OK).body(statistics);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
