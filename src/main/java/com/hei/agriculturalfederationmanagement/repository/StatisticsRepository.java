@@ -268,7 +268,7 @@ public class StatisticsRepository {
             while (rs.next()) {
                 CollectivityInformation info = new CollectivityInformation();
                 info.setName(rs.getString("name"));
-                info.setNumber(rs.getString("number"));
+                info.setNumber(Integer.valueOf(rs.getString("number")));
 
                 CollectivityOverallStatistics stat = CollectivityOverallStatistics.builder()
                         .collectivityInformation(info)

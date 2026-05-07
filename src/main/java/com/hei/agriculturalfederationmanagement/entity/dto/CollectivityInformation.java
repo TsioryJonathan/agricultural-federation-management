@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CollectivityInformation {
     private String name;
-    private String number;
+    private Integer number;
 }

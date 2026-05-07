@@ -810,7 +810,7 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
             expect(res.body.id).to.equal('col-1');
             expect(res.body.name).to.equal('Mpanorina');
-            expect(res.body.number).to.equal('1');
+            expect(res.body.number).to.equal(1);
             expect(res.body.location).to.equal('Ambatondrazaka');
         });
 
@@ -870,7 +870,7 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             validateCollectivityObject(res.body);
             expect(res.body.id).to.equal('col-2');
             expect(res.body.name).to.equal('Dobo voalahany');
-            expect(res.body.number).to.equal('2');
+            expect(res.body.number).to.equal(2);
         });
 
         it('should retrieve col-3 with correct data', async function() {
@@ -880,7 +880,7 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
             validateCollectivityObject(res.body);
             expect(res.body.id).to.equal('col-3');
             expect(res.body.name).to.equal('Tantely mamy');
-            expect(res.body.number).to.equal('3');
+            expect(res.body.number).to.equal(3);
             expect(res.body.location).to.equal('Brickaville');
         });
 

@@ -71,7 +71,7 @@ public class CollectivityService {
         }
 
         String newName = request.getName();
-        String newNumber = request.getNumber();
+        Integer newNumber = request.getNumber();
 
         String currentName = collectivity.getName();
         String currentNumber = collectivity.getNumber();
@@ -81,7 +81,7 @@ public class CollectivityService {
             throw new BadRequestException("Collectivity name is already assigned and cannot be modified");
         }
 
-        if (newNumber != null && !newNumber.trim().isEmpty()
+        if (newNumber != null
                 && currentNumber != null && !currentNumber.trim().isEmpty()) {
             throw new BadRequestException("Collectivity number is already assigned and cannot be modified");
         }
@@ -89,18 +89,14 @@ public class CollectivityService {
         if (newName != null && !newName.trim().isEmpty() && repository.existsByName(newName)) {
             throw new BadRequestException("Collectivity name already exists: " + newName);
         }
-        if (newNumber != null && !newNumber.trim().isEmpty() && repository.existsByNumber(newNumber)) {
+        if (newNumber != null && repository.existsByNumber(String.valueOf(newNumber))) {
             throw new BadRequestException("Collectivity number already exists: " + newNumber);
         }
 
         String finalName = (newName != null && !newName.trim().isEmpty()) ? newName : currentName;
-        String finalNumber = (newNumber != null && !newNumber.trim().isEmpty()) ? newNumber : currentNumber;
+        Integer finalNumber = (newNumber != null) ? newNumber : Integer.valueOf(currentNumber);
 
-        if (finalName == null && finalNumber == null) {
-            throw new BadRequestException("At least one of name or number must be provided");
-        }
-
-        repository.assignIdentity(id, finalNumber, finalName);
+        repository.assignIdentity(id, String.valueOf(finalNumber), finalName);
         Collectivity updated = repository.findById(id);
 
         Map<String, String> occupations = repository.findMemberOccupations(id);
