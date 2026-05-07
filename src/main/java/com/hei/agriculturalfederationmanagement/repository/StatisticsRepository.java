@@ -144,124 +144,124 @@ public class StatisticsRepository {
      */
     public List<CollectivityOverallStatistics> getOverallStatistics(LocalDate from, LocalDate to) {
         String sql = """
-            WITH collectivity_list AS (
-                SELECT id, number, name
-                FROM collectivity
-            ),
-            active_cotisations AS (
-                SELECT 
-                    cp.id_collectivity,
-                    cp.amount,
-                    cp.frequency
-                FROM cotisation_plan cp
-                WHERE cp.status = 'ACTIVE'
-                AND cp.eligible_from <= ?::date
-            ),
-            member_payments AS (
-                SELECT 
-                    mc.id_collectivity,
-                    mc.id_member,
-                    COALESCE(SUM(t.amount), 0) as paid_amount
-                FROM member_collectivity mc
-                LEFT JOIN transaction t ON t.id_member = mc.id_member 
-                    AND t.id_collectivity = mc.id_collectivity
-                    AND t.transaction_type = 'IN'
-                    AND t.transaction_date >= ?
-                    AND t.transaction_date <= ?
-                WHERE mc.end_date IS NULL
-                GROUP BY mc.id_collectivity, mc.id_member
-            ),
-            total_cotisation_per_collectivity AS (
-                SELECT 
-                    id_collectivity,
-                    SUM(amount) as total_cotisation
-                FROM active_cotisations
-                GROUP BY id_collectivity
-            ),
-            member_current_status AS (
-                SELECT 
-                    mp.id_collectivity,
-                    mp.id_member,
-                    CASE 
-                        WHEN tc.total_cotisation IS NULL THEN TRUE
-                        WHEN mp.paid_amount >= tc.total_cotisation THEN TRUE
-                        ELSE FALSE
-                    END as is_current
-                FROM member_payments mp
-                LEFT JOIN total_cotisation_per_collectivity tc ON mp.id_collectivity = tc.id_collectivity
-            ),
-            collectivity_attendance AS (
-                SELECT 
-                    a.id_collectivity,
-                    aa.id_member,
-                    aa.attendance_status
-                FROM activity a
-                JOIN activity_attendance aa ON a.id = aa.id_activity
-                WHERE a.executive_date >= ?::date
-                AND a.executive_date <= ?::date
-            ),
-            collectivity_attendance_stats AS (
-                SELECT 
-                    ca.id_collectivity,
-                    COUNT(DISTINCT ca.id_member) as total_members_with_activities,
-                    COUNT(DISTINCT CASE WHEN ca.attendance_status = 'ATTENDED' THEN ca.id_member END) as members_attended,
-                    COUNT(*) as total_attendance_records,
-                    COUNT(CASE WHEN ca.attendance_status = 'ATTENDED' THEN 1 END) as attended_records
-                FROM collectivity_attendance ca
-                GROUP BY ca.id_collectivity
-            ),
-            collectivity_stats AS (
-                SELECT 
-                    cl.id,
-                    cl.number,
-                    cl.name,
-                    COUNT(DISTINCT mc.id_member) as total_members,
-                    COUNT(DISTINCT CASE WHEN mcs.is_current THEN mcs.id_member END) as current_members,
-                    COUNT(DISTINCT CASE 
-                        WHEN m.enrolment_date >= ? AND m.enrolment_date <= ? 
-                        THEN m.id 
-                    END) as new_members
-                FROM collectivity_list cl
-                JOIN member_collectivity mc ON cl.id = mc.id_collectivity AND mc.end_date IS NULL
-                JOIN member m ON mc.id_member = m.id
-                LEFT JOIN member_current_status mcs ON cl.id = mcs.id_collectivity 
-                    AND mc.id_member = mcs.id_member
-                GROUP BY cl.id, cl.number, cl.name
-            )
+        WITH collectivity_list AS (
+            SELECT id, number, name
+            FROM collectivity
+        ),
+        active_cotisations AS (
             SELECT 
-                cs.id,
-                cs.number,
-                cs.name,
-                cs.total_members,
-                cs.current_members,
-                cs.new_members,
+                cp.id_collectivity,
+                cp.amount,
+                cp.frequency
+            FROM cotisation_plan cp
+            WHERE cp.status = 'ACTIVE'
+            AND cp.eligible_from <= ?
+        ),
+        member_payments AS (
+            SELECT 
+                mc.id_collectivity,
+                mc.id_member,
+                COALESCE(SUM(t.amount), 0) as paid_amount
+            FROM member_collectivity mc
+            LEFT JOIN transaction t ON t.id_member = mc.id_member 
+                AND t.id_collectivity = mc.id_collectivity
+                AND t.transaction_type = 'IN'
+                AND t.transaction_date >= ?
+                AND t.transaction_date <= ?
+            WHERE mc.end_date IS NULL
+            GROUP BY mc.id_collectivity, mc.id_member
+        ),
+        total_cotisation_per_collectivity AS (
+            SELECT 
+                id_collectivity,
+                SUM(amount) as total_cotisation
+            FROM active_cotisations
+            GROUP BY id_collectivity
+        ),
+        member_current_status AS (
+            SELECT 
+                mp.id_collectivity,
+                mp.id_member,
                 CASE 
-                    WHEN cs.total_members > 0 THEN 
-                        ROUND((cs.current_members::decimal / cs.total_members::decimal) * 100, 2)
-                    ELSE 0
-                END as current_due_percentage,
-                COALESCE(cas.total_members_with_activities, 0) as total_with_activities,
-                COALESCE(cas.members_attended, 0) as attended_members,
-                CASE 
-                    WHEN cas.total_attendance_records IS NULL OR cas.total_attendance_records = 0 THEN 0.0
-                    ELSE ROUND((cas.attended_records::decimal / cas.total_attendance_records::decimal) * 100, 2)
-                END as assiduity_percentage
-            FROM collectivity_stats cs
-            LEFT JOIN collectivity_attendance_stats cas ON cs.id = cas.id_collectivity
-            ORDER BY cs.id
-        """;
+                    WHEN tc.total_cotisation IS NULL THEN TRUE
+                    WHEN mp.paid_amount >= tc.total_cotisation THEN TRUE
+                    ELSE FALSE
+                END as is_current
+            FROM member_payments mp
+            LEFT JOIN total_cotisation_per_collectivity tc ON mp.id_collectivity = tc.id_collectivity
+        ),
+        collectivity_attendance AS (
+            SELECT 
+                a.id_collectivity,
+                aa.id_member,
+                aa.attendance_status
+            FROM activity a
+            JOIN activity_attendance aa ON a.id = aa.id_activity
+            WHERE a.executive_date >= ?
+            AND a.executive_date <= ?
+        ),
+        collectivity_attendance_stats AS (
+            SELECT 
+                ca.id_collectivity,
+                COUNT(DISTINCT ca.id_member) as total_members_with_activities,
+                COUNT(DISTINCT CASE WHEN ca.attendance_status = 'ATTENDED' THEN ca.id_member END) as members_attended,
+                COUNT(*) as total_attendance_records,
+                COUNT(CASE WHEN ca.attendance_status = 'ATTENDED' THEN 1 END) as attended_records
+            FROM collectivity_attendance ca
+            GROUP BY ca.id_collectivity
+        ),
+        collectivity_stats AS (
+            SELECT 
+                cl.id,
+                cl.number,
+                cl.name,
+                COUNT(DISTINCT mc.id_member) as total_members,
+                COUNT(DISTINCT CASE WHEN mcs.is_current THEN mcs.id_member END) as current_members,
+                COUNT(DISTINCT CASE 
+                    WHEN m.enrolment_date >= ? AND m.enrolment_date <= ? 
+                    THEN m.id 
+                END) as new_members
+            FROM collectivity_list cl
+            JOIN member_collectivity mc ON cl.id = mc.id_collectivity AND mc.end_date IS NULL
+            JOIN member m ON mc.id_member = m.id
+            LEFT JOIN member_current_status mcs ON cl.id = mcs.id_collectivity 
+                AND mc.id_member = mcs.id_member
+            GROUP BY cl.id, cl.number, cl.name
+        )
+        SELECT 
+            cs.id,
+            cs.number,
+            cs.name,
+            cs.total_members,
+            cs.current_members,
+            cs.new_members,
+            CASE 
+                WHEN cs.total_members > 0 THEN 
+                    ROUND((cs.current_members::decimal / cs.total_members::decimal) * 100, 2)
+                ELSE 0
+            END as current_due_percentage,
+            COALESCE(cas.total_members_with_activities, 0) as total_with_activities,
+            COALESCE(cas.members_attended, 0) as attended_members,
+            CASE 
+                WHEN cas.total_attendance_records IS NULL OR cas.total_attendance_records = 0 THEN 0.0
+                ELSE ROUND((cas.attended_records::decimal / cas.total_attendance_records::decimal) * 100, 2)
+            END as assiduity_percentage
+        FROM collectivity_stats cs
+        LEFT JOIN collectivity_attendance_stats cas ON cs.id = cas.id_collectivity
+        ORDER BY cs.id
+    """;
 
         List<CollectivityOverallStatistics> statistics = new ArrayList<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            int paramIndex = 1;
-            stmt.setDate(paramIndex++, Date.valueOf(to));
-            stmt.setDate(paramIndex++, Date.valueOf(from));
-            stmt.setDate(paramIndex++, Date.valueOf(to));
-            stmt.setDate(paramIndex++, Date.valueOf(from));
-            stmt.setDate(paramIndex++, Date.valueOf(to));
-            stmt.setDate(paramIndex++, Date.valueOf(from));
-            stmt.setDate(paramIndex++, Date.valueOf(to));
+            int i = 1;
+            stmt.setDate(i++, Date.valueOf(to));     // 1: active_cotisations eligible_from <= to
+            stmt.setDate(i++, Date.valueOf(from));   // 2: member_payments >= from
+            stmt.setDate(i++, Date.valueOf(to));     // 3: member_payments <= to
+            stmt.setDate(i++, Date.valueOf(from));   // 4: attendance >= from
+            stmt.setDate(i++, Date.valueOf(to));     // 5: attendance <= to
+            stmt.setDate(i++, Date.valueOf(from));   // 6: enrolment_date >= from (FIXED: was Timestamp)
+            stmt.setDate(i++, Date.valueOf(to));     // 7: enrolment_date <= to (FIXED: was Timestamp)
 
             ResultSet rs = stmt.executeQuery();
 
@@ -282,7 +282,7 @@ public class StatisticsRepository {
 
             return statistics;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get overall statistics " + e.getMessage());
+            throw new RuntimeException("Failed to get overall statistics: " + e.getMessage(), e);
         }
     }
 }

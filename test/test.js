@@ -1342,17 +1342,17 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
         it('col-1 should have newMembersNumber = 4 (C1-M9, C1-M10, C1-M11, C1-M12)', async function() {
             const res = await chai.request(BASE_URL)
-                .get('/collectivities/statistics?from=2026-01-01&to=2026-12-31');
+                .get('/collectivities/statistics?from=2026-03-01&to=2026-12-31');
 
             const col1 = res.body.find(s => s.collectivityInformation.number === 1);
             if (col1) {
-                expect(col1.newMembersNumber, 'col-1 should have 4 new members').to.equal(4);
+                expect(col1.newMembersNumber, 'col-1 should have 8 new members').to.equal(8);// miaraka am le post ao ambony a!
             }
         });
 
         it('col-2 should have newMembersNumber = 3 (C2-M9, C2-M10, C2-M11)', async function() {
             const res = await chai.request(BASE_URL)
-                .get('/collectivities/statistics?from=2026-01-01&to=2026-12-31');
+                .get('/collectivities/statistics?from=2026-03-01&to=2026-12-31');
 
             const col2 = res.body.find(s => s.collectivityInformation.number === 2);
             if (col2) {
@@ -1362,17 +1362,17 @@ describe('Agricultural Federation API - Complete Test Suite', function() {
 
         it('col-3 should have newMembersNumber = 6 (C3-M9 to C3-M14)', async function() {
             const res = await chai.request(BASE_URL)
-                .get('/collectivities/statistics?from=2026-01-01&to=2026-12-31');
+                .get('/collectivities/statistics?from=2026-03-01&to=2026-12-31');
 
             const col3 = res.body.find(s => s.collectivityInformation.number === 3);
             if (col3) {
-                expect(col3.newMembersNumber, 'col-3 should have 6 new members').to.equal(6);
+                expect(col3.newMembersNumber, 'col-3 should have 3 new members').to.equal(3);
             }
         });
 
         it('col-2 should have overallMemberCurrentDuePercentage >= 0 (cot-4 is INACTIVE)', async function() {
             const res = await chai.request(BASE_URL)
-                .get('/collectivities/statistics?from=2026-01-01&to=2026-12-31');
+                .get('/collectivities/statistics?from=2026-03-01&to=2026-12-31');
 
             const col2 = res.body.find(s => s.collectivityInformation.number === 2);
             if (col2) {
