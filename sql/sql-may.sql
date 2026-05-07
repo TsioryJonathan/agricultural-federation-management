@@ -142,8 +142,7 @@ CREATE TABLE IF NOT EXISTS activity_attendance (
                                                    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::VARCHAR,
                                                    id_activity VARCHAR REFERENCES activity(id),
                                                    id_member VARCHAR REFERENCES member(id),
-                                                   attendance_status VARCHAR DEFAULT 'UNDEFINED' CHECK (attendance_status IN ('UNDEFINED', 'ATTENDED', 'MISSING')),
-                                                   UNIQUE (id_activity, id_member)
+                                                   attendance_status VARCHAR DEFAULT 'UNDEFINED' CHECK (attendance_status IN ('UNDEFINED', 'ATTENDED', 'MISSING'))
 );
 
 -- ============================================
@@ -396,3 +395,5 @@ INSERT INTO member_referee (id_candidate, id_referee, relationship) VALUES
                                                                         ('C3-M12', 'C3-M1', 'AMI'), ('C3-M12', 'C3-M2', 'AMI'),
                                                                         ('C3-M13', 'C3-M1', 'AMI'), ('C3-M13', 'C3-M2', 'AMI'),
                                                                         ('C3-M14', 'C3-M1', 'AMI'), ('C3-M14', 'C3-M2', 'AMI');
+
+

@@ -152,7 +152,8 @@ public class StatisticsRepository {
             SELECT 
                 cp.id_collectivity,
                 cp.amount,
-                cp.frequency
+                cp.frequency,
+                cp.eligible_from
             FROM cotisation_plan cp
             WHERE cp.status = 'ACTIVE'
             AND cp.eligible_from <= ?
@@ -166,15 +167,28 @@ public class StatisticsRepository {
             LEFT JOIN transaction t ON t.id_member = mc.id_member 
                 AND t.id_collectivity = mc.id_collectivity
                 AND t.transaction_type = 'IN'
-                AND t.transaction_date >= ?
                 AND t.transaction_date <= ?
             WHERE mc.end_date IS NULL
             GROUP BY mc.id_collectivity, mc.id_member
         ),
         total_cotisation_per_collectivity AS (
-            SELECT 
+            SELECT
                 id_collectivity,
-                SUM(amount) as total_cotisation
+                SUM(
+                    CASE
+                        WHEN frequency = 'WEEKLY' THEN
+                            amount * GREATEST(FLOOR((?::date - eligible_from) / 7.0) + 1, 0)
+                        WHEN frequency = 'MONTHLY' THEN
+                            amount * GREATEST(
+                                (DATE_PART('year', ?::date) - DATE_PART('year', eligible_from)) * 12
+                                + DATE_PART('month', ?::date) - DATE_PART('month', eligible_from) + 1, 0)
+                        WHEN frequency = 'ANNUALLY' THEN
+                            amount * GREATEST(DATE_PART('year', ?::date) - DATE_PART('year', eligible_from) + 1, 0)
+                        WHEN frequency = 'PUNCTUALLY' THEN
+                            CASE WHEN eligible_from BETWEEN ?::date AND ?::date THEN amount ELSE 0 END
+                        ELSE amount
+                    END
+                ) as total_cotisation
             FROM active_cotisations
             GROUP BY id_collectivity
         ),
@@ -197,14 +211,13 @@ public class StatisticsRepository {
                 aa.attendance_status
             FROM activity a
             JOIN activity_attendance aa ON a.id = aa.id_activity
-            WHERE a.executive_date >= ?
-            AND a.executive_date <= ?
+            JOIN member_collectivity mc ON aa.id_member = mc.id_member 
+                AND mc.id_collectivity = a.id_collectivity 
+                AND mc.end_date IS NULL
         ),
         collectivity_attendance_stats AS (
             SELECT 
                 ca.id_collectivity,
-                COUNT(DISTINCT ca.id_member) as total_members_with_activities,
-                COUNT(DISTINCT CASE WHEN ca.attendance_status = 'ATTENDED' THEN ca.id_member END) as members_attended,
                 COUNT(*) as total_attendance_records,
                 COUNT(CASE WHEN ca.attendance_status = 'ATTENDED' THEN 1 END) as attended_records
             FROM collectivity_attendance ca
@@ -240,8 +253,6 @@ public class StatisticsRepository {
                     ROUND((cs.current_members::decimal / cs.total_members::decimal) * 100, 2)
                 ELSE 0
             END as current_due_percentage,
-            COALESCE(cas.total_members_with_activities, 0) as total_with_activities,
-            COALESCE(cas.members_attended, 0) as attended_members,
             CASE 
                 WHEN cas.total_attendance_records IS NULL OR cas.total_attendance_records = 0 THEN 0.0
                 ELSE ROUND((cas.attended_records::decimal / cas.total_attendance_records::decimal) * 100, 2)
@@ -256,12 +267,15 @@ public class StatisticsRepository {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             int i = 1;
             stmt.setDate(i++, Date.valueOf(to));     // 1: active_cotisations eligible_from <= to
-            stmt.setDate(i++, Date.valueOf(from));   // 2: member_payments >= from
-            stmt.setDate(i++, Date.valueOf(to));     // 3: member_payments <= to
-            stmt.setDate(i++, Date.valueOf(from));   // 4: attendance >= from
-            stmt.setDate(i++, Date.valueOf(to));     // 5: attendance <= to
-            stmt.setDate(i++, Date.valueOf(from));   // 6: enrolment_date >= from (FIXED: was Timestamp)
-            stmt.setDate(i++, Date.valueOf(to));     // 7: enrolment_date <= to (FIXED: was Timestamp)
+            stmt.setDate(i++, Date.valueOf(to));     // 2: member_payments <= to (ALL payments up to "to" date)
+            stmt.setDate(i++, Date.valueOf(to));     // 3: WEEKLY ::date
+            stmt.setDate(i++, Date.valueOf(to));     // 4: MONTHLY year ::date
+            stmt.setDate(i++, Date.valueOf(to));     // 5: MONTHLY month ::date
+            stmt.setDate(i++, Date.valueOf(to));     // 6: ANNUALLY ::date
+            stmt.setDate(i++, Date.valueOf(from));   // 7: PUNCTUALLY from ::date
+            stmt.setDate(i++, Date.valueOf(to));     // 8: PUNCTUALLY to ::date
+            stmt.setDate(i++, Date.valueOf(from));   // 9: enrolment_date >= from
+            stmt.setDate(i++, Date.valueOf(to));     // 10: enrolment_date <= to
 
             ResultSet rs = stmt.executeQuery();
 
