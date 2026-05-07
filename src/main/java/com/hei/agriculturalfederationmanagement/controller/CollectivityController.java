@@ -154,9 +154,6 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Either to or from mandatory query params not provided or malformed");
         }
         try {
-
-
-
             List<CollectivityLocalStatistics> statistics =
                     statisticsService.getLocalStatistics(id, from, to);
             return ResponseEntity.status(HttpStatus.OK).body(statistics);
