@@ -64,30 +64,47 @@ public class CollectivityService {
     }
 
     public CollectivityResponse assignIdentity(String id, CollectivityInformation request) {
-
         Collectivity collectivity = repository.findById(id);
         if (collectivity == null) {
             throw new NotFoundException("Collectivity not found with id: " + id);
         }
 
-        if (collectivity.getName() != null && !collectivity.getName().isBlank()
-                && collectivity.getNumber() != null && !collectivity.getNumber().isBlank()) {
-            throw new BadRequestException("Collectivity identity already assigned and cannot be modified");
+        String newName = request.getName();
+        String newNumber = request.getNumber();
+
+        String currentName = collectivity.getName();
+        String currentNumber = collectivity.getNumber();
+
+        if (newName != null && !newName.trim().isEmpty()
+                && currentName != null && !currentName.trim().isEmpty()) {
+            throw new BadRequestException("Collectivity name is already assigned and cannot be modified");
         }
 
-        if (repository.existsByNumber(request.getNumber())) {
-            throw new BadRequestException("Collectivity number already exists: " + request.getNumber());
-        }
-        if (repository.existsByName(request.getName())) {
-            throw new BadRequestException("Collectivity name already exists: " + request.getName());
+        if (newNumber != null && !newNumber.trim().isEmpty()
+                && currentNumber != null && !currentNumber.trim().isEmpty()) {
+            throw new BadRequestException("Collectivity number is already assigned and cannot be modified");
         }
 
-        repository.assignIdentity(id, request.getNumber(), request.getName());
+        if (newName != null && !newName.trim().isEmpty() && repository.existsByName(newName)) {
+            throw new BadRequestException("Collectivity name already exists: " + newName);
+        }
+        if (newNumber != null && !newNumber.trim().isEmpty() && repository.existsByNumber(newNumber)) {
+            throw new BadRequestException("Collectivity number already exists: " + newNumber);
+        }
+
+        String finalName = (newName != null && !newName.trim().isEmpty()) ? newName : currentName;
+        String finalNumber = (newNumber != null && !newNumber.trim().isEmpty()) ? newNumber : currentNumber;
+
+        if (finalName == null && finalNumber == null) {
+            throw new BadRequestException("At least one of name or number must be provided");
+        }
+
+        repository.assignIdentity(id, finalNumber, finalName);
         Collectivity updated = repository.findById(id);
+
         Map<String, String> occupations = repository.findMemberOccupations(id);
         return mapper.toResponse(updated, occupations);
     }
-
     public CollectivityResponse getCollectivityById(String id) {
         Collectivity collectivity = repository.findById(id);
         if (collectivity == null) {

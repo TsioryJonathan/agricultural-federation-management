@@ -372,7 +372,12 @@ public class CollectivityRepository {
     }
 
     public void assignIdentity(String id, String number, String name) {
-        String updateSql = "UPDATE collectivity SET number = ?, name = ? WHERE id = ?";
+        String updateSql = """
+        UPDATE collectivity 
+        SET number = COALESCE(?, number), 
+            name = COALESCE(?, name) 
+        WHERE id = ?
+    """;
         try (PreparedStatement stmt = connection.prepareStatement(updateSql)) {
             stmt.setString(1, number);
             stmt.setString(2, name);

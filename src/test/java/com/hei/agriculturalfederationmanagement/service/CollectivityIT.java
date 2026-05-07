@@ -81,7 +81,7 @@ public class CollectivityIT {
     void change_name() {
         var id = "col-1";
         var payload = new CollectivityInformation();
-        payload.name = "Other";
+        payload.name = "jojo";
 
         var actualCollectivity = apiClient.put("/collectivities/" + id + "/informations", payload, Collectivity.class);
 
