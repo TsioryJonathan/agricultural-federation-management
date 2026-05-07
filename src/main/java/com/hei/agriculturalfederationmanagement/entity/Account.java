@@ -1,5 +1,6 @@
 package com.hei.agriculturalfederationmanagement.entity;
 
+import com.hei.agriculturalfederationmanagement.entity.enums.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +25,7 @@ public class Account {
             return 0.0;
         }
         return transactions.stream()
-                .mapToDouble(t -> t.getTransactionType().equals("IN") ? t.getAmount() : -t.getAmount())
+                .mapToDouble(t -> t.getTransactionType().equals(TransactionType.IN) ? t.getAmount() : -t.getAmount())
                 .sum();
     }
 }
